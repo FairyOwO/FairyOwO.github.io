@@ -10,15 +10,25 @@
         let theme = localStorage.getItem("meek_theme") || "light";
         document.documentElement.setAttribute("data-color-mode", theme);
     </script>
-<meta name="description" content="这是一个测试!
-This is a test!。">
-<meta property="og:title" content="Test">
-<meta property="og:description" content="这是一个测试!
-This is a test!。">
+<meta name="description" content="## 对强化学习进行系统性的学习
+1. [Reinforcement Learning: An Introduction](https://rl.qiwihui.com/zh-cn/latest/) 强化学习导论
+2. [Openai Spinning Up](https://spinningup.qiwihui.com/zh-cn/latest/) OpenAI 深度强化学习
+
+## 知乎 大模型相关
+
+## 苏剑林博客。">
+<meta property="og:title" content="待阅读">
+<meta property="og:description" content="## 对强化学习进行系统性的学习
+1. [Reinforcement Learning: An Introduction](https://rl.qiwihui.com/zh-cn/latest/) 强化学习导论
+2. [Openai Spinning Up](https://spinningup.qiwihui.com/zh-cn/latest/) OpenAI 深度强化学习
+
+## 知乎 大模型相关
+
+## 苏剑林博客。">
 <meta property="og:type" content="article">
-<meta property="og:url" content="https://FairyOwO.github.io/post/Test.html">
+<meta property="og:url" content="https://FairyOwO.github.io/post/dai-yue-du.html">
 <meta property="og:image" content="https://github.githubassets.com/favicons/favicon.svg">
-<title>Test</title>
+<title>待阅读</title>
 
 
 
@@ -51,7 +61,7 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
 
 <body>
     <div id="header">
-<h1 class="postTitle">Test</h1>
+<h1 class="postTitle">待阅读</h1>
 <div class="title-right">
     <a href="https://FairyOwO.github.io" id="buttonHome" class="btn btn-invisible circle" title="首页">
         <svg class="octicon" width="16" height="16">
@@ -59,7 +69,7 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
         </svg>
     </a>
     
-    <a href="https://github.com/FairyOwO/FairyOwO.github.io/issues/1" target="_blank" class="btn btn-invisible circle" title="Issue">
+    <a href="https://github.com/FairyOwO/FairyOwO.github.io/issues/2" target="_blank" class="btn btn-invisible circle" title="Issue">
         <svg class="octicon" width="16" height="16">
             <path id="pathIssue" fill-rule="evenodd"></path>
         </svg>
@@ -75,8 +85,13 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
 </div>
 </div>
     <div id="content">
-<div class="markdown-body" id="postBody"><p>这是一个测试!<br>
-This is a test!</p></div>
+<div class="markdown-body" id="postBody"><h2>对强化学习进行系统性的学习</h2>
+<ol>
+<li><a href="https://rl.qiwihui.com/zh-cn/latest/" rel="nofollow">Reinforcement Learning: An Introduction</a> 强化学习导论</li>
+<li><a href="https://spinningup.qiwihui.com/zh-cn/latest/" rel="nofollow">Openai Spinning Up</a> OpenAI 深度强化学习</li>
+</ol>
+<h2>知乎 大模型相关</h2>
+<h2>苏剑林博客</h2></div>
 <div style="font-size:small;margin-top:8px;float:right;">转载无需注明出处</div>
 
 <button class="btn btn-block" type="button" onclick="openComments()" id="cmButton">评论</button>
@@ -135,11 +150,7 @@ console.log("\n %c Gmeek last https://github.com/Meekdai/Gmeek \n","padding:5px 
 <script>
 document.getElementById("pathHome").setAttribute("d",IconList["home"]);
 document.getElementById("pathIssue").setAttribute("d",IconList["github"]);
-cmButton=document.getElementById("cmButton");
-    span=document.createElement("span");
-    span.setAttribute("class","Counter");
-    span.innerHTML="2";
-    cmButton.appendChild(span);
+
 
 
 function openComments(){
