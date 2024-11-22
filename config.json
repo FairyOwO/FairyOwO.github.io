@@ -1,6 +1,14 @@
 {
-    "title":"Blog Title",
-    "subTitle":"Blog description",
+    "title":"FairyOwO 的 Blog",
+    "subTitle":"记录一些琐事",
     "avatarUrl":"https://github.githubassets.com/favicons/favicon.svg",
-    "GMEEK_VERSION":"last"
+    "GMEEK_VERSION":"last",
+    "UTC":8,
+    "i18n":"CN",
+    "email":"740614599@qq.com",
+    "dayTheme":"light",
+    "nightTheme":"dark_colorblind",
+    "needComment":1,
+    "bottomText":"转载无需注明出处",
+    "startSite":"11/22/2024"
 }
