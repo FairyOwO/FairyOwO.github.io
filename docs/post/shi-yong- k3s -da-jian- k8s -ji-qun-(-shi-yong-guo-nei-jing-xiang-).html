@@ -266,7 +266,7 @@ echo http://$NODE_IP:$NODE_PORT
 > ```sh
 > kubectl port-forward --address 0.0.0.0 kubepi-d8477f9d8-drthz -n kube-system 2999:80
 > ```
-> 此命令不会中断, 会持续运行
+> 此命令不会中断, 会持续运行, 需要把这条命令中的 `kubepi-d8477f9d8-drthz` 换成实际名字
 
 登陆系统
 
@@ -294,7 +294,13 @@ cat k3s.yaml
 
 ## 部署项目
 
-待研究更新。">
+在 kubepi 中 选择集群, 应用市场, chart 仓库, 填入相关信息, 这里我使用的是:
+```text
+开源社: http://mirror.kaiyuanshe.cn/kubernetes/charts/
+开源应用市场: https://charts.grapps.cn
+```
+
+点开应用就有很多项目跳出来可以部署。">
 <meta property="og:title" content="使用 k3s 搭建 k8s 集群(使用国内镜像)">
 <meta property="og:description" content="> 历史文章搬运
 
@@ -552,7 +558,7 @@ echo http://$NODE_IP:$NODE_PORT
 > ```sh
 > kubectl port-forward --address 0.0.0.0 kubepi-d8477f9d8-drthz -n kube-system 2999:80
 > ```
-> 此命令不会中断, 会持续运行
+> 此命令不会中断, 会持续运行, 需要把这条命令中的 `kubepi-d8477f9d8-drthz` 换成实际名字
 
 登陆系统
 
@@ -580,7 +586,13 @@ cat k3s.yaml
 
 ## 部署项目
 
-待研究更新。">
+在 kubepi 中 选择集群, 应用市场, chart 仓库, 填入相关信息, 这里我使用的是:
+```text
+开源社: http://mirror.kaiyuanshe.cn/kubernetes/charts/
+开源应用市场: https://charts.grapps.cn
+```
+
+点开应用就有很多项目跳出来可以部署。">
 <meta property="og:type" content="article">
 <meta property="og:url" content="https://FairyOwO.github.io/post/shi-yong-%20k3s%20-da-jian-%20k8s%20-ji-qun-%28-shi-yong-guo-nei-jing-xiang-%29.html">
 <meta property="og:image" content="https://github.githubassets.com/favicons/favicon.svg">
@@ -871,7 +883,7 @@ sudo kubectl apply -f https://raw.githubusercontent.com/1Panel-dev/KubePi/master
 <blockquote>
 <p>注: 内网组机子的时候这里会是内网地址, 需要使用端口转发转发到 <code class="notranslate">0.0.0.0</code> 之后才能外网访问</p>
 <div class="highlight highlight-source-shell"><pre class="notranslate">kubectl port-forward --address 0.0.0.0 kubepi-d8477f9d8-drthz -n kube-system 2999:80</pre></div>
-<p>此命令不会中断, 会持续运行</p>
+<p>此命令不会中断, 会持续运行, 需要把这条命令中的 <code class="notranslate">kubepi-d8477f9d8-drthz</code> 换成实际名字</p>
 </blockquote>
 <p>登陆系统</p>
 <pre lang="text" class="notranslate"><code class="notranslate">地址: http://$NODE_IP:$NODE_PORT
@@ -887,7 +899,11 @@ cat k3s.yaml</pre></div>
 <p>在集群配置中, 配置一下网络, 使之可以直接通过外网端口访问</p>
 <p>具体配置流程忘了, 此方法由同事指点</p>
 <h2>部署项目</h2>
-<p>待研究更新</p></div>
+<p>在 kubepi 中 选择集群, 应用市场, chart 仓库, 填入相关信息, 这里我使用的是:</p>
+<pre lang="text" class="notranslate"><code class="notranslate">开源社: http://mirror.kaiyuanshe.cn/kubernetes/charts/
+开源应用市场: https://charts.grapps.cn
+</code></pre>
+<p>点开应用就有很多项目跳出来可以部署</p></div>
 <div style="font-size:small;margin-top:8px;float:right;">转载无需注明出处</div>
 
 <button class="btn btn-block" type="button" onclick="openComments()" id="cmButton">评论</button>

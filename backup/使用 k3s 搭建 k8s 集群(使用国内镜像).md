@@ -254,7 +254,7 @@ echo http://$NODE_IP:$NODE_PORT
 > ```sh
 > kubectl port-forward --address 0.0.0.0 kubepi-d8477f9d8-drthz -n kube-system 2999:80
 > ```
-> 此命令不会中断, 会持续运行
+> 此命令不会中断, 会持续运行, 需要把这条命令中的 `kubepi-d8477f9d8-drthz` 换成实际名字
 
 登陆系统
 
@@ -282,4 +282,10 @@ cat k3s.yaml
 
 ## 部署项目
 
-待研究更新
+在 kubepi 中 选择集群, 应用市场, chart 仓库, 填入相关信息, 这里我使用的是:
+```text
+开源社: http://mirror.kaiyuanshe.cn/kubernetes/charts/
+开源应用市场: https://charts.grapps.cn
+```
+
+点开应用就有很多项目跳出来可以部署
