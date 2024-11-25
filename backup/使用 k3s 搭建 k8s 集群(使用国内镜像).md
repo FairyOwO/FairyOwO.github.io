@@ -13,7 +13,7 @@
 <p>
 
 ```sh
-deb https://mirrors.tuna.tsinghua.edu.cn/debian/ bookworm main contrib non-free non-free-firmware
+echo "deb https://mirrors.tuna.tsinghua.edu.cn/debian/ bookworm main contrib non-free non-free-firmware
 deb-src https://mirrors.tuna.tsinghua.edu.cn/debian/ bookworm main contrib non-free non-free-firmware
 
 deb https://mirrors.tuna.tsinghua.edu.cn/debian/ bookworm-updates main contrib non-free non-free-firmware
@@ -24,7 +24,7 @@ deb-src https://mirrors.tuna.tsinghua.edu.cn/debian/ bookworm-backports main con
 
 # 以下安全更新软件源包含了官方源与镜像站配置，如有需要可自行修改注释切换
 deb https://security.debian.org/debian-security bookworm-security main contrib non-free non-free-firmware
-deb-src https://security.debian.org/debian-security bookworm-security main contrib non-free non-free-firmware
+deb-src https://security.debian.org/debian-security bookworm-security main contrib non-free non-free-firmware" > /etc/apt/sources.list
 
 apt update
 
@@ -76,7 +76,7 @@ systemctl restart k3s
 <p>
 
 ```sh
-deb https://mirrors.tuna.tsinghua.edu.cn/debian/ bookworm main contrib non-free non-free-firmware
+echo "deb https://mirrors.tuna.tsinghua.edu.cn/debian/ bookworm main contrib non-free non-free-firmware
 deb-src https://mirrors.tuna.tsinghua.edu.cn/debian/ bookworm main contrib non-free non-free-firmware
 
 deb https://mirrors.tuna.tsinghua.edu.cn/debian/ bookworm-updates main contrib non-free non-free-firmware
@@ -87,7 +87,7 @@ deb-src https://mirrors.tuna.tsinghua.edu.cn/debian/ bookworm-backports main con
 
 # 以下安全更新软件源包含了官方源与镜像站配置，如有需要可自行修改注释切换
 deb https://security.debian.org/debian-security bookworm-security main contrib non-free non-free-firmware
-deb-src https://security.debian.org/debian-security bookworm-security main contrib non-free non-free-firmware
+deb-src https://security.debian.org/debian-security bookworm-security main contrib non-free non-free-firmware" > /etc/apt/sources.list
 
 apt update
 
@@ -139,7 +139,7 @@ client sh脚本
 <p>
 
 ```sh
-deb https://mirrors.tuna.tsinghua.edu.cn/debian/ bookworm main contrib non-free non-free-firmware
+echo "deb https://mirrors.tuna.tsinghua.edu.cn/debian/ bookworm main contrib non-free non-free-firmware
 deb-src https://mirrors.tuna.tsinghua.edu.cn/debian/ bookworm main contrib non-free non-free-firmware
 
 deb https://mirrors.tuna.tsinghua.edu.cn/debian/ bookworm-updates main contrib non-free non-free-firmware
@@ -150,7 +150,7 @@ deb-src https://mirrors.tuna.tsinghua.edu.cn/debian/ bookworm-backports main con
 
 # 以下安全更新软件源包含了官方源与镜像站配置，如有需要可自行修改注释切换
 deb https://security.debian.org/debian-security bookworm-security main contrib non-free non-free-firmware
-deb-src https://security.debian.org/debian-security bookworm-security main contrib non-free non-free-firmware
+deb-src https://security.debian.org/debian-security bookworm-security main contrib non-free non-free-firmware" > /etc/apt/sources.list
 
 apt update
 
