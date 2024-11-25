@@ -36,7 +36,7 @@ deb-src https://mirrors.tuna.tsinghua.edu.cn/debian/ bookworm-backports main con
 
 # 以下安全更新软件源包含了官方源与镜像站配置，如有需要可自行修改注释切换
 deb https://security.debian.org/debian-security bookworm-security main contrib non-free non-free-firmware
-deb-src https://security.debian.org/debian-security bookworm-security main contrib non-free non-free-firmware' > /etc/apt/sources.list
+deb-src https://security.debian.org/debian-security bookworm-security main contrib non-free non-free-firmware
 
 apt update
 
@@ -99,7 +99,7 @@ deb-src https://mirrors.tuna.tsinghua.edu.cn/debian/ bookworm-backports main con
 
 # 以下安全更新软件源包含了官方源与镜像站配置，如有需要可自行修改注释切换
 deb https://security.debian.org/debian-security bookworm-security main contrib non-free non-free-firmware
-deb-src https://security.debian.org/debian-security bookworm-security main contrib non-free non-free-firmware' > /etc/apt/sources.list
+deb-src https://security.debian.org/debian-security bookworm-security main contrib non-free non-free-firmware
 
 apt update
 
@@ -162,7 +162,7 @@ deb-src https://mirrors.tuna.tsinghua.edu.cn/debian/ bookworm-backports main con
 
 # 以下安全更新软件源包含了官方源与镜像站配置，如有需要可自行修改注释切换
 deb https://security.debian.org/debian-security bookworm-security main contrib non-free non-free-firmware
-deb-src https://security.debian.org/debian-security bookworm-security main contrib non-free non-free-firmware' > /etc/apt/sources.list
+deb-src https://security.debian.org/debian-security bookworm-security main contrib non-free non-free-firmware
 
 apt update
 
@@ -328,7 +328,7 @@ deb-src https://mirrors.tuna.tsinghua.edu.cn/debian/ bookworm-backports main con
 
 # 以下安全更新软件源包含了官方源与镜像站配置，如有需要可自行修改注释切换
 deb https://security.debian.org/debian-security bookworm-security main contrib non-free non-free-firmware
-deb-src https://security.debian.org/debian-security bookworm-security main contrib non-free non-free-firmware' > /etc/apt/sources.list
+deb-src https://security.debian.org/debian-security bookworm-security main contrib non-free non-free-firmware
 
 apt update
 
@@ -391,7 +391,7 @@ deb-src https://mirrors.tuna.tsinghua.edu.cn/debian/ bookworm-backports main con
 
 # 以下安全更新软件源包含了官方源与镜像站配置，如有需要可自行修改注释切换
 deb https://security.debian.org/debian-security bookworm-security main contrib non-free non-free-firmware
-deb-src https://security.debian.org/debian-security bookworm-security main contrib non-free non-free-firmware' > /etc/apt/sources.list
+deb-src https://security.debian.org/debian-security bookworm-security main contrib non-free non-free-firmware
 
 apt update
 
@@ -454,7 +454,7 @@ deb-src https://mirrors.tuna.tsinghua.edu.cn/debian/ bookworm-backports main con
 
 # 以下安全更新软件源包含了官方源与镜像站配置，如有需要可自行修改注释切换
 deb https://security.debian.org/debian-security bookworm-security main contrib non-free non-free-firmware
-deb-src https://security.debian.org/debian-security bookworm-security main contrib non-free non-free-firmware' > /etc/apt/sources.list
+deb-src https://security.debian.org/debian-security bookworm-security main contrib non-free non-free-firmware
 
 apt update
 
@@ -684,47 +684,47 @@ deb-src https://mirrors.tuna.tsinghua.edu.cn/debian/ bookworm-backports main con
 
 <span class="pl-c"><span class="pl-c">#</span> 以下安全更新软件源包含了官方源与镜像站配置，如有需要可自行修改注释切换</span>
 deb https://security.debian.org/debian-security bookworm-security main contrib non-free non-free-firmware
-deb-src https://security.debian.org/debian-security bookworm-security main contrib non-free non-free-firmware<span class="pl-s"><span class="pl-pds">"</span> &gt; /etc/apt/sources.list</span>
-<span class="pl-s"></span>
-<span class="pl-s">apt update</span>
-<span class="pl-s"></span>
-<span class="pl-s">curl -sfL https://rancher-mirror.rancher.cn/k3s/k3s-install.sh | <span class="pl-cce">\</span></span>
-<span class="pl-s">  INSTALL_K3S_MIRROR=cn <span class="pl-cce">\</span></span>
-<span class="pl-s">  sh -s - server <span class="pl-cce">\</span></span>
-<span class="pl-s">  --cluster-init <span class="pl-cce">\</span></span>
-<span class="pl-s">  --system-default-registry=registry.cn-hangzhou.aliyuncs.com</span>
-<span class="pl-s"></span>
-<span class="pl-s">cat /var/lib/rancher/k3s/server/token</span>
-<span class="pl-s"></span>
-<span class="pl-s">cat &gt;&gt; /etc/rancher/k3s/registries.yaml &lt;&lt; EOF</span>
+deb-src https://security.debian.org/debian-security bookworm-security main contrib non-free non-free-firmware
+
+apt update
+
+curl -sfL https://rancher-mirror.rancher.cn/k3s/k3s-install.sh <span class="pl-k">|</span> \
+  INSTALL_K3S_MIRROR=cn \
+  sh -s - server \
+  --cluster-init \
+  --system-default-registry=registry.cn-hangzhou.aliyuncs.com
+
+cat /var/lib/rancher/k3s/server/token
+
+cat <span class="pl-k">&gt;&gt;</span> /etc/rancher/k3s/registries.yaml <span class="pl-s"><span class="pl-k">&lt;&lt;</span> <span class="pl-k">EOF</span></span>
 <span class="pl-s">mirrors:</span>
 <span class="pl-s">  docker.io:</span>
 <span class="pl-s">    endpoint:</span>
-<span class="pl-s">      - <span class="pl-pds">"</span></span>https://dockerproxy.net<span class="pl-s"><span class="pl-pds">"</span></span>
-<span class="pl-s">      - <span class="pl-pds">"</span></span>https://registry.cn-hangzhou.aliyuncs.com/<span class="pl-s"><span class="pl-pds">"</span></span>
-<span class="pl-s">      - <span class="pl-pds">"</span></span>https://mirror.ccs.tencentyun.com<span class="pl-s"><span class="pl-pds">"</span></span>
+<span class="pl-s">      - "https://dockerproxy.net"</span>
+<span class="pl-s">      - "https://registry.cn-hangzhou.aliyuncs.com/"</span>
+<span class="pl-s">      - "https://mirror.ccs.tencentyun.com"</span>
 <span class="pl-s">  k8s.gcr.io:</span>
 <span class="pl-s">    endpoint:</span>
-<span class="pl-s">      - <span class="pl-pds">"</span></span>https://k8s.dockerproxy.net<span class="pl-s"><span class="pl-pds">"</span></span>
-<span class="pl-s">      - <span class="pl-pds">"</span></span>https://registry.aliyuncs.com/google_containers<span class="pl-s"><span class="pl-pds">"</span></span>
+<span class="pl-s">      - "https://k8s.dockerproxy.net"</span>
+<span class="pl-s">      - "https://registry.aliyuncs.com/google_containers"</span>
 <span class="pl-s">  ghcr.io:</span>
 <span class="pl-s">    endpoint:</span>
-<span class="pl-s">      - <span class="pl-pds">"</span></span>https://ghcr.dockerproxy.net<span class="pl-s"><span class="pl-pds">"</span></span>
-<span class="pl-s">      - <span class="pl-pds">"</span></span>https://ghcr.m.daocloud.io/<span class="pl-s"><span class="pl-pds">"</span></span>
+<span class="pl-s">      - "https://ghcr.dockerproxy.net"</span>
+<span class="pl-s">      - "https://ghcr.m.daocloud.io/"</span>
 <span class="pl-s">  gcr.io:</span>
 <span class="pl-s">    endpoint:</span>
-<span class="pl-s">      - <span class="pl-pds">"</span></span>https://gcr.dockerproxy.net<span class="pl-s"><span class="pl-pds">"</span></span>
-<span class="pl-s">      - <span class="pl-pds">"</span></span>https://gcr.m.daocloud.io/<span class="pl-s"><span class="pl-pds">"</span></span>
+<span class="pl-s">      - "https://gcr.dockerproxy.net"</span>
+<span class="pl-s">      - "https://gcr.m.daocloud.io/"</span>
 <span class="pl-s">  quay.io:</span>
 <span class="pl-s">    endpoint:</span>
-<span class="pl-s">      - <span class="pl-pds">"</span></span>https://quay.dockerproxy.net<span class="pl-s"><span class="pl-pds">"</span></span>
-<span class="pl-s">      - <span class="pl-pds">"</span></span>https://quay.tencentcloudcr.com/<span class="pl-s"><span class="pl-pds">"</span></span>
+<span class="pl-s">      - "https://quay.dockerproxy.net"</span>
+<span class="pl-s">      - "https://quay.tencentcloudcr.com/"</span>
 <span class="pl-s">  registry.k8s.io:</span>
 <span class="pl-s">    endpoint:</span>
-<span class="pl-s">      - <span class="pl-pds">"</span></span>https://k8s.dockerproxy.net<span class="pl-s"><span class="pl-pds">"</span></span>
-<span class="pl-s">      - <span class="pl-pds">"</span></span>https://registry.aliyuncs.com/v2/google_containers<span class="pl-s"><span class="pl-pds">"</span></span>
-<span class="pl-s">EOF</span>
-<span class="pl-s">systemctl restart k3s</span></pre></div>
+<span class="pl-s">      - "https://k8s.dockerproxy.net"</span>
+<span class="pl-s">      - "https://registry.aliyuncs.com/v2/google_containers"</span>
+<span class="pl-s"><span class="pl-k">EOF</span></span>
+systemctl restart k3s</pre></div>
 <p></p>
 </details> 
 <p>副 server sh脚本</p>
@@ -741,47 +741,47 @@ deb-src https://mirrors.tuna.tsinghua.edu.cn/debian/ bookworm-backports main con
 
 <span class="pl-c"><span class="pl-c">#</span> 以下安全更新软件源包含了官方源与镜像站配置，如有需要可自行修改注释切换</span>
 deb https://security.debian.org/debian-security bookworm-security main contrib non-free non-free-firmware
-deb-src https://security.debian.org/debian-security bookworm-security main contrib non-free non-free-firmware<span class="pl-s"><span class="pl-pds">"</span> &gt; /etc/apt/sources.list</span>
-<span class="pl-s"></span>
-<span class="pl-s">apt update</span>
-<span class="pl-s"></span>
-<span class="pl-s">curl -sfL https://rancher-mirror.rancher.cn/k3s/k3s-install.sh | <span class="pl-cce">\</span></span>
-<span class="pl-s">  INSTALL_K3S_MIRROR=cn <span class="pl-cce">\</span></span>
-<span class="pl-s">  sh -s - server <span class="pl-cce">\</span></span>
-<span class="pl-s">  --cluster-init <span class="pl-cce">\</span></span>
-<span class="pl-s">  --system-default-registry=registry.cn-hangzhou.aliyuncs.com</span>
-<span class="pl-s"></span>
-<span class="pl-s">cat /var/lib/rancher/k3s/server/token</span>
-<span class="pl-s"></span>
-<span class="pl-s">cat &gt;&gt; /etc/rancher/k3s/registries.yaml &lt;&lt; EOF</span>
+deb-src https://security.debian.org/debian-security bookworm-security main contrib non-free non-free-firmware
+
+apt update
+
+curl -sfL https://rancher-mirror.rancher.cn/k3s/k3s-install.sh <span class="pl-k">|</span> \
+  INSTALL_K3S_MIRROR=cn \
+  sh -s - server \
+  --cluster-init \
+  --system-default-registry=registry.cn-hangzhou.aliyuncs.com
+
+cat /var/lib/rancher/k3s/server/token
+
+cat <span class="pl-k">&gt;&gt;</span> /etc/rancher/k3s/registries.yaml <span class="pl-s"><span class="pl-k">&lt;&lt;</span> <span class="pl-k">EOF</span></span>
 <span class="pl-s">mirrors:</span>
 <span class="pl-s">  docker.io:</span>
 <span class="pl-s">    endpoint:</span>
-<span class="pl-s">      - <span class="pl-pds">"</span></span>https://dockerproxy.net<span class="pl-s"><span class="pl-pds">"</span></span>
-<span class="pl-s">      - <span class="pl-pds">"</span></span>https://registry.cn-hangzhou.aliyuncs.com/<span class="pl-s"><span class="pl-pds">"</span></span>
-<span class="pl-s">      - <span class="pl-pds">"</span></span>https://mirror.ccs.tencentyun.com<span class="pl-s"><span class="pl-pds">"</span></span>
+<span class="pl-s">      - "https://dockerproxy.net"</span>
+<span class="pl-s">      - "https://registry.cn-hangzhou.aliyuncs.com/"</span>
+<span class="pl-s">      - "https://mirror.ccs.tencentyun.com"</span>
 <span class="pl-s">  k8s.gcr.io:</span>
 <span class="pl-s">    endpoint:</span>
-<span class="pl-s">      - <span class="pl-pds">"</span></span>https://k8s.dockerproxy.net<span class="pl-s"><span class="pl-pds">"</span></span>
-<span class="pl-s">      - <span class="pl-pds">"</span></span>https://registry.aliyuncs.com/google_containers<span class="pl-s"><span class="pl-pds">"</span></span>
+<span class="pl-s">      - "https://k8s.dockerproxy.net"</span>
+<span class="pl-s">      - "https://registry.aliyuncs.com/google_containers"</span>
 <span class="pl-s">  ghcr.io:</span>
 <span class="pl-s">    endpoint:</span>
-<span class="pl-s">      - <span class="pl-pds">"</span></span>https://ghcr.dockerproxy.net<span class="pl-s"><span class="pl-pds">"</span></span>
-<span class="pl-s">      - <span class="pl-pds">"</span></span>https://ghcr.m.daocloud.io/<span class="pl-s"><span class="pl-pds">"</span></span>
+<span class="pl-s">      - "https://ghcr.dockerproxy.net"</span>
+<span class="pl-s">      - "https://ghcr.m.daocloud.io/"</span>
 <span class="pl-s">  gcr.io:</span>
 <span class="pl-s">    endpoint:</span>
-<span class="pl-s">      - <span class="pl-pds">"</span></span>https://gcr.dockerproxy.net<span class="pl-s"><span class="pl-pds">"</span></span>
-<span class="pl-s">      - <span class="pl-pds">"</span></span>https://gcr.m.daocloud.io/<span class="pl-s"><span class="pl-pds">"</span></span>
+<span class="pl-s">      - "https://gcr.dockerproxy.net"</span>
+<span class="pl-s">      - "https://gcr.m.daocloud.io/"</span>
 <span class="pl-s">  quay.io:</span>
 <span class="pl-s">    endpoint:</span>
-<span class="pl-s">      - <span class="pl-pds">"</span></span>https://quay.dockerproxy.net<span class="pl-s"><span class="pl-pds">"</span></span>
-<span class="pl-s">      - <span class="pl-pds">"</span></span>https://quay.tencentcloudcr.com/<span class="pl-s"><span class="pl-pds">"</span></span>
+<span class="pl-s">      - "https://quay.dockerproxy.net"</span>
+<span class="pl-s">      - "https://quay.tencentcloudcr.com/"</span>
 <span class="pl-s">  registry.k8s.io:</span>
 <span class="pl-s">    endpoint:</span>
-<span class="pl-s">      - <span class="pl-pds">"</span></span>https://k8s.dockerproxy.net<span class="pl-s"><span class="pl-pds">"</span></span>
-<span class="pl-s">      - <span class="pl-pds">"</span></span>https://registry.aliyuncs.com/v2/google_containers<span class="pl-s"><span class="pl-pds">"</span></span>
-<span class="pl-s">EOF</span>
-<span class="pl-s">systemctl restart k3s</span></pre></div>
+<span class="pl-s">      - "https://k8s.dockerproxy.net"</span>
+<span class="pl-s">      - "https://registry.aliyuncs.com/v2/google_containers"</span>
+<span class="pl-s"><span class="pl-k">EOF</span></span>
+systemctl restart k3s</pre></div>
 <p></p>
 </details> 
 <p>client sh脚本</p>
@@ -798,46 +798,46 @@ deb-src https://mirrors.tuna.tsinghua.edu.cn/debian/ bookworm-backports main con
 
 <span class="pl-c"><span class="pl-c">#</span> 以下安全更新软件源包含了官方源与镜像站配置，如有需要可自行修改注释切换</span>
 deb https://security.debian.org/debian-security bookworm-security main contrib non-free non-free-firmware
-deb-src https://security.debian.org/debian-security bookworm-security main contrib non-free non-free-firmware<span class="pl-s"><span class="pl-pds">"</span> &gt; /etc/apt/sources.list</span>
-<span class="pl-s"></span>
-<span class="pl-s">apt update</span>
-<span class="pl-s"></span>
-<span class="pl-s">curl -sfL https://rancher-mirror.rancher.cn/k3s/k3s-install.sh | <span class="pl-cce">\</span></span>
-<span class="pl-s">  INSTALL_K3S_MIRROR=cn <span class="pl-cce">\</span></span>
-<span class="pl-s">  K3S_URL=https://ip:6443 <span class="pl-cce">\</span></span>
-<span class="pl-s">  K3S_TOKEN=your_token <span class="pl-cce">\</span></span>
-<span class="pl-s">  sh -</span>
-<span class="pl-s"></span>
-<span class="pl-s">mkdir -p /etc/rancher/k3s</span>
-<span class="pl-s">cat &gt;&gt; /etc/rancher/k3s/registries.yaml &lt;&lt; EOF</span>
+deb-src https://security.debian.org/debian-security bookworm-security main contrib non-free non-free-firmware
+
+apt update
+
+curl -sfL https://rancher-mirror.rancher.cn/k3s/k3s-install.sh <span class="pl-k">|</span> \
+  INSTALL_K3S_MIRROR=cn \
+  K3S_URL=https://ip:6443 \
+  K3S_TOKEN=your_token \
+  sh -
+
+mkdir -p /etc/rancher/k3s
+cat <span class="pl-k">&gt;&gt;</span> /etc/rancher/k3s/registries.yaml <span class="pl-s"><span class="pl-k">&lt;&lt;</span> <span class="pl-k">EOF</span></span>
 <span class="pl-s">mirrors:</span>
 <span class="pl-s">  docker.io:</span>
 <span class="pl-s">    endpoint:</span>
-<span class="pl-s">      - <span class="pl-pds">"</span></span>https://dockerproxy.net<span class="pl-s"><span class="pl-pds">"</span></span>
-<span class="pl-s">      - <span class="pl-pds">"</span></span>https://registry.cn-hangzhou.aliyuncs.com/<span class="pl-s"><span class="pl-pds">"</span></span>
-<span class="pl-s">      - <span class="pl-pds">"</span></span>https://mirror.ccs.tencentyun.com<span class="pl-s"><span class="pl-pds">"</span></span>
+<span class="pl-s">      - "https://dockerproxy.net"</span>
+<span class="pl-s">      - "https://registry.cn-hangzhou.aliyuncs.com/"</span>
+<span class="pl-s">      - "https://mirror.ccs.tencentyun.com"</span>
 <span class="pl-s">  k8s.gcr.io:</span>
 <span class="pl-s">    endpoint:</span>
-<span class="pl-s">      - <span class="pl-pds">"</span></span>https://k8s.dockerproxy.net<span class="pl-s"><span class="pl-pds">"</span></span>
-<span class="pl-s">      - <span class="pl-pds">"</span></span>https://registry.aliyuncs.com/google_containers<span class="pl-s"><span class="pl-pds">"</span></span>
+<span class="pl-s">      - "https://k8s.dockerproxy.net"</span>
+<span class="pl-s">      - "https://registry.aliyuncs.com/google_containers"</span>
 <span class="pl-s">  ghcr.io:</span>
 <span class="pl-s">    endpoint:</span>
-<span class="pl-s">      - <span class="pl-pds">"</span></span>https://ghcr.dockerproxy.net<span class="pl-s"><span class="pl-pds">"</span></span>
-<span class="pl-s">      - <span class="pl-pds">"</span></span>https://ghcr.m.daocloud.io/<span class="pl-s"><span class="pl-pds">"</span></span>
+<span class="pl-s">      - "https://ghcr.dockerproxy.net"</span>
+<span class="pl-s">      - "https://ghcr.m.daocloud.io/"</span>
 <span class="pl-s">  gcr.io:</span>
 <span class="pl-s">    endpoint:</span>
-<span class="pl-s">      - <span class="pl-pds">"</span></span>https://gcr.dockerproxy.net<span class="pl-s"><span class="pl-pds">"</span></span>
-<span class="pl-s">      - <span class="pl-pds">"</span></span>https://gcr.m.daocloud.io/<span class="pl-s"><span class="pl-pds">"</span></span>
+<span class="pl-s">      - "https://gcr.dockerproxy.net"</span>
+<span class="pl-s">      - "https://gcr.m.daocloud.io/"</span>
 <span class="pl-s">  quay.io:</span>
 <span class="pl-s">    endpoint:</span>
-<span class="pl-s">      - <span class="pl-pds">"</span></span>https://quay.dockerproxy.net<span class="pl-s"><span class="pl-pds">"</span></span>
-<span class="pl-s">      - <span class="pl-pds">"</span></span>https://quay.tencentcloudcr.com/<span class="pl-s"><span class="pl-pds">"</span></span>
+<span class="pl-s">      - "https://quay.dockerproxy.net"</span>
+<span class="pl-s">      - "https://quay.tencentcloudcr.com/"</span>
 <span class="pl-s">  registry.k8s.io:</span>
 <span class="pl-s">    endpoint:</span>
-<span class="pl-s">      - <span class="pl-pds">"</span></span>https://k8s.dockerproxy.net<span class="pl-s"><span class="pl-pds">"</span></span>
-<span class="pl-s">      - <span class="pl-pds">"</span></span>https://registry.aliyuncs.com/v2/google_containers<span class="pl-s"><span class="pl-pds">"</span></span>
-<span class="pl-s">EOF</span>
-<span class="pl-s">systemctl restart k3s-agent</span></pre></div>
+<span class="pl-s">      - "https://k8s.dockerproxy.net"</span>
+<span class="pl-s">      - "https://registry.aliyuncs.com/v2/google_containers"</span>
+<span class="pl-s"><span class="pl-k">EOF</span></span>
+systemctl restart k3s-agent</pre></div>
 <p></p>
 </details> 
 <blockquote>

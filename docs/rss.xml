@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0"><channel><title>FairyOwO 的 Blog</title><link>https://FairyOwO.github.io</link><description>记录一些琐事</description><copyright>FairyOwO 的 Blog</copyright><docs>http://www.rssboard.org/rss-specification</docs><generator>python-feedgen</generator><image><url>https://github.githubassets.com/favicons/favicon.svg</url><title>avatar</title><link>https://FairyOwO.github.io</link></image><lastBuildDate>Fri, 22 Nov 2024 12:28:58 +0000</lastBuildDate><managingEditor>FairyOwO 的 Blog</managingEditor><ttl>60</ttl><webMaster>FairyOwO 的 Blog</webMaster><item><title>使用 k3s 搭建 k8s 集群(使用国内镜像)</title><link>https://FairyOwO.github.io/post/shi-yong-%20k3s%20-da-jian-%20k8s%20-ji-qun-%28-shi-yong-guo-nei-jing-xiang-%29.html</link><description>&gt; 历史文章搬运&#13;
+<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0"><channel><title>FairyOwO 的 Blog</title><link>https://FairyOwO.github.io</link><description>记录一些琐事</description><copyright>FairyOwO 的 Blog</copyright><docs>http://www.rssboard.org/rss-specification</docs><generator>python-feedgen</generator><image><url>https://github.githubassets.com/favicons/favicon.svg</url><title>avatar</title><link>https://FairyOwO.github.io</link></image><lastBuildDate>Mon, 25 Nov 2024 02:45:58 +0000</lastBuildDate><managingEditor>FairyOwO 的 Blog</managingEditor><ttl>60</ttl><webMaster>FairyOwO 的 Blog</webMaster><item><title>使用 k3s 搭建 k8s 集群(使用国内镜像)</title><link>https://FairyOwO.github.io/post/shi-yong-%20k3s%20-da-jian-%20k8s%20-ji-qun-%28-shi-yong-guo-nei-jing-xiang-%29.html</link><description>&gt; 历史文章搬运&#13;
 &#13;
 需求之初是想对年抛机, 月抛机进行统一的管理, 方便部署相关镜像, 类似于史莱姆的结构(拿到新的机器, 加入集群, 机器时间过期, 自动离线, 伸缩重启分配全由集群本身管理)&#13;
 &#13;
@@ -25,7 +25,7 @@ deb-src https://mirrors.tuna.tsinghua.edu.cn/debian/ bookworm-backports main con
 &#13;
 # 以下安全更新软件源包含了官方源与镜像站配置，如有需要可自行修改注释切换&#13;
 deb https://security.debian.org/debian-security bookworm-security main contrib non-free non-free-firmware&#13;
-deb-src https://security.debian.org/debian-security bookworm-security main contrib non-free non-free-firmware' &gt; /etc/apt/sources.list&#13;
+deb-src https://security.debian.org/debian-security bookworm-security main contrib non-free non-free-firmware&#13;
 &#13;
 apt update&#13;
 &#13;
@@ -88,7 +88,7 @@ deb-src https://mirrors.tuna.tsinghua.edu.cn/debian/ bookworm-backports main con
 &#13;
 # 以下安全更新软件源包含了官方源与镜像站配置，如有需要可自行修改注释切换&#13;
 deb https://security.debian.org/debian-security bookworm-security main contrib non-free non-free-firmware&#13;
-deb-src https://security.debian.org/debian-security bookworm-security main contrib non-free non-free-firmware' &gt; /etc/apt/sources.list&#13;
+deb-src https://security.debian.org/debian-security bookworm-security main contrib non-free non-free-firmware&#13;
 &#13;
 apt update&#13;
 &#13;
@@ -151,7 +151,7 @@ deb-src https://mirrors.tuna.tsinghua.edu.cn/debian/ bookworm-backports main con
 &#13;
 # 以下安全更新软件源包含了官方源与镜像站配置，如有需要可自行修改注释切换&#13;
 deb https://security.debian.org/debian-security bookworm-security main contrib non-free non-free-firmware&#13;
-deb-src https://security.debian.org/debian-security bookworm-security main contrib non-free non-free-firmware' &gt; /etc/apt/sources.list&#13;
+deb-src https://security.debian.org/debian-security bookworm-security main contrib non-free non-free-firmware&#13;
 &#13;
 apt update&#13;
 &#13;
