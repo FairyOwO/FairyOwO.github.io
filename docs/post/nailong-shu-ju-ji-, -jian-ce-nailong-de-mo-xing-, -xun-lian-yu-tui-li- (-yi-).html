@@ -549,18 +549,522 @@ if __name__ == '__main__':
 </p>
 </details> 
 
-<details><summary>train.py(代码未整理完毕)</summary>
+`trainer.py` 简单整合了几个常用的训练手段, 比如混合精度训练, 梯度裁剪, 梯度累计, weight_decay(写死了), tensorboard的记录, 断点续训等操作, 需要注意的是, `trainer.py` 没有使用 epoch 作为训练进度, 而是用了更精细的 step (每次迭代参数即为一个step), 使用的时候需要自行实现模型构建, 损失函数构建 学习率调度器 数据集加载器, 单步训练, 验证的流程的子类实现
+
+然后将一些配置放到config中便于读取, 其中有一些配置是必须的, 其他则是子类实现的时候需要的
+
+听起来可能有点抽象, 下面是一个简单的trainer使用案例
+
+<details><summary>trainer使用案例</summary>
+<p>
+
+import torchvision
+import torch
+from trainer import Trainer
+from torchvision.models import resnet18
+from torch.optim.lr_scheduler import LambdaLR
+
+
+
+transform = torchvision.transforms.Compose([
+    torchvision.transforms.ToTensor(),
+    torchvision.transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+])
+
+class ConstantLambdaLR(LambdaLR):
+    def __init__(self, optimizer, **kwargs):
+        kwargs['optimizer'] = optimizer
+        kwargs['lr_lambda'] = self._step_inner
+        super().__init__(**kwargs)
+
+    def _step_inner(self, steps):
+        return 1
+
+
+class Cifer10Trainer(Trainer):
+    def __init__(self, config):
+        super().__init__(config)
+
+    def build_model(self):
+        model = resnet18()
+        model.fc = torch.nn.Linear(model.fc.in_features, 10)
+        return model
+    
+    def build_criterion(self):
+        return torch.nn.CrossEntropyLoss()
+    
+    def build_scheduler(self):
+        return ConstantLambdaLR(self.optimizer)
+    
+    def build_dataloader(self):
+        train_dataset = torchvision.datasets.CIFAR10(root='./temp', train=True, download=True, transform=transform)
+        train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=self.config['batch_size'], shuffle=True, num_workers=1)
+        return train_loader
+    
+    def train_step(self, batch):
+        inputs, labels = batch
+        inputs, labels = inputs.to(self.device), labels.to(self.device)
+        outputs = self.model(inputs)
+        loss = self.criterion(outputs, labels)
+        return loss
+    
+    def validate(self):
+        self.model.eval()
+        test_dataset = torchvision.datasets.CIFAR10(root='./temp', train=False, download=True, transform=transform)
+        test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=self.config['batch_size'], shuffle=False, num_workers=1)
+        acc = []
+        with torch.inference_mode():
+            for batch in test_loader:
+                inputs, labels = batch
+                inputs, labels = inputs.to(self.device), labels.to(self.device)
+                y_hat = self.model(inputs)
+                acc.append((y_hat.argmax(dim=1) == labels).sum().item() / labels.size(0))
+                
+        return {'acc': sum(acc) / len(acc)}
+                
+
+def main():
+    config = {
+        'model': 'resnet18',
+        'checkpoint_dir': './checkpoints',
+        'tensorboard_dir': './tensorboard',
+        'device': 'cuda',
+        'enable_cudnn_benchmark': True,
+        'enable_amp': False,
+        'learning_rate': 1e-3,
+        'betas': [0.9, 0.999],
+        'eps': 1e-8,
+        'enable_compile': False,
+        'weight_decay': 0.05,
+        'max_steps': 500,
+        'max_grad_norm': 1.0,
+        'save_every': 100,
+        'gradient_accumulation_steps': 1,
+        'batch_size': 32
+    }
+    trainer = Cifer10Trainer(config)
+    trainer.train()
+    
+if __name__ == '__main__':
+    try:
+        main()
+    except KeyboardInterrupt:
+        pass
+
+</p>
+</details> 
+
+> 代码使用cifer10数据集, resnet18作为模型训练的简单的流程
+
+有了流程接下来编写我们的训练代码
+
+<details><summary>train.py(代码未整理完毕, 非初版代码, 仅供参考)</summary>
 <p>
 
 ```python
+import os
+import random
 
+import cv2
+import numpy as np
+from sklearn.metrics import f1_score
+import torch
+from PIL import Image
+from torch.optim.lr_scheduler import LambdaLR
+from torch.utils.data import DataLoader, Dataset
+from datasets import load_dataset
+from torchvision import transforms
+
+# from torchvision.models import resnet18
+from model import convnext_base
+from trainer import Trainer
+
+image_size = 224
+batch_size = 32
+device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
+
+
+# def get_color_from_image(image_path):
+#     '''
+#     从纯色图片中获取RGB颜色值
+#     返回: (R, G, B)元组
+#     '''
+#     # 读取图片
+#     image = Image.open(image_path).convert('RGB')
+#     # 转换为numpy数组
+#     img_array = np.array(image)
+    
+#     # 获取图片中心点的颜色值
+#     h, w = img_array.shape[:2]
+#     center_color = img_array[h//2, w//2]
+    
+#     # 或者计算整个图片的平均颜色
+#     average_color = img_array.mean(axis=(0,1)).astype(int)
+    
+#     return tuple(average_color)  # 或者 tuple(average_color)
+
+
+# class AugmentationUtils:
+#     @staticmethod
+#     def add_color_mask(image, is_positive):
+#         '''给图片添加颜色遮罩'''
+#         # 转换为numpy数组并确保类型为uint8
+#         image = np.array(image, dtype=np.uint8)
+        
+#         # 创建与图像相同大小的遮罩
+#         mask = np.ones_like(image, dtype=np.uint8)
+        
+#         # 随机生成颜色
+#         if is_positive:
+#             color = [random.randint(0, 255) for _ in range(3)]
+#         else:
+#             color = get_color_from_image('22.png')
+        
+#         # 为遮罩赋予颜色    
+#         for i in range(3):
+#             mask[:, :, i] = color[i]
+        
+#         # 确保mask也是uint8类型
+#         mask = mask.astype(np.uint8)
+        
+#         # 添加遮罩
+#         alpha = 0.5  # 透明度
+#         image = cv2.addWeighted(image, 1-alpha, mask, alpha, 0)
+        
+#         return Image.fromarray(image)
+
+#     @staticmethod
+#     def embed_positive_in_negative(positive_img, negative_img):
+#         '''在负样本中嵌入正样本'''
+#         # 转换为numpy数组
+#         pos_img = np.array(positive_img)
+#         neg_img = np.array(negative_img)
+        
+#         # 确保图像是3通道的
+#         if len(pos_img.shape) == 2:
+#             pos_img = cv2.cvtColor(pos_img, cv2.COLOR_GRAY2BGR)
+#         if len(neg_img.shape) == 2:
+#             neg_img = cv2.cvtColor(neg_img, cv2.COLOR_GRAY2BGR)
+        
+#         # 获取负样本尺寸
+#         h, w = neg_img.shape[:2]
+#         pos_h, pos_w = pos_img.shape[:2]
+        
+#         # 计算合适的缩放比例
+#         scale = min(
+#             random.uniform(0.5, 0.8),
+#             (w * 0.8) / pos_w,
+#             (h * 0.8) / pos_h
+#         )
+        
+#         # 缩放正样本
+#         new_size = (int(pos_w * scale), int(pos_h * scale))
+#         pos_img_resized = cv2.resize(pos_img, new_size)
+        
+#         # 确保有效的随机位置范围
+#         max_x = max(0, w - new_size[0])
+#         max_y = max(0, h - new_size[1])
+        
+#         # 随机选择插入位置
+#         x = random.randint(0, max_x) if max_x > 0 else 0
+#         y = random.randint(0, max_y) if max_y > 0 else 0
+        
+#         # 获取ROI区域并确保与缩放后的正样本具有相同的形状
+#         roi = neg_img[y:y+new_size[1], x:x+new_size[0]]
+        
+#         # 确保ROI和pos_img_resized具有相同的形状和通道数
+#         if roi.shape == pos_img_resized.shape:
+#             # 混合图像
+#             blended = cv2.addWeighted(roi, 0.3, pos_img_resized, 0.7, 0)
+#             neg_img[y:y+new_size[1], x:x+new_size[0]] = blended
+        
+#         return Image.fromarray(neg_img)
+    
+#     @staticmethod
+#     def embed_same(positive_img, negative_img):
+#         '''在负样本中嵌入正样本'''
+#         # 转换为numpy数组
+#         pos_img = np.array(positive_img)
+#         neg_img = np.array(negative_img)
+        
+#         # 确保图像是3通道的
+#         if len(pos_img.shape) == 2:
+#             pos_img = cv2.cvtColor(pos_img, cv2.COLOR_GRAY2BGR)
+#         if len(neg_img.shape) == 2:
+#             neg_img = cv2.cvtColor(neg_img, cv2.COLOR_GRAY2BGR)
+        
+#         # 获取负样本尺寸
+#         h, w = neg_img.shape[:2]
+#         pos_h, pos_w = pos_img.shape[:2]
+        
+#         # 计算合适的缩放比例
+#         scale = min(
+#             random.uniform(0.5, 0.8),
+#             (w * 0.8) / pos_w,
+#             (h * 0.8) / pos_h
+#         )
+        
+#         # 缩放正样本
+#         new_size = (int(pos_w * scale), int(pos_h * scale))
+#         pos_img_resized = cv2.resize(pos_img, new_size)
+        
+#         # 确保有效的随机位置范围
+#         max_x = max(0, w - new_size[0])
+#         max_y = max(0, h - new_size[1])
+        
+#         # 随机选择插入位置
+#         x = random.randint(0, max_x) if max_x > 0 else 0
+#         y = random.randint(0, max_y) if max_y > 0 else 0
+        
+#         # 获取ROI区域并确保与缩放后的正样本具有相同的形状
+#         roi = neg_img[y:y+new_size[1], x:x+new_size[0]]
+        
+#         # 确保ROI和pos_img_resized具有相同的形状和通道数
+#         if roi.shape == pos_img_resized.shape:
+#             # 混合图像
+#             blended = cv2.addWeighted(roi, 0.3, pos_img_resized, 0.7, 0)
+#             neg_img[y:y+new_size[1], x:x+new_size[0]] = blended
+        
+#         return Image.fromarray(neg_img)
+
+#     @staticmethod
+#     def flip_image(image):
+#         '''图片轴对称'''
+#         return Image.fromarray(np.array(image)[:, ::-1])
+    
+#     @staticmethod
+#     def mirror_half_image(image):
+#         img_array = np.array(image)
+    
+#         # 获取图片尺寸
+#         h, w = img_array.shape[:2]
+        
+#         # 取左半边
+#         half_w = w // 2
+#         left_half = img_array[:, :half_w]
+        
+#         # 水平翻转左半边得到右半边
+#         right_half = left_half[:, ::-1]
+        
+#         # 拼接两个半边
+#         mirrored = np.concatenate([left_half, right_half], axis=1)
+        
+#         return Image.fromarray(mirrored)
+    
+
+# def augment_dataset(positive_images, negative_images):
+#     aug_utils = AugmentationUtils()
+#     augmented_data = []
+    
+#     # 增强正样本
+#     for pos_img in positive_images:
+#         img = Image.open(pos_img).convert('RGB')
+#         # 原图
+#         augmented_data.append((img, 1))
+#         # 颜色遮罩
+#         augmented_data.append((aug_utils.add_color_mask(img, True), 1))
+#         # 轴对称
+#         augmented_data.append((aug_utils.flip_image(img), 1))
+#         # 镜像一半
+#         augmented_data.append((aug_utils.mirror_half_image(img), 1))
+#         # 嵌入相同
+#         img_id = random.randint(0, len(positive_images)-1)
+#         aaa = Image.open(positive_images[img_id]).convert('RGB')
+#         augmented_data.append((aug_utils.embed_same(aaa, img), 1))
+        
+    
+#     # 增强负样本
+#     for i, neg_img in enumerate(negative_images):
+#         img = Image.open(neg_img).convert('RGB')
+#         # 原图
+#         augmented_data.append((img, 0))
+#         # 颜色遮罩
+#         augmented_data.append((aug_utils.add_color_mask(img, False), 0))
+#         # 镜像一半
+#         augmented_data.append((aug_utils.mirror_half_image(img), 0))
+#         # 嵌入正样本
+#         pos_img = Image.open(positive_images[random.randint(0, len(positive_images)-1)]).convert('RGB')
+#         augmented_data.append((aug_utils.embed_positive_in_negative(pos_img, img), 1))
+#         # 嵌入相同
+#         img_id = random.randint(0, len(negative_images)-1)
+#         aaa = Image.open(negative_images[img_id]).convert('RGB')
+#         augmented_data.append((aug_utils.embed_same(aaa, img), 0))
+        
+
+        
+#     # # 显示并保存
+#     # for i, (img, label) in enumerate(augmented_data):
+#     #     # img.show()
+#     #     os.makedirs('aug_images', exist_ok=True)
+#     #     img.save(f'aug_images/aug_{i}.jpg')
+    
+#     # 统计
+#     print(f'Positive: {len([x for x, y in augmented_data if y == 1])}, Negative: {len([x for x, y in augmented_data if y == 0])}')
+#     return augmented_data
+
+
+class LinearWarmUpCosineAnnealingLR(LambdaLR):
+    def __init__(self, optimizer, *, warmup_iters, max_learning_rate, min_lr, lr_decay_iters, **kwargs):
+        self.warmup_iters = warmup_iters
+        self.max_learning_rate = max_learning_rate
+        self.lr_decay_iters = lr_decay_iters
+        self.min_lr = min_lr
+        kwargs['optimizer'] = optimizer
+        kwargs['lr_lambda'] = self._step_inner
+        super().__init__(**kwargs)
+
+    def _step_inner(self, steps):
+        if steps < self.warmup_iters:
+            return self.max_learning_rate * steps / self.warmup_iters
+        elif steps < self.lr_decay_iters:
+            return self.min_lr + 0.5 * (1.0 + np.cos((steps - self.warmup_iters) / (self.lr_decay_iters - self.warmup_iters)*np.pi)) * (self.max_learning_rate - self.min_lr)
+        else:
+            return self.min_lr
+
+
+def transform_img(img):
+    # 处理图片
+    img_np = np.array(img)
+    img_tensor = torch.from_numpy(img_np).permute(2, 0, 1)  # C, H, W
+    img_tensor = torch.nn.functional.interpolate(img_tensor.unsqueeze(0), size=(image_size, image_size), mode='bilinear', align_corners=False).squeeze(0)
+    # normalize
+    normalized_img = img_tensor.float() / 255.0
+    return normalized_img
+
+
+transform = transforms.Compose([
+    transforms.Resize((image_size, image_size)),
+    transforms.ToTensor(),
+    transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+])
+
+
+def transform_img_torchvision(data):
+    data['x'] = [transform(img.convert('RGB')) for img in data['image']]
+    return data
+
+
+label_mapping = {
+    'nailong': 0,
+    'emoji': 1,
+    'anime': 2,
+    'others': 3,
+    'long': 4
+}
+
+def extract_datasets():
+    ds = load_dataset('refoundd/NailongClassification', cache_dir='data', split='train')
+    ds = ds.map(lambda x: {'label': label_mapping[x['label']]})
+    ds = ds.map(transform_img_torchvision, remove_columns=['image'], batched=True)
+    dataset = ds.train_test_split(test_size=0.2)
+    return dataset
+
+dataset = extract_datasets()
+
+
+class NaiLongDataset(Dataset):
+    def __init__(self, mode='train'):
+        assert mode in ['train', 'test']
+        self.dataset = dataset[mode]
+
+    def __len__(self):
+        return len(self.dataset)
+
+    def __getitem__(self, idx):
+        item = self.dataset[idx]['x']
+        label = self.dataset[idx]['label']
+        return torch.tensor(item), torch.tensor(label)
+
+
+
+class NaiLongTrainer(Trainer):
+    def __init__(self, config):
+        super().__init__(config)
+
+    def build_model(self):
+        # model = resnet18()
+        # model.fc = torch.nn.Linear(model.fc.in_features, 2)
+        # return model
+        return convnext_base(pretrained=False, num_classes=5)
+    
+    def build_criterion(self):
+        return torch.nn.CrossEntropyLoss()
+    
+    def build_scheduler(self):
+        return LinearWarmUpCosineAnnealingLR(self.optimizer, warmup_iters=self.config['warmup_iters'], max_learning_rate=self.config['max_learning_rate'], min_lr=self.config['min_lr'], lr_decay_iters=self.config['lr_decay_iters'])
+    
+    def build_dataloader(self, mode='train'):
+        dataset = NaiLongDataset(mode='train')
+        return DataLoader(dataset, batch_size=batch_size, shuffle=True)
+    
+    def train_step(self, batch):
+        x, y = batch
+        x, y = x.to(device), y.to(device)
+        return self.criterion(self.model(x), y)
+    
+    def validate(self):
+        self.logger.info('Validating...')
+        self.model.eval()
+        dataloader = self.build_dataloader(mode='test')
+        acc = []
+        f1 = [[], []]
+        with torch.no_grad(): 
+            for i, (x, y) in enumerate(dataloader):
+                x, y = x.to(device), y.to(device)
+                # print(f'Validation: {i}, {y}')
+                y_hat = self.model(x)
+                acc.append(torch.sum(torch.argmax(y_hat, dim=1) == y).item() / len(y))
+                f1[0].extend(y.cpu().tolist())
+                f1[1].extend(torch.argmax(y_hat, dim=1).cpu().tolist())
+            f1_scores = f1_score(f1[0], f1[1], average='macro')
+        return {'acc': sum(acc) / len(acc), 'f1': f1_scores}
+
+
+def main():
+    config = {  # test
+        'model': 'convnext_tiny',
+        'checkpoint_dir': './checkpoints',
+        'tensorboard_dir': './tensorboard',
+        'device': 'cuda',
+        'enable_cudnn_benchmark': True,
+        'enable_amp': False,
+        'learning_rate': 1,  # 启动lr_scheduler 这里必须是1
+        'betas': [0.9, 0.999],
+        'eps': 1e-8,
+        'enable_compile': False,
+        'weight_decay': 0.0,
+        'max_steps': 5000,
+        'max_grad_norm': 1.0,
+        'save_every': 500,
+        'gradient_accumulation_steps': 1,
+        'warmup_iters': 500,
+        'max_learning_rate': 1e-3,
+        'min_lr': 1e-4,
+        'lr_decay_iters': 1000
+    }
+    os.makedirs(config['checkpoint_dir'], exist_ok=True)
+    os.makedirs(config['tensorboard_dir'], exist_ok=True)
+    trainer = NaiLongTrainer(config)
+    trainer.train()
+
+if __name__ == '__main__':
+    # 删除tensorboard下的文件, 但不删除文件夹
+    for i in os.listdir('./tensorboard'):
+        os.remove(os.path.join('./tensorboard', i))
+    # 删除checkpoints下的文件
+    for i in os.listdir('./checkpoints'):
+        os.remove(os.path.join('./checkpoints', i))
+    try:
+        main()
+    except KeyboardInterrupt:
+        print('KeyboardInterrupt')
+        
 ```
 
 </p>
 </details> 
 
 > TODO 补充trainer的用例与用法
-> TODO 补充超参搜索相关内容, 以及其用例与用法
 
 ### 数据增广
 
@@ -571,8 +1075,310 @@ if __name__ == '__main__':
 - 在负样本中嵌入正样本
     很经典的增广数据的手法
 - 图片轴对称
-- 等
-。">
+- 取图像的一半镜像翻转
+
+### 训练
+
+#### 参数搜索
+
+虽然是个人小项目, 简单的参数搜索不能少, 继续上面写的 `trainer.py`, 我也写了一个简单的 `hyperparameter_seacher.py` 来搜索超参
+
+<details><summary>Details</summary>
+<p>
+
+```python
+from trainer import Trainer
+import optuna
+
+
+example_config = {
+    'model': 'convnext_tiny',
+    'checkpoint_dir': './checkpoints',
+    'tensorboard_dir': './tensorboard',
+    'device': 'cuda',
+    'enable_cudnn_benchmark': True,
+    'enable_amp': False,
+    'learning_rate': 1e-4,
+    'betas': [0.9, 0.999],
+    'eps': 1e-8,
+    'enable_compile': False,
+    'weight_decay': 0.05,
+    'max_steps': 100,
+    'max_grad_norm': 1.0,
+    'save_every': 1000000,  # 不保存
+    'gradient_accumulation_steps': 4
+}
+
+example_search_config = {
+    'params': {
+        'learning_rate': {
+            'type': 'float',
+            'range': [1e-5, 1e-2],
+            'log': True
+        },
+        'gradient_accumulation_steps': {
+            'type': 'int',
+            'range': [1, 8],
+            'log': False
+        }
+    },
+    'if_save_info': False,
+    'n_trials': 10
+}
+
+class HyperparameterSearcher:
+    def __init__(self, config, trainer):
+        assert isinstance(trainer, Trainer), 'trainer must be an instance of Trainer'
+        self.config = config
+        self.trainer = trainer
+        
+    def objective(self, trial):
+        search_params = self.config['params']
+        
+        for param_name, param_config in search_params.items():
+            if param_config['type'] == 'float':
+                self.trainer.config[param_name] = trial.suggest_float(
+                    param_name,
+                    param_config['range'][0],
+                    param_config['range'][1],
+                    log=param_config.get('log', False)
+                )
+            elif param_config['type'] == 'int':
+                self.trainer.config[param_name] = trial.suggest_int(
+                    param_name,
+                    param_config['range'][0],
+                    param_config['range'][1]
+                )
+            elif param_config['type'] == 'list':
+                self.trainer.config[param_name] = trial.suggest_categorical(
+                    param_name,
+                    param_config['range']
+                )
+            else:
+                raise ValueError(f'Unsupported parameter type: {param_config['type']}, only support float and int')
+        
+        self.trainer.setup_training()
+        self.trainer.train()
+        metric = self.trainer.validate()
+        if 'acc' not in metric:
+            raise ValueError('metric must contain 'acc'')
+        return -metric['acc']  # only support maximizing acc
+    
+    def search(self):
+        study = optuna.create_study(direction='maximize')
+        study.optimize(self.objective, n_trials=self.config['n_trials'])
+        print('Best params:', study.best_params)
+        print('Best value:', -study.best_value)
+        if self.config['if_save_info']:
+            study.trials_dataframe().to_csv('./output/optuna_results.csv')
+        return study.best_params
+    
+def main():
+    
+    pass
+
+if __name__ == '__main__':
+    try:
+        main()
+    except KeyboardInterrupt:
+        pass
+```
+
+</p>
+</details> 
+
+超参搜索需要 trainer 的配合, 使用了与模型无关的 optuna 来跑给定范围的超参值, 这个时候可以给trainer一个比较容易训练的超参设置(短的epoch等), 同时关闭保存模式
+
+我也写了个简单的超参搜索的例子
+
+<details><summary>Details</summary>
+<p>
+
+from example_trainer import Cifer10Trainer
+from hyperparameter_seacher import HyperparameterSearcher
+
+class Cifer10HyperparameterSearcher(HyperparameterSearcher):
+    def __init__(self, config, trainer):
+        super().__init__(config, trainer)
+
+
+def main():
+    search_config = {
+        'params': {
+            'learning_rate': {
+                'type': 'float',
+                'range': [1e-5, 1e-2],
+                'log': True
+            },
+            'gradient_accumulation_steps': {
+                'type': 'int',
+                'range': [1, 8],
+                'log': False
+            }
+        },
+        'if_save_info': True,
+        'n_trials': 10
+    }
+
+    trainer_config = {
+        'model': 'resnet18',
+        'checkpoint_dir': './checkpoints',
+        'tensorboard_dir': './tensorboard',
+        'device': 'cuda',
+        'enable_cudnn_benchmark': True,
+        'enable_amp': False,
+        'learning_rate': 1e-3,
+        'betas': [0.9, 0.999],
+        'eps': 1e-8,
+        'enable_compile': False,
+        'weight_decay': 0.05,
+        'max_steps': 500,
+        'max_grad_norm': 1.0,
+        'save_every': 10000,  # large than max_steps, no save
+        'gradient_accumulation_steps': 4,
+        'batch_size': 32
+    }
+    trainer = Cifer10Trainer(trainer_config)
+    searcher = Cifer10HyperparameterSearcher(search_config, trainer)
+    best_params = searcher.search()
+    print(best_params)
+
+if __name__ == '__main__':
+    main()
+
+</p>
+</details> 
+
+> 搜索上面那个例子中的合适的超参数
+
+在准备好这些后, 编写我们项目的超参搜索器
+
+<details><summary>之后补充</summary>
+<p>
+
+
+
+</p>
+</details> 
+
+> 搜索出来的最佳超参是一个很长的小数, 四舍五入合适的位数即可
+
+#### 第一次训练
+
+在准备好后, 开始第一次训练
+
+在较新的GPU下, 训练以前较小的模型可谓降维打击, 不到一个小时训练完毕
+
+然而, 第一个问题出来了
+
+acc很高, f1很低
+
+编写测试代码:
+
+<details><summary>test.py(非初版代码, 仅供参考)</summary>
+<p>
+
+```python
+from sklearn.metrics import f1_score
+import torch
+
+from model import convnext_base
+from PIL import Image
+import numpy as np
+from glob import glob
+from torchvision import transforms
+
+device = 'cuda'
+image_size = 224
+
+model = convnext_base(pretrained=False, num_classes=5).to(device)
+# model = resnet18()
+# model.fc = torch.nn.Linear(model.fc.in_features, 2)
+checkpoint = torch.load('./checkpoints/best.pt', map_location=device)
+model.load_state_dict(checkpoint['model'])
+
+transform = transforms.Compose([
+    transforms.Resize((image_size, image_size)),
+    transforms.ToTensor(),
+    transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+])
+
+def transform_img(img):
+    # 处理图片
+    img_np = np.array(img)
+    img_tensor = torch.from_numpy(img_np).permute(2, 0, 1)  # C, H, W
+    img_tensor = torch.nn.functional.interpolate(img_tensor.unsqueeze(0), size=(image_size, image_size), mode='bilinear', align_corners=False).squeeze(0)
+    # normalize
+    normalized_img = img_tensor.float() / 255.0
+    return normalized_img
+
+
+def get_input_images(image_path):
+    img = Image.open(image_path).convert('RGB')
+    img = transform(img)
+    return torch.tensor(img).to(device).unsqueeze(0)
+
+model.eval()
+
+# 导出onnx
+input_names = ['input']
+output_names = ['output']
+dynamic_axes = {
+    'input': {0: 'batch_size'},  # 输入的第一个维度是动态的
+    'output': {0: 'batch_size'}  # 输出的第一个维度是动态的
+}
+torch.onnx.export(model, torch.randn(1, 3, 224, 224).to(device), 'model.onnx', input_names=input_names, output_names=output_names, dynamic_axes=dynamic_axes, opset_version=11)
+
+with torch.no_grad():
+    # image = torch.randn(1, 3, 256, 256)
+    print(torch.softmax(model(get_input_images('1.jpg')), dim=1))
+    input()
+    print(torch.softmax(model(get_input_images('3.jpg')), dim=1))
+    input()
+    acc = []
+    f1 = [[], []]
+    
+    
+    for file in glob('./datasets/nailong/*'):
+        y_hat, y = model(get_input_images(file)), torch.tensor([0]).to(device)
+        acc.append(torch.sum(torch.argmax(y_hat, dim=1) == y).item() / len(y))
+        f1[0].append(y.cpu().tolist()[0])
+        f1[1].append(torch.argmax(y_hat, dim=1).cpu().tolist()[0])
+        
+
+    # for file in glob('./datasets/cifer10/*'):
+    #     y_hat, y = model(get_input_images(file)), torch.tensor([3]).to(device)
+    #     acc.append(torch.sum(torch.argmax(y_hat, dim=1) == y).item() / len(y))
+    #     f1[0].append(y.cpu().tolist()[0])
+    #     f1[1].append(torch.argmax(y_hat, dim=1).cpu().tolist()[0])
+
+print(sum(acc) / len(acc))
+f1_scores = f1_score(f1[0], f1[1], average='macro')
+print(f1_scores)
+```
+
+</p>
+</details> 
+
+
+发现 acc 与 f1 的值非常低(百分之10到百分之20附近)
+
+这个时候查看模型的输出, 发现模型的输出接近初始化的输出(softmax后), 模型没有怎么被训练
+
+这个时候怀疑是训练代码出了问题, 然而 cifer10 的 训练并没有什么问题
+检查数据增广代码, 查看增广后的图片, 发现增广做的不是很好, 正样本内嵌负样本没嵌好
+
+在经过修改后, 重启训练
+然而, 问题变成了, 模型的输出接近[0.5, 0.5](二分类任务)
+
+跟人讨论后, 认为是数据集难度太大, 检查表情包数据集, 都是一些分布与 nailong 数据差异很大的图片. 
+
+> 非严格推理, 纯脑测
+模型发现, 给一张新的图片预测 nailong 类, 还是其他类, 都会导致loss上升, 于是干脆摆烂乱猜,  最终的概率分布会输出数据分布, 经过数据增广后的数据恰好是两类 1:1, 模型退化成统计数据集了
+
+导致这个的最直接原因是输入特征不够, 换算到图片就是模型找不到决定图片分类的模式
+
+于是, 第一阶段的训练结束了。">
 <meta property="og:title" content="nailong数据集, 检测nailong的模型, 训练与推理 (一)">
 <meta property="og:description" content="> 回归 老本行
 
@@ -1113,18 +1919,522 @@ if __name__ == '__main__':
 </p>
 </details> 
 
-<details><summary>train.py(代码未整理完毕)</summary>
+`trainer.py` 简单整合了几个常用的训练手段, 比如混合精度训练, 梯度裁剪, 梯度累计, weight_decay(写死了), tensorboard的记录, 断点续训等操作, 需要注意的是, `trainer.py` 没有使用 epoch 作为训练进度, 而是用了更精细的 step (每次迭代参数即为一个step), 使用的时候需要自行实现模型构建, 损失函数构建 学习率调度器 数据集加载器, 单步训练, 验证的流程的子类实现
+
+然后将一些配置放到config中便于读取, 其中有一些配置是必须的, 其他则是子类实现的时候需要的
+
+听起来可能有点抽象, 下面是一个简单的trainer使用案例
+
+<details><summary>trainer使用案例</summary>
+<p>
+
+import torchvision
+import torch
+from trainer import Trainer
+from torchvision.models import resnet18
+from torch.optim.lr_scheduler import LambdaLR
+
+
+
+transform = torchvision.transforms.Compose([
+    torchvision.transforms.ToTensor(),
+    torchvision.transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+])
+
+class ConstantLambdaLR(LambdaLR):
+    def __init__(self, optimizer, **kwargs):
+        kwargs['optimizer'] = optimizer
+        kwargs['lr_lambda'] = self._step_inner
+        super().__init__(**kwargs)
+
+    def _step_inner(self, steps):
+        return 1
+
+
+class Cifer10Trainer(Trainer):
+    def __init__(self, config):
+        super().__init__(config)
+
+    def build_model(self):
+        model = resnet18()
+        model.fc = torch.nn.Linear(model.fc.in_features, 10)
+        return model
+    
+    def build_criterion(self):
+        return torch.nn.CrossEntropyLoss()
+    
+    def build_scheduler(self):
+        return ConstantLambdaLR(self.optimizer)
+    
+    def build_dataloader(self):
+        train_dataset = torchvision.datasets.CIFAR10(root='./temp', train=True, download=True, transform=transform)
+        train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=self.config['batch_size'], shuffle=True, num_workers=1)
+        return train_loader
+    
+    def train_step(self, batch):
+        inputs, labels = batch
+        inputs, labels = inputs.to(self.device), labels.to(self.device)
+        outputs = self.model(inputs)
+        loss = self.criterion(outputs, labels)
+        return loss
+    
+    def validate(self):
+        self.model.eval()
+        test_dataset = torchvision.datasets.CIFAR10(root='./temp', train=False, download=True, transform=transform)
+        test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=self.config['batch_size'], shuffle=False, num_workers=1)
+        acc = []
+        with torch.inference_mode():
+            for batch in test_loader:
+                inputs, labels = batch
+                inputs, labels = inputs.to(self.device), labels.to(self.device)
+                y_hat = self.model(inputs)
+                acc.append((y_hat.argmax(dim=1) == labels).sum().item() / labels.size(0))
+                
+        return {'acc': sum(acc) / len(acc)}
+                
+
+def main():
+    config = {
+        'model': 'resnet18',
+        'checkpoint_dir': './checkpoints',
+        'tensorboard_dir': './tensorboard',
+        'device': 'cuda',
+        'enable_cudnn_benchmark': True,
+        'enable_amp': False,
+        'learning_rate': 1e-3,
+        'betas': [0.9, 0.999],
+        'eps': 1e-8,
+        'enable_compile': False,
+        'weight_decay': 0.05,
+        'max_steps': 500,
+        'max_grad_norm': 1.0,
+        'save_every': 100,
+        'gradient_accumulation_steps': 1,
+        'batch_size': 32
+    }
+    trainer = Cifer10Trainer(config)
+    trainer.train()
+    
+if __name__ == '__main__':
+    try:
+        main()
+    except KeyboardInterrupt:
+        pass
+
+</p>
+</details> 
+
+> 代码使用cifer10数据集, resnet18作为模型训练的简单的流程
+
+有了流程接下来编写我们的训练代码
+
+<details><summary>train.py(代码未整理完毕, 非初版代码, 仅供参考)</summary>
 <p>
 
 ```python
+import os
+import random
 
+import cv2
+import numpy as np
+from sklearn.metrics import f1_score
+import torch
+from PIL import Image
+from torch.optim.lr_scheduler import LambdaLR
+from torch.utils.data import DataLoader, Dataset
+from datasets import load_dataset
+from torchvision import transforms
+
+# from torchvision.models import resnet18
+from model import convnext_base
+from trainer import Trainer
+
+image_size = 224
+batch_size = 32
+device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
+
+
+# def get_color_from_image(image_path):
+#     '''
+#     从纯色图片中获取RGB颜色值
+#     返回: (R, G, B)元组
+#     '''
+#     # 读取图片
+#     image = Image.open(image_path).convert('RGB')
+#     # 转换为numpy数组
+#     img_array = np.array(image)
+    
+#     # 获取图片中心点的颜色值
+#     h, w = img_array.shape[:2]
+#     center_color = img_array[h//2, w//2]
+    
+#     # 或者计算整个图片的平均颜色
+#     average_color = img_array.mean(axis=(0,1)).astype(int)
+    
+#     return tuple(average_color)  # 或者 tuple(average_color)
+
+
+# class AugmentationUtils:
+#     @staticmethod
+#     def add_color_mask(image, is_positive):
+#         '''给图片添加颜色遮罩'''
+#         # 转换为numpy数组并确保类型为uint8
+#         image = np.array(image, dtype=np.uint8)
+        
+#         # 创建与图像相同大小的遮罩
+#         mask = np.ones_like(image, dtype=np.uint8)
+        
+#         # 随机生成颜色
+#         if is_positive:
+#             color = [random.randint(0, 255) for _ in range(3)]
+#         else:
+#             color = get_color_from_image('22.png')
+        
+#         # 为遮罩赋予颜色    
+#         for i in range(3):
+#             mask[:, :, i] = color[i]
+        
+#         # 确保mask也是uint8类型
+#         mask = mask.astype(np.uint8)
+        
+#         # 添加遮罩
+#         alpha = 0.5  # 透明度
+#         image = cv2.addWeighted(image, 1-alpha, mask, alpha, 0)
+        
+#         return Image.fromarray(image)
+
+#     @staticmethod
+#     def embed_positive_in_negative(positive_img, negative_img):
+#         '''在负样本中嵌入正样本'''
+#         # 转换为numpy数组
+#         pos_img = np.array(positive_img)
+#         neg_img = np.array(negative_img)
+        
+#         # 确保图像是3通道的
+#         if len(pos_img.shape) == 2:
+#             pos_img = cv2.cvtColor(pos_img, cv2.COLOR_GRAY2BGR)
+#         if len(neg_img.shape) == 2:
+#             neg_img = cv2.cvtColor(neg_img, cv2.COLOR_GRAY2BGR)
+        
+#         # 获取负样本尺寸
+#         h, w = neg_img.shape[:2]
+#         pos_h, pos_w = pos_img.shape[:2]
+        
+#         # 计算合适的缩放比例
+#         scale = min(
+#             random.uniform(0.5, 0.8),
+#             (w * 0.8) / pos_w,
+#             (h * 0.8) / pos_h
+#         )
+        
+#         # 缩放正样本
+#         new_size = (int(pos_w * scale), int(pos_h * scale))
+#         pos_img_resized = cv2.resize(pos_img, new_size)
+        
+#         # 确保有效的随机位置范围
+#         max_x = max(0, w - new_size[0])
+#         max_y = max(0, h - new_size[1])
+        
+#         # 随机选择插入位置
+#         x = random.randint(0, max_x) if max_x > 0 else 0
+#         y = random.randint(0, max_y) if max_y > 0 else 0
+        
+#         # 获取ROI区域并确保与缩放后的正样本具有相同的形状
+#         roi = neg_img[y:y+new_size[1], x:x+new_size[0]]
+        
+#         # 确保ROI和pos_img_resized具有相同的形状和通道数
+#         if roi.shape == pos_img_resized.shape:
+#             # 混合图像
+#             blended = cv2.addWeighted(roi, 0.3, pos_img_resized, 0.7, 0)
+#             neg_img[y:y+new_size[1], x:x+new_size[0]] = blended
+        
+#         return Image.fromarray(neg_img)
+    
+#     @staticmethod
+#     def embed_same(positive_img, negative_img):
+#         '''在负样本中嵌入正样本'''
+#         # 转换为numpy数组
+#         pos_img = np.array(positive_img)
+#         neg_img = np.array(negative_img)
+        
+#         # 确保图像是3通道的
+#         if len(pos_img.shape) == 2:
+#             pos_img = cv2.cvtColor(pos_img, cv2.COLOR_GRAY2BGR)
+#         if len(neg_img.shape) == 2:
+#             neg_img = cv2.cvtColor(neg_img, cv2.COLOR_GRAY2BGR)
+        
+#         # 获取负样本尺寸
+#         h, w = neg_img.shape[:2]
+#         pos_h, pos_w = pos_img.shape[:2]
+        
+#         # 计算合适的缩放比例
+#         scale = min(
+#             random.uniform(0.5, 0.8),
+#             (w * 0.8) / pos_w,
+#             (h * 0.8) / pos_h
+#         )
+        
+#         # 缩放正样本
+#         new_size = (int(pos_w * scale), int(pos_h * scale))
+#         pos_img_resized = cv2.resize(pos_img, new_size)
+        
+#         # 确保有效的随机位置范围
+#         max_x = max(0, w - new_size[0])
+#         max_y = max(0, h - new_size[1])
+        
+#         # 随机选择插入位置
+#         x = random.randint(0, max_x) if max_x > 0 else 0
+#         y = random.randint(0, max_y) if max_y > 0 else 0
+        
+#         # 获取ROI区域并确保与缩放后的正样本具有相同的形状
+#         roi = neg_img[y:y+new_size[1], x:x+new_size[0]]
+        
+#         # 确保ROI和pos_img_resized具有相同的形状和通道数
+#         if roi.shape == pos_img_resized.shape:
+#             # 混合图像
+#             blended = cv2.addWeighted(roi, 0.3, pos_img_resized, 0.7, 0)
+#             neg_img[y:y+new_size[1], x:x+new_size[0]] = blended
+        
+#         return Image.fromarray(neg_img)
+
+#     @staticmethod
+#     def flip_image(image):
+#         '''图片轴对称'''
+#         return Image.fromarray(np.array(image)[:, ::-1])
+    
+#     @staticmethod
+#     def mirror_half_image(image):
+#         img_array = np.array(image)
+    
+#         # 获取图片尺寸
+#         h, w = img_array.shape[:2]
+        
+#         # 取左半边
+#         half_w = w // 2
+#         left_half = img_array[:, :half_w]
+        
+#         # 水平翻转左半边得到右半边
+#         right_half = left_half[:, ::-1]
+        
+#         # 拼接两个半边
+#         mirrored = np.concatenate([left_half, right_half], axis=1)
+        
+#         return Image.fromarray(mirrored)
+    
+
+# def augment_dataset(positive_images, negative_images):
+#     aug_utils = AugmentationUtils()
+#     augmented_data = []
+    
+#     # 增强正样本
+#     for pos_img in positive_images:
+#         img = Image.open(pos_img).convert('RGB')
+#         # 原图
+#         augmented_data.append((img, 1))
+#         # 颜色遮罩
+#         augmented_data.append((aug_utils.add_color_mask(img, True), 1))
+#         # 轴对称
+#         augmented_data.append((aug_utils.flip_image(img), 1))
+#         # 镜像一半
+#         augmented_data.append((aug_utils.mirror_half_image(img), 1))
+#         # 嵌入相同
+#         img_id = random.randint(0, len(positive_images)-1)
+#         aaa = Image.open(positive_images[img_id]).convert('RGB')
+#         augmented_data.append((aug_utils.embed_same(aaa, img), 1))
+        
+    
+#     # 增强负样本
+#     for i, neg_img in enumerate(negative_images):
+#         img = Image.open(neg_img).convert('RGB')
+#         # 原图
+#         augmented_data.append((img, 0))
+#         # 颜色遮罩
+#         augmented_data.append((aug_utils.add_color_mask(img, False), 0))
+#         # 镜像一半
+#         augmented_data.append((aug_utils.mirror_half_image(img), 0))
+#         # 嵌入正样本
+#         pos_img = Image.open(positive_images[random.randint(0, len(positive_images)-1)]).convert('RGB')
+#         augmented_data.append((aug_utils.embed_positive_in_negative(pos_img, img), 1))
+#         # 嵌入相同
+#         img_id = random.randint(0, len(negative_images)-1)
+#         aaa = Image.open(negative_images[img_id]).convert('RGB')
+#         augmented_data.append((aug_utils.embed_same(aaa, img), 0))
+        
+
+        
+#     # # 显示并保存
+#     # for i, (img, label) in enumerate(augmented_data):
+#     #     # img.show()
+#     #     os.makedirs('aug_images', exist_ok=True)
+#     #     img.save(f'aug_images/aug_{i}.jpg')
+    
+#     # 统计
+#     print(f'Positive: {len([x for x, y in augmented_data if y == 1])}, Negative: {len([x for x, y in augmented_data if y == 0])}')
+#     return augmented_data
+
+
+class LinearWarmUpCosineAnnealingLR(LambdaLR):
+    def __init__(self, optimizer, *, warmup_iters, max_learning_rate, min_lr, lr_decay_iters, **kwargs):
+        self.warmup_iters = warmup_iters
+        self.max_learning_rate = max_learning_rate
+        self.lr_decay_iters = lr_decay_iters
+        self.min_lr = min_lr
+        kwargs['optimizer'] = optimizer
+        kwargs['lr_lambda'] = self._step_inner
+        super().__init__(**kwargs)
+
+    def _step_inner(self, steps):
+        if steps < self.warmup_iters:
+            return self.max_learning_rate * steps / self.warmup_iters
+        elif steps < self.lr_decay_iters:
+            return self.min_lr + 0.5 * (1.0 + np.cos((steps - self.warmup_iters) / (self.lr_decay_iters - self.warmup_iters)*np.pi)) * (self.max_learning_rate - self.min_lr)
+        else:
+            return self.min_lr
+
+
+def transform_img(img):
+    # 处理图片
+    img_np = np.array(img)
+    img_tensor = torch.from_numpy(img_np).permute(2, 0, 1)  # C, H, W
+    img_tensor = torch.nn.functional.interpolate(img_tensor.unsqueeze(0), size=(image_size, image_size), mode='bilinear', align_corners=False).squeeze(0)
+    # normalize
+    normalized_img = img_tensor.float() / 255.0
+    return normalized_img
+
+
+transform = transforms.Compose([
+    transforms.Resize((image_size, image_size)),
+    transforms.ToTensor(),
+    transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+])
+
+
+def transform_img_torchvision(data):
+    data['x'] = [transform(img.convert('RGB')) for img in data['image']]
+    return data
+
+
+label_mapping = {
+    'nailong': 0,
+    'emoji': 1,
+    'anime': 2,
+    'others': 3,
+    'long': 4
+}
+
+def extract_datasets():
+    ds = load_dataset('refoundd/NailongClassification', cache_dir='data', split='train')
+    ds = ds.map(lambda x: {'label': label_mapping[x['label']]})
+    ds = ds.map(transform_img_torchvision, remove_columns=['image'], batched=True)
+    dataset = ds.train_test_split(test_size=0.2)
+    return dataset
+
+dataset = extract_datasets()
+
+
+class NaiLongDataset(Dataset):
+    def __init__(self, mode='train'):
+        assert mode in ['train', 'test']
+        self.dataset = dataset[mode]
+
+    def __len__(self):
+        return len(self.dataset)
+
+    def __getitem__(self, idx):
+        item = self.dataset[idx]['x']
+        label = self.dataset[idx]['label']
+        return torch.tensor(item), torch.tensor(label)
+
+
+
+class NaiLongTrainer(Trainer):
+    def __init__(self, config):
+        super().__init__(config)
+
+    def build_model(self):
+        # model = resnet18()
+        # model.fc = torch.nn.Linear(model.fc.in_features, 2)
+        # return model
+        return convnext_base(pretrained=False, num_classes=5)
+    
+    def build_criterion(self):
+        return torch.nn.CrossEntropyLoss()
+    
+    def build_scheduler(self):
+        return LinearWarmUpCosineAnnealingLR(self.optimizer, warmup_iters=self.config['warmup_iters'], max_learning_rate=self.config['max_learning_rate'], min_lr=self.config['min_lr'], lr_decay_iters=self.config['lr_decay_iters'])
+    
+    def build_dataloader(self, mode='train'):
+        dataset = NaiLongDataset(mode='train')
+        return DataLoader(dataset, batch_size=batch_size, shuffle=True)
+    
+    def train_step(self, batch):
+        x, y = batch
+        x, y = x.to(device), y.to(device)
+        return self.criterion(self.model(x), y)
+    
+    def validate(self):
+        self.logger.info('Validating...')
+        self.model.eval()
+        dataloader = self.build_dataloader(mode='test')
+        acc = []
+        f1 = [[], []]
+        with torch.no_grad(): 
+            for i, (x, y) in enumerate(dataloader):
+                x, y = x.to(device), y.to(device)
+                # print(f'Validation: {i}, {y}')
+                y_hat = self.model(x)
+                acc.append(torch.sum(torch.argmax(y_hat, dim=1) == y).item() / len(y))
+                f1[0].extend(y.cpu().tolist())
+                f1[1].extend(torch.argmax(y_hat, dim=1).cpu().tolist())
+            f1_scores = f1_score(f1[0], f1[1], average='macro')
+        return {'acc': sum(acc) / len(acc), 'f1': f1_scores}
+
+
+def main():
+    config = {  # test
+        'model': 'convnext_tiny',
+        'checkpoint_dir': './checkpoints',
+        'tensorboard_dir': './tensorboard',
+        'device': 'cuda',
+        'enable_cudnn_benchmark': True,
+        'enable_amp': False,
+        'learning_rate': 1,  # 启动lr_scheduler 这里必须是1
+        'betas': [0.9, 0.999],
+        'eps': 1e-8,
+        'enable_compile': False,
+        'weight_decay': 0.0,
+        'max_steps': 5000,
+        'max_grad_norm': 1.0,
+        'save_every': 500,
+        'gradient_accumulation_steps': 1,
+        'warmup_iters': 500,
+        'max_learning_rate': 1e-3,
+        'min_lr': 1e-4,
+        'lr_decay_iters': 1000
+    }
+    os.makedirs(config['checkpoint_dir'], exist_ok=True)
+    os.makedirs(config['tensorboard_dir'], exist_ok=True)
+    trainer = NaiLongTrainer(config)
+    trainer.train()
+
+if __name__ == '__main__':
+    # 删除tensorboard下的文件, 但不删除文件夹
+    for i in os.listdir('./tensorboard'):
+        os.remove(os.path.join('./tensorboard', i))
+    # 删除checkpoints下的文件
+    for i in os.listdir('./checkpoints'):
+        os.remove(os.path.join('./checkpoints', i))
+    try:
+        main()
+    except KeyboardInterrupt:
+        print('KeyboardInterrupt')
+        
 ```
 
 </p>
 </details> 
 
 > TODO 补充trainer的用例与用法
-> TODO 补充超参搜索相关内容, 以及其用例与用法
 
 ### 数据增广
 
@@ -1135,8 +2445,310 @@ if __name__ == '__main__':
 - 在负样本中嵌入正样本
     很经典的增广数据的手法
 - 图片轴对称
-- 等
-。">
+- 取图像的一半镜像翻转
+
+### 训练
+
+#### 参数搜索
+
+虽然是个人小项目, 简单的参数搜索不能少, 继续上面写的 `trainer.py`, 我也写了一个简单的 `hyperparameter_seacher.py` 来搜索超参
+
+<details><summary>Details</summary>
+<p>
+
+```python
+from trainer import Trainer
+import optuna
+
+
+example_config = {
+    'model': 'convnext_tiny',
+    'checkpoint_dir': './checkpoints',
+    'tensorboard_dir': './tensorboard',
+    'device': 'cuda',
+    'enable_cudnn_benchmark': True,
+    'enable_amp': False,
+    'learning_rate': 1e-4,
+    'betas': [0.9, 0.999],
+    'eps': 1e-8,
+    'enable_compile': False,
+    'weight_decay': 0.05,
+    'max_steps': 100,
+    'max_grad_norm': 1.0,
+    'save_every': 1000000,  # 不保存
+    'gradient_accumulation_steps': 4
+}
+
+example_search_config = {
+    'params': {
+        'learning_rate': {
+            'type': 'float',
+            'range': [1e-5, 1e-2],
+            'log': True
+        },
+        'gradient_accumulation_steps': {
+            'type': 'int',
+            'range': [1, 8],
+            'log': False
+        }
+    },
+    'if_save_info': False,
+    'n_trials': 10
+}
+
+class HyperparameterSearcher:
+    def __init__(self, config, trainer):
+        assert isinstance(trainer, Trainer), 'trainer must be an instance of Trainer'
+        self.config = config
+        self.trainer = trainer
+        
+    def objective(self, trial):
+        search_params = self.config['params']
+        
+        for param_name, param_config in search_params.items():
+            if param_config['type'] == 'float':
+                self.trainer.config[param_name] = trial.suggest_float(
+                    param_name,
+                    param_config['range'][0],
+                    param_config['range'][1],
+                    log=param_config.get('log', False)
+                )
+            elif param_config['type'] == 'int':
+                self.trainer.config[param_name] = trial.suggest_int(
+                    param_name,
+                    param_config['range'][0],
+                    param_config['range'][1]
+                )
+            elif param_config['type'] == 'list':
+                self.trainer.config[param_name] = trial.suggest_categorical(
+                    param_name,
+                    param_config['range']
+                )
+            else:
+                raise ValueError(f'Unsupported parameter type: {param_config['type']}, only support float and int')
+        
+        self.trainer.setup_training()
+        self.trainer.train()
+        metric = self.trainer.validate()
+        if 'acc' not in metric:
+            raise ValueError('metric must contain 'acc'')
+        return -metric['acc']  # only support maximizing acc
+    
+    def search(self):
+        study = optuna.create_study(direction='maximize')
+        study.optimize(self.objective, n_trials=self.config['n_trials'])
+        print('Best params:', study.best_params)
+        print('Best value:', -study.best_value)
+        if self.config['if_save_info']:
+            study.trials_dataframe().to_csv('./output/optuna_results.csv')
+        return study.best_params
+    
+def main():
+    
+    pass
+
+if __name__ == '__main__':
+    try:
+        main()
+    except KeyboardInterrupt:
+        pass
+```
+
+</p>
+</details> 
+
+超参搜索需要 trainer 的配合, 使用了与模型无关的 optuna 来跑给定范围的超参值, 这个时候可以给trainer一个比较容易训练的超参设置(短的epoch等), 同时关闭保存模式
+
+我也写了个简单的超参搜索的例子
+
+<details><summary>Details</summary>
+<p>
+
+from example_trainer import Cifer10Trainer
+from hyperparameter_seacher import HyperparameterSearcher
+
+class Cifer10HyperparameterSearcher(HyperparameterSearcher):
+    def __init__(self, config, trainer):
+        super().__init__(config, trainer)
+
+
+def main():
+    search_config = {
+        'params': {
+            'learning_rate': {
+                'type': 'float',
+                'range': [1e-5, 1e-2],
+                'log': True
+            },
+            'gradient_accumulation_steps': {
+                'type': 'int',
+                'range': [1, 8],
+                'log': False
+            }
+        },
+        'if_save_info': True,
+        'n_trials': 10
+    }
+
+    trainer_config = {
+        'model': 'resnet18',
+        'checkpoint_dir': './checkpoints',
+        'tensorboard_dir': './tensorboard',
+        'device': 'cuda',
+        'enable_cudnn_benchmark': True,
+        'enable_amp': False,
+        'learning_rate': 1e-3,
+        'betas': [0.9, 0.999],
+        'eps': 1e-8,
+        'enable_compile': False,
+        'weight_decay': 0.05,
+        'max_steps': 500,
+        'max_grad_norm': 1.0,
+        'save_every': 10000,  # large than max_steps, no save
+        'gradient_accumulation_steps': 4,
+        'batch_size': 32
+    }
+    trainer = Cifer10Trainer(trainer_config)
+    searcher = Cifer10HyperparameterSearcher(search_config, trainer)
+    best_params = searcher.search()
+    print(best_params)
+
+if __name__ == '__main__':
+    main()
+
+</p>
+</details> 
+
+> 搜索上面那个例子中的合适的超参数
+
+在准备好这些后, 编写我们项目的超参搜索器
+
+<details><summary>之后补充</summary>
+<p>
+
+
+
+</p>
+</details> 
+
+> 搜索出来的最佳超参是一个很长的小数, 四舍五入合适的位数即可
+
+#### 第一次训练
+
+在准备好后, 开始第一次训练
+
+在较新的GPU下, 训练以前较小的模型可谓降维打击, 不到一个小时训练完毕
+
+然而, 第一个问题出来了
+
+acc很高, f1很低
+
+编写测试代码:
+
+<details><summary>test.py(非初版代码, 仅供参考)</summary>
+<p>
+
+```python
+from sklearn.metrics import f1_score
+import torch
+
+from model import convnext_base
+from PIL import Image
+import numpy as np
+from glob import glob
+from torchvision import transforms
+
+device = 'cuda'
+image_size = 224
+
+model = convnext_base(pretrained=False, num_classes=5).to(device)
+# model = resnet18()
+# model.fc = torch.nn.Linear(model.fc.in_features, 2)
+checkpoint = torch.load('./checkpoints/best.pt', map_location=device)
+model.load_state_dict(checkpoint['model'])
+
+transform = transforms.Compose([
+    transforms.Resize((image_size, image_size)),
+    transforms.ToTensor(),
+    transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+])
+
+def transform_img(img):
+    # 处理图片
+    img_np = np.array(img)
+    img_tensor = torch.from_numpy(img_np).permute(2, 0, 1)  # C, H, W
+    img_tensor = torch.nn.functional.interpolate(img_tensor.unsqueeze(0), size=(image_size, image_size), mode='bilinear', align_corners=False).squeeze(0)
+    # normalize
+    normalized_img = img_tensor.float() / 255.0
+    return normalized_img
+
+
+def get_input_images(image_path):
+    img = Image.open(image_path).convert('RGB')
+    img = transform(img)
+    return torch.tensor(img).to(device).unsqueeze(0)
+
+model.eval()
+
+# 导出onnx
+input_names = ['input']
+output_names = ['output']
+dynamic_axes = {
+    'input': {0: 'batch_size'},  # 输入的第一个维度是动态的
+    'output': {0: 'batch_size'}  # 输出的第一个维度是动态的
+}
+torch.onnx.export(model, torch.randn(1, 3, 224, 224).to(device), 'model.onnx', input_names=input_names, output_names=output_names, dynamic_axes=dynamic_axes, opset_version=11)
+
+with torch.no_grad():
+    # image = torch.randn(1, 3, 256, 256)
+    print(torch.softmax(model(get_input_images('1.jpg')), dim=1))
+    input()
+    print(torch.softmax(model(get_input_images('3.jpg')), dim=1))
+    input()
+    acc = []
+    f1 = [[], []]
+    
+    
+    for file in glob('./datasets/nailong/*'):
+        y_hat, y = model(get_input_images(file)), torch.tensor([0]).to(device)
+        acc.append(torch.sum(torch.argmax(y_hat, dim=1) == y).item() / len(y))
+        f1[0].append(y.cpu().tolist()[0])
+        f1[1].append(torch.argmax(y_hat, dim=1).cpu().tolist()[0])
+        
+
+    # for file in glob('./datasets/cifer10/*'):
+    #     y_hat, y = model(get_input_images(file)), torch.tensor([3]).to(device)
+    #     acc.append(torch.sum(torch.argmax(y_hat, dim=1) == y).item() / len(y))
+    #     f1[0].append(y.cpu().tolist()[0])
+    #     f1[1].append(torch.argmax(y_hat, dim=1).cpu().tolist()[0])
+
+print(sum(acc) / len(acc))
+f1_scores = f1_score(f1[0], f1[1], average='macro')
+print(f1_scores)
+```
+
+</p>
+</details> 
+
+
+发现 acc 与 f1 的值非常低(百分之10到百分之20附近)
+
+这个时候查看模型的输出, 发现模型的输出接近初始化的输出(softmax后), 模型没有怎么被训练
+
+这个时候怀疑是训练代码出了问题, 然而 cifer10 的 训练并没有什么问题
+检查数据增广代码, 查看增广后的图片, 发现增广做的不是很好, 正样本内嵌负样本没嵌好
+
+在经过修改后, 重启训练
+然而, 问题变成了, 模型的输出接近[0.5, 0.5](二分类任务)
+
+跟人讨论后, 认为是数据集难度太大, 检查表情包数据集, 都是一些分布与 nailong 数据差异很大的图片. 
+
+> 非严格推理, 纯脑测
+模型发现, 给一张新的图片预测 nailong 类, 还是其他类, 都会导致loss上升, 于是干脆摆烂乱猜,  最终的概率分布会输出数据分布, 经过数据增广后的数据恰好是两类 1:1, 模型退化成统计数据集了
+
+导致这个的最直接原因是输入特征不够, 换算到图片就是模型找不到决定图片分类的模式
+
+于是, 第一阶段的训练结束了。">
 <meta property="og:type" content="article">
 <meta property="og:url" content="https://FairyOwO.github.io/post/nailong-shu-ju-ji-%2C%20-jian-ce-nailong-de-mo-xing-%2C%20-xun-lian-yu-tui-li-%20%28-yi-%29.html">
 <meta property="og:image" content="https://github.githubassets.com/favicons/favicon.svg">
@@ -1723,14 +3335,503 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
         <span class="pl-k">pass</span></pre></div>
 <p></p>
 </details> 
-<details><summary>train.py(代码未整理完毕)</summary>
+<p><code class="notranslate">trainer.py</code> 简单整合了几个常用的训练手段, 比如混合精度训练, 梯度裁剪, 梯度累计, weight_decay(写死了), tensorboard的记录, 断点续训等操作, 需要注意的是, <code class="notranslate">trainer.py</code> 没有使用 epoch 作为训练进度, 而是用了更精细的 step (每次迭代参数即为一个step), 使用的时候需要自行实现模型构建, 损失函数构建 学习率调度器 数据集加载器, 单步训练, 验证的流程的子类实现</p>
+<p>然后将一些配置放到config中便于读取, 其中有一些配置是必须的, 其他则是子类实现的时候需要的</p>
+<p>听起来可能有点抽象, 下面是一个简单的trainer使用案例</p>
+<details><summary>trainer使用案例</summary>
 <p>
-</p><div class="highlight highlight-source-python"><pre class="notranslate"></pre></div>
+</p><p>import torchvision<br>
+import torch<br>
+from trainer import Trainer<br>
+from torchvision.models import resnet18<br>
+from torch.optim.lr_scheduler import LambdaLR</p>
+<p>transform = torchvision.transforms.Compose([<br>
+torchvision.transforms.ToTensor(),<br>
+torchvision.transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))<br>
+])</p>
+<p>class ConstantLambdaLR(LambdaLR):<br>
+def <strong>init</strong>(self, optimizer, **kwargs):<br>
+kwargs['optimizer'] = optimizer<br>
+kwargs['lr_lambda'] = self._step_inner<br>
+super().<strong>init</strong>(**kwargs)</p>
+<pre class="notranslate"><code class="notranslate">def _step_inner(self, steps):
+    return 1
+</code></pre>
+<p>class Cifer10Trainer(Trainer):<br>
+def <strong>init</strong>(self, config):<br>
+super().<strong>init</strong>(config)</p>
+<pre class="notranslate"><code class="notranslate">def build_model(self):
+    model = resnet18()
+    model.fc = torch.nn.Linear(model.fc.in_features, 10)
+    return model
+
+def build_criterion(self):
+    return torch.nn.CrossEntropyLoss()
+
+def build_scheduler(self):
+    return ConstantLambdaLR(self.optimizer)
+
+def build_dataloader(self):
+    train_dataset = torchvision.datasets.CIFAR10(root='./temp', train=True, download=True, transform=transform)
+    train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=self.config['batch_size'], shuffle=True, num_workers=1)
+    return train_loader
+
+def train_step(self, batch):
+    inputs, labels = batch
+    inputs, labels = inputs.to(self.device), labels.to(self.device)
+    outputs = self.model(inputs)
+    loss = self.criterion(outputs, labels)
+    return loss
+
+def validate(self):
+    self.model.eval()
+    test_dataset = torchvision.datasets.CIFAR10(root='./temp', train=False, download=True, transform=transform)
+    test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=self.config['batch_size'], shuffle=False, num_workers=1)
+    acc = []
+    with torch.inference_mode():
+        for batch in test_loader:
+            inputs, labels = batch
+            inputs, labels = inputs.to(self.device), labels.to(self.device)
+            y_hat = self.model(inputs)
+            acc.append((y_hat.argmax(dim=1) == labels).sum().item() / labels.size(0))
+            
+    return {'acc': sum(acc) / len(acc)}
+</code></pre>
+<p>def main():<br>
+config = {<br>
+"model": "resnet18",<br>
+"checkpoint_dir": "./checkpoints",<br>
+"tensorboard_dir": "./tensorboard",<br>
+"device": "cuda",<br>
+"enable_cudnn_benchmark": True,<br>
+"enable_amp": False,<br>
+"learning_rate": 1e-3,<br>
+"betas": [0.9, 0.999],<br>
+"eps": 1e-8,<br>
+"enable_compile": False,<br>
+"weight_decay": 0.05,<br>
+"max_steps": 500,<br>
+"max_grad_norm": 1.0,<br>
+"save_every": 100,<br>
+"gradient_accumulation_steps": 1,<br>
+'batch_size': 32<br>
+}<br>
+trainer = Cifer10Trainer(config)<br>
+trainer.train()</p>
+<p>if <strong>name</strong> == '<strong>main</strong>':<br>
+try:<br>
+main()<br>
+except KeyboardInterrupt:<br>
+pass</p>
 <p></p>
 </details> 
 <blockquote>
-<p>TODO 补充trainer的用例与用法<br>
-TODO 补充超参搜索相关内容, 以及其用例与用法</p>
+<p>代码使用cifer10数据集, resnet18作为模型训练的简单的流程</p>
+</blockquote>
+<p>有了流程接下来编写我们的训练代码</p>
+<details><summary>train.py(代码未整理完毕, 非初版代码, 仅供参考)</summary>
+<p>
+</p><div class="highlight highlight-source-python"><pre class="notranslate"><span class="pl-k">import</span> <span class="pl-s1">os</span>
+<span class="pl-k">import</span> <span class="pl-s1">random</span>
+
+<span class="pl-k">import</span> <span class="pl-s1">cv2</span>
+<span class="pl-k">import</span> <span class="pl-s1">numpy</span> <span class="pl-k">as</span> <span class="pl-s1">np</span>
+<span class="pl-k">from</span> <span class="pl-s1">sklearn</span>.<span class="pl-s1">metrics</span> <span class="pl-k">import</span> <span class="pl-s1">f1_score</span>
+<span class="pl-k">import</span> <span class="pl-s1">torch</span>
+<span class="pl-k">from</span> <span class="pl-v">PIL</span> <span class="pl-k">import</span> <span class="pl-v">Image</span>
+<span class="pl-k">from</span> <span class="pl-s1">torch</span>.<span class="pl-s1">optim</span>.<span class="pl-s1">lr_scheduler</span> <span class="pl-k">import</span> <span class="pl-v">LambdaLR</span>
+<span class="pl-k">from</span> <span class="pl-s1">torch</span>.<span class="pl-s1">utils</span>.<span class="pl-s1">data</span> <span class="pl-k">import</span> <span class="pl-v">DataLoader</span>, <span class="pl-v">Dataset</span>
+<span class="pl-k">from</span> <span class="pl-s1">datasets</span> <span class="pl-k">import</span> <span class="pl-s1">load_dataset</span>
+<span class="pl-k">from</span> <span class="pl-s1">torchvision</span> <span class="pl-k">import</span> <span class="pl-s1">transforms</span>
+
+<span class="pl-c"># from torchvision.models import resnet18</span>
+<span class="pl-k">from</span> <span class="pl-s1">model</span> <span class="pl-k">import</span> <span class="pl-s1">convnext_base</span>
+<span class="pl-k">from</span> <span class="pl-s1">trainer</span> <span class="pl-k">import</span> <span class="pl-v">Trainer</span>
+
+<span class="pl-s1">image_size</span> <span class="pl-c1">=</span> <span class="pl-c1">224</span>
+<span class="pl-s1">batch_size</span> <span class="pl-c1">=</span> <span class="pl-c1">32</span>
+<span class="pl-s1">device</span> <span class="pl-c1">=</span> <span class="pl-s1">torch</span>.<span class="pl-en">device</span>(<span class="pl-s">"cuda"</span>) <span class="pl-k">if</span> <span class="pl-s1">torch</span>.<span class="pl-s1">cuda</span>.<span class="pl-en">is_available</span>() <span class="pl-k">else</span> <span class="pl-s1">torch</span>.<span class="pl-en">device</span>(<span class="pl-s">"cpu"</span>)
+
+
+<span class="pl-c"># def get_color_from_image(image_path):</span>
+<span class="pl-c">#     """</span>
+<span class="pl-c">#     从纯色图片中获取RGB颜色值</span>
+<span class="pl-c">#     返回: (R, G, B)元组</span>
+<span class="pl-c">#     """</span>
+<span class="pl-c">#     # 读取图片</span>
+<span class="pl-c">#     image = Image.open(image_path).convert('RGB')</span>
+<span class="pl-c">#     # 转换为numpy数组</span>
+<span class="pl-c">#     img_array = np.array(image)</span>
+    
+<span class="pl-c">#     # 获取图片中心点的颜色值</span>
+<span class="pl-c">#     h, w = img_array.shape[:2]</span>
+<span class="pl-c">#     center_color = img_array[h//2, w//2]</span>
+    
+<span class="pl-c">#     # 或者计算整个图片的平均颜色</span>
+<span class="pl-c">#     average_color = img_array.mean(axis=(0,1)).astype(int)</span>
+    
+<span class="pl-c">#     return tuple(average_color)  # 或者 tuple(average_color)</span>
+
+
+<span class="pl-c"># class AugmentationUtils:</span>
+<span class="pl-c">#     @staticmethod</span>
+<span class="pl-c">#     def add_color_mask(image, is_positive):</span>
+<span class="pl-c">#         """给图片添加颜色遮罩"""</span>
+<span class="pl-c">#         # 转换为numpy数组并确保类型为uint8</span>
+<span class="pl-c">#         image = np.array(image, dtype=np.uint8)</span>
+        
+<span class="pl-c">#         # 创建与图像相同大小的遮罩</span>
+<span class="pl-c">#         mask = np.ones_like(image, dtype=np.uint8)</span>
+        
+<span class="pl-c">#         # 随机生成颜色</span>
+<span class="pl-c">#         if is_positive:</span>
+<span class="pl-c">#             color = [random.randint(0, 255) for _ in range(3)]</span>
+<span class="pl-c">#         else:</span>
+<span class="pl-c">#             color = get_color_from_image('22.png')</span>
+        
+<span class="pl-c">#         # 为遮罩赋予颜色    </span>
+<span class="pl-c">#         for i in range(3):</span>
+<span class="pl-c">#             mask[:, :, i] = color[i]</span>
+        
+<span class="pl-c">#         # 确保mask也是uint8类型</span>
+<span class="pl-c">#         mask = mask.astype(np.uint8)</span>
+        
+<span class="pl-c">#         # 添加遮罩</span>
+<span class="pl-c">#         alpha = 0.5  # 透明度</span>
+<span class="pl-c">#         image = cv2.addWeighted(image, 1-alpha, mask, alpha, 0)</span>
+        
+<span class="pl-c">#         return Image.fromarray(image)</span>
+
+<span class="pl-c">#     @staticmethod</span>
+<span class="pl-c">#     def embed_positive_in_negative(positive_img, negative_img):</span>
+<span class="pl-c">#         """在负样本中嵌入正样本"""</span>
+<span class="pl-c">#         # 转换为numpy数组</span>
+<span class="pl-c">#         pos_img = np.array(positive_img)</span>
+<span class="pl-c">#         neg_img = np.array(negative_img)</span>
+        
+<span class="pl-c">#         # 确保图像是3通道的</span>
+<span class="pl-c">#         if len(pos_img.shape) == 2:</span>
+<span class="pl-c">#             pos_img = cv2.cvtColor(pos_img, cv2.COLOR_GRAY2BGR)</span>
+<span class="pl-c">#         if len(neg_img.shape) == 2:</span>
+<span class="pl-c">#             neg_img = cv2.cvtColor(neg_img, cv2.COLOR_GRAY2BGR)</span>
+        
+<span class="pl-c">#         # 获取负样本尺寸</span>
+<span class="pl-c">#         h, w = neg_img.shape[:2]</span>
+<span class="pl-c">#         pos_h, pos_w = pos_img.shape[:2]</span>
+        
+<span class="pl-c">#         # 计算合适的缩放比例</span>
+<span class="pl-c">#         scale = min(</span>
+<span class="pl-c">#             random.uniform(0.5, 0.8),</span>
+<span class="pl-c">#             (w * 0.8) / pos_w,</span>
+<span class="pl-c">#             (h * 0.8) / pos_h</span>
+<span class="pl-c">#         )</span>
+        
+<span class="pl-c">#         # 缩放正样本</span>
+<span class="pl-c">#         new_size = (int(pos_w * scale), int(pos_h * scale))</span>
+<span class="pl-c">#         pos_img_resized = cv2.resize(pos_img, new_size)</span>
+        
+<span class="pl-c">#         # 确保有效的随机位置范围</span>
+<span class="pl-c">#         max_x = max(0, w - new_size[0])</span>
+<span class="pl-c">#         max_y = max(0, h - new_size[1])</span>
+        
+<span class="pl-c">#         # 随机选择插入位置</span>
+<span class="pl-c">#         x = random.randint(0, max_x) if max_x &gt; 0 else 0</span>
+<span class="pl-c">#         y = random.randint(0, max_y) if max_y &gt; 0 else 0</span>
+        
+<span class="pl-c">#         # 获取ROI区域并确保与缩放后的正样本具有相同的形状</span>
+<span class="pl-c">#         roi = neg_img[y:y+new_size[1], x:x+new_size[0]]</span>
+        
+<span class="pl-c">#         # 确保ROI和pos_img_resized具有相同的形状和通道数</span>
+<span class="pl-c">#         if roi.shape == pos_img_resized.shape:</span>
+<span class="pl-c">#             # 混合图像</span>
+<span class="pl-c">#             blended = cv2.addWeighted(roi, 0.3, pos_img_resized, 0.7, 0)</span>
+<span class="pl-c">#             neg_img[y:y+new_size[1], x:x+new_size[0]] = blended</span>
+        
+<span class="pl-c">#         return Image.fromarray(neg_img)</span>
+    
+<span class="pl-c">#     @staticmethod</span>
+<span class="pl-c">#     def embed_same(positive_img, negative_img):</span>
+<span class="pl-c">#         """在负样本中嵌入正样本"""</span>
+<span class="pl-c">#         # 转换为numpy数组</span>
+<span class="pl-c">#         pos_img = np.array(positive_img)</span>
+<span class="pl-c">#         neg_img = np.array(negative_img)</span>
+        
+<span class="pl-c">#         # 确保图像是3通道的</span>
+<span class="pl-c">#         if len(pos_img.shape) == 2:</span>
+<span class="pl-c">#             pos_img = cv2.cvtColor(pos_img, cv2.COLOR_GRAY2BGR)</span>
+<span class="pl-c">#         if len(neg_img.shape) == 2:</span>
+<span class="pl-c">#             neg_img = cv2.cvtColor(neg_img, cv2.COLOR_GRAY2BGR)</span>
+        
+<span class="pl-c">#         # 获取负样本尺寸</span>
+<span class="pl-c">#         h, w = neg_img.shape[:2]</span>
+<span class="pl-c">#         pos_h, pos_w = pos_img.shape[:2]</span>
+        
+<span class="pl-c">#         # 计算合适的缩放比例</span>
+<span class="pl-c">#         scale = min(</span>
+<span class="pl-c">#             random.uniform(0.5, 0.8),</span>
+<span class="pl-c">#             (w * 0.8) / pos_w,</span>
+<span class="pl-c">#             (h * 0.8) / pos_h</span>
+<span class="pl-c">#         )</span>
+        
+<span class="pl-c">#         # 缩放正样本</span>
+<span class="pl-c">#         new_size = (int(pos_w * scale), int(pos_h * scale))</span>
+<span class="pl-c">#         pos_img_resized = cv2.resize(pos_img, new_size)</span>
+        
+<span class="pl-c">#         # 确保有效的随机位置范围</span>
+<span class="pl-c">#         max_x = max(0, w - new_size[0])</span>
+<span class="pl-c">#         max_y = max(0, h - new_size[1])</span>
+        
+<span class="pl-c">#         # 随机选择插入位置</span>
+<span class="pl-c">#         x = random.randint(0, max_x) if max_x &gt; 0 else 0</span>
+<span class="pl-c">#         y = random.randint(0, max_y) if max_y &gt; 0 else 0</span>
+        
+<span class="pl-c">#         # 获取ROI区域并确保与缩放后的正样本具有相同的形状</span>
+<span class="pl-c">#         roi = neg_img[y:y+new_size[1], x:x+new_size[0]]</span>
+        
+<span class="pl-c">#         # 确保ROI和pos_img_resized具有相同的形状和通道数</span>
+<span class="pl-c">#         if roi.shape == pos_img_resized.shape:</span>
+<span class="pl-c">#             # 混合图像</span>
+<span class="pl-c">#             blended = cv2.addWeighted(roi, 0.3, pos_img_resized, 0.7, 0)</span>
+<span class="pl-c">#             neg_img[y:y+new_size[1], x:x+new_size[0]] = blended</span>
+        
+<span class="pl-c">#         return Image.fromarray(neg_img)</span>
+
+<span class="pl-c">#     @staticmethod</span>
+<span class="pl-c">#     def flip_image(image):</span>
+<span class="pl-c">#         """图片轴对称"""</span>
+<span class="pl-c">#         return Image.fromarray(np.array(image)[:, ::-1])</span>
+    
+<span class="pl-c">#     @staticmethod</span>
+<span class="pl-c">#     def mirror_half_image(image):</span>
+<span class="pl-c">#         img_array = np.array(image)</span>
+    
+<span class="pl-c">#         # 获取图片尺寸</span>
+<span class="pl-c">#         h, w = img_array.shape[:2]</span>
+        
+<span class="pl-c">#         # 取左半边</span>
+<span class="pl-c">#         half_w = w // 2</span>
+<span class="pl-c">#         left_half = img_array[:, :half_w]</span>
+        
+<span class="pl-c">#         # 水平翻转左半边得到右半边</span>
+<span class="pl-c">#         right_half = left_half[:, ::-1]</span>
+        
+<span class="pl-c">#         # 拼接两个半边</span>
+<span class="pl-c">#         mirrored = np.concatenate([left_half, right_half], axis=1)</span>
+        
+<span class="pl-c">#         return Image.fromarray(mirrored)</span>
+    
+
+<span class="pl-c"># def augment_dataset(positive_images, negative_images):</span>
+<span class="pl-c">#     aug_utils = AugmentationUtils()</span>
+<span class="pl-c">#     augmented_data = []</span>
+    
+<span class="pl-c">#     # 增强正样本</span>
+<span class="pl-c">#     for pos_img in positive_images:</span>
+<span class="pl-c">#         img = Image.open(pos_img).convert('RGB')</span>
+<span class="pl-c">#         # 原图</span>
+<span class="pl-c">#         augmented_data.append((img, 1))</span>
+<span class="pl-c">#         # 颜色遮罩</span>
+<span class="pl-c">#         augmented_data.append((aug_utils.add_color_mask(img, True), 1))</span>
+<span class="pl-c">#         # 轴对称</span>
+<span class="pl-c">#         augmented_data.append((aug_utils.flip_image(img), 1))</span>
+<span class="pl-c">#         # 镜像一半</span>
+<span class="pl-c">#         augmented_data.append((aug_utils.mirror_half_image(img), 1))</span>
+<span class="pl-c">#         # 嵌入相同</span>
+<span class="pl-c">#         img_id = random.randint(0, len(positive_images)-1)</span>
+<span class="pl-c">#         aaa = Image.open(positive_images[img_id]).convert('RGB')</span>
+<span class="pl-c">#         augmented_data.append((aug_utils.embed_same(aaa, img), 1))</span>
+        
+    
+<span class="pl-c">#     # 增强负样本</span>
+<span class="pl-c">#     for i, neg_img in enumerate(negative_images):</span>
+<span class="pl-c">#         img = Image.open(neg_img).convert('RGB')</span>
+<span class="pl-c">#         # 原图</span>
+<span class="pl-c">#         augmented_data.append((img, 0))</span>
+<span class="pl-c">#         # 颜色遮罩</span>
+<span class="pl-c">#         augmented_data.append((aug_utils.add_color_mask(img, False), 0))</span>
+<span class="pl-c">#         # 镜像一半</span>
+<span class="pl-c">#         augmented_data.append((aug_utils.mirror_half_image(img), 0))</span>
+<span class="pl-c">#         # 嵌入正样本</span>
+<span class="pl-c">#         pos_img = Image.open(positive_images[random.randint(0, len(positive_images)-1)]).convert('RGB')</span>
+<span class="pl-c">#         augmented_data.append((aug_utils.embed_positive_in_negative(pos_img, img), 1))</span>
+<span class="pl-c">#         # 嵌入相同</span>
+<span class="pl-c">#         img_id = random.randint(0, len(negative_images)-1)</span>
+<span class="pl-c">#         aaa = Image.open(negative_images[img_id]).convert('RGB')</span>
+<span class="pl-c">#         augmented_data.append((aug_utils.embed_same(aaa, img), 0))</span>
+        
+
+        
+<span class="pl-c">#     # # 显示并保存</span>
+<span class="pl-c">#     # for i, (img, label) in enumerate(augmented_data):</span>
+<span class="pl-c">#     #     # img.show()</span>
+<span class="pl-c">#     #     os.makedirs('aug_images', exist_ok=True)</span>
+<span class="pl-c">#     #     img.save(f'aug_images/aug_{i}.jpg')</span>
+    
+<span class="pl-c">#     # 统计</span>
+<span class="pl-c">#     print(f"Positive: {len([x for x, y in augmented_data if y == 1])}, Negative: {len([x for x, y in augmented_data if y == 0])}")</span>
+<span class="pl-c">#     return augmented_data</span>
+
+
+<span class="pl-k">class</span> <span class="pl-v">LinearWarmUpCosineAnnealingLR</span>(<span class="pl-v">LambdaLR</span>):
+    <span class="pl-k">def</span> <span class="pl-en">__init__</span>(<span class="pl-s1">self</span>, <span class="pl-s1">optimizer</span>, <span class="pl-c1">*</span>, <span class="pl-s1">warmup_iters</span>, <span class="pl-s1">max_learning_rate</span>, <span class="pl-s1">min_lr</span>, <span class="pl-s1">lr_decay_iters</span>, <span class="pl-c1">**</span><span class="pl-s1">kwargs</span>):
+        <span class="pl-s1">self</span>.<span class="pl-s1">warmup_iters</span> <span class="pl-c1">=</span> <span class="pl-s1">warmup_iters</span>
+        <span class="pl-s1">self</span>.<span class="pl-s1">max_learning_rate</span> <span class="pl-c1">=</span> <span class="pl-s1">max_learning_rate</span>
+        <span class="pl-s1">self</span>.<span class="pl-s1">lr_decay_iters</span> <span class="pl-c1">=</span> <span class="pl-s1">lr_decay_iters</span>
+        <span class="pl-s1">self</span>.<span class="pl-s1">min_lr</span> <span class="pl-c1">=</span> <span class="pl-s1">min_lr</span>
+        <span class="pl-s1">kwargs</span>[<span class="pl-s">'optimizer'</span>] <span class="pl-c1">=</span> <span class="pl-s1">optimizer</span>
+        <span class="pl-s1">kwargs</span>[<span class="pl-s">'lr_lambda'</span>] <span class="pl-c1">=</span> <span class="pl-s1">self</span>.<span class="pl-s1">_step_inner</span>
+        <span class="pl-en">super</span>().<span class="pl-en">__init__</span>(<span class="pl-c1">**</span><span class="pl-s1">kwargs</span>)
+
+    <span class="pl-k">def</span> <span class="pl-en">_step_inner</span>(<span class="pl-s1">self</span>, <span class="pl-s1">steps</span>):
+        <span class="pl-k">if</span> <span class="pl-s1">steps</span> <span class="pl-c1">&lt;</span> <span class="pl-s1">self</span>.<span class="pl-s1">warmup_iters</span>:
+            <span class="pl-k">return</span> <span class="pl-s1">self</span>.<span class="pl-s1">max_learning_rate</span> <span class="pl-c1">*</span> <span class="pl-s1">steps</span> <span class="pl-c1">/</span> <span class="pl-s1">self</span>.<span class="pl-s1">warmup_iters</span>
+        <span class="pl-k">elif</span> <span class="pl-s1">steps</span> <span class="pl-c1">&lt;</span> <span class="pl-s1">self</span>.<span class="pl-s1">lr_decay_iters</span>:
+            <span class="pl-k">return</span> <span class="pl-s1">self</span>.<span class="pl-s1">min_lr</span> <span class="pl-c1">+</span> <span class="pl-c1">0.5</span> <span class="pl-c1">*</span> (<span class="pl-c1">1.0</span> <span class="pl-c1">+</span> <span class="pl-s1">np</span>.<span class="pl-en">cos</span>((<span class="pl-s1">steps</span> <span class="pl-c1">-</span> <span class="pl-s1">self</span>.<span class="pl-s1">warmup_iters</span>) <span class="pl-c1">/</span> (<span class="pl-s1">self</span>.<span class="pl-s1">lr_decay_iters</span> <span class="pl-c1">-</span> <span class="pl-s1">self</span>.<span class="pl-s1">warmup_iters</span>)<span class="pl-c1">*</span><span class="pl-s1">np</span>.<span class="pl-s1">pi</span>)) <span class="pl-c1">*</span> (<span class="pl-s1">self</span>.<span class="pl-s1">max_learning_rate</span> <span class="pl-c1">-</span> <span class="pl-s1">self</span>.<span class="pl-s1">min_lr</span>)
+        <span class="pl-k">else</span>:
+            <span class="pl-k">return</span> <span class="pl-s1">self</span>.<span class="pl-s1">min_lr</span>
+
+
+<span class="pl-k">def</span> <span class="pl-en">transform_img</span>(<span class="pl-s1">img</span>):
+    <span class="pl-c"># 处理图片</span>
+    <span class="pl-s1">img_np</span> <span class="pl-c1">=</span> <span class="pl-s1">np</span>.<span class="pl-en">array</span>(<span class="pl-s1">img</span>)
+    <span class="pl-s1">img_tensor</span> <span class="pl-c1">=</span> <span class="pl-s1">torch</span>.<span class="pl-en">from_numpy</span>(<span class="pl-s1">img_np</span>).<span class="pl-en">permute</span>(<span class="pl-c1">2</span>, <span class="pl-c1">0</span>, <span class="pl-c1">1</span>)  <span class="pl-c"># C, H, W</span>
+    <span class="pl-s1">img_tensor</span> <span class="pl-c1">=</span> <span class="pl-s1">torch</span>.<span class="pl-s1">nn</span>.<span class="pl-s1">functional</span>.<span class="pl-en">interpolate</span>(<span class="pl-s1">img_tensor</span>.<span class="pl-en">unsqueeze</span>(<span class="pl-c1">0</span>), <span class="pl-s1">size</span><span class="pl-c1">=</span>(<span class="pl-s1">image_size</span>, <span class="pl-s1">image_size</span>), <span class="pl-s1">mode</span><span class="pl-c1">=</span><span class="pl-s">'bilinear'</span>, <span class="pl-s1">align_corners</span><span class="pl-c1">=</span><span class="pl-c1">False</span>).<span class="pl-en">squeeze</span>(<span class="pl-c1">0</span>)
+    <span class="pl-c"># normalize</span>
+    <span class="pl-s1">normalized_img</span> <span class="pl-c1">=</span> <span class="pl-s1">img_tensor</span>.<span class="pl-en">float</span>() <span class="pl-c1">/</span> <span class="pl-c1">255.0</span>
+    <span class="pl-k">return</span> <span class="pl-s1">normalized_img</span>
+
+
+<span class="pl-s1">transform</span> <span class="pl-c1">=</span> <span class="pl-s1">transforms</span>.<span class="pl-v">Compose</span>([
+    <span class="pl-s1">transforms</span>.<span class="pl-v">Resize</span>((<span class="pl-s1">image_size</span>, <span class="pl-s1">image_size</span>)),
+    <span class="pl-s1">transforms</span>.<span class="pl-v">ToTensor</span>(),
+    <span class="pl-s1">transforms</span>.<span class="pl-v">Normalize</span>(<span class="pl-s1">mean</span><span class="pl-c1">=</span>[<span class="pl-c1">0.485</span>, <span class="pl-c1">0.456</span>, <span class="pl-c1">0.406</span>], <span class="pl-s1">std</span><span class="pl-c1">=</span>[<span class="pl-c1">0.229</span>, <span class="pl-c1">0.224</span>, <span class="pl-c1">0.225</span>]),
+])
+
+
+<span class="pl-k">def</span> <span class="pl-en">transform_img_torchvision</span>(<span class="pl-s1">data</span>):
+    <span class="pl-s1">data</span>[<span class="pl-s">'x'</span>] <span class="pl-c1">=</span> [<span class="pl-en">transform</span>(<span class="pl-s1">img</span>.<span class="pl-en">convert</span>(<span class="pl-s">'RGB'</span>)) <span class="pl-k">for</span> <span class="pl-s1">img</span> <span class="pl-c1">in</span> <span class="pl-s1">data</span>[<span class="pl-s">'image'</span>]]
+    <span class="pl-k">return</span> <span class="pl-s1">data</span>
+
+
+<span class="pl-s1">label_mapping</span> <span class="pl-c1">=</span> {
+    <span class="pl-s">"nailong"</span>: <span class="pl-c1">0</span>,
+    <span class="pl-s">"emoji"</span>: <span class="pl-c1">1</span>,
+    <span class="pl-s">"anime"</span>: <span class="pl-c1">2</span>,
+    <span class="pl-s">"others"</span>: <span class="pl-c1">3</span>,
+    <span class="pl-s">"long"</span>: <span class="pl-c1">4</span>
+}
+
+<span class="pl-k">def</span> <span class="pl-en">extract_datasets</span>():
+    <span class="pl-s1">ds</span> <span class="pl-c1">=</span> <span class="pl-en">load_dataset</span>(<span class="pl-s">"refoundd/NailongClassification"</span>, <span class="pl-s1">cache_dir</span><span class="pl-c1">=</span><span class="pl-s">"data"</span>, <span class="pl-s1">split</span><span class="pl-c1">=</span><span class="pl-s">"train"</span>)
+    <span class="pl-s1">ds</span> <span class="pl-c1">=</span> <span class="pl-s1">ds</span>.<span class="pl-en">map</span>(<span class="pl-k">lambda</span> <span class="pl-s1">x</span>: {<span class="pl-s">'label'</span>: <span class="pl-s1">label_mapping</span>[<span class="pl-s1">x</span>[<span class="pl-s">'label'</span>]]})
+    <span class="pl-s1">ds</span> <span class="pl-c1">=</span> <span class="pl-s1">ds</span>.<span class="pl-en">map</span>(<span class="pl-s1">transform_img_torchvision</span>, <span class="pl-s1">remove_columns</span><span class="pl-c1">=</span>[<span class="pl-s">'image'</span>], <span class="pl-s1">batched</span><span class="pl-c1">=</span><span class="pl-c1">True</span>)
+    <span class="pl-s1">dataset</span> <span class="pl-c1">=</span> <span class="pl-s1">ds</span>.<span class="pl-en">train_test_split</span>(<span class="pl-s1">test_size</span><span class="pl-c1">=</span><span class="pl-c1">0.2</span>)
+    <span class="pl-k">return</span> <span class="pl-s1">dataset</span>
+
+<span class="pl-s1">dataset</span> <span class="pl-c1">=</span> <span class="pl-en">extract_datasets</span>()
+
+
+<span class="pl-k">class</span> <span class="pl-v">NaiLongDataset</span>(<span class="pl-v">Dataset</span>):
+    <span class="pl-k">def</span> <span class="pl-en">__init__</span>(<span class="pl-s1">self</span>, <span class="pl-s1">mode</span><span class="pl-c1">=</span><span class="pl-s">'train'</span>):
+        <span class="pl-k">assert</span> <span class="pl-s1">mode</span> <span class="pl-c1">in</span> [<span class="pl-s">'train'</span>, <span class="pl-s">'test'</span>]
+        <span class="pl-s1">self</span>.<span class="pl-s1">dataset</span> <span class="pl-c1">=</span> <span class="pl-s1">dataset</span>[<span class="pl-s1">mode</span>]
+
+    <span class="pl-k">def</span> <span class="pl-en">__len__</span>(<span class="pl-s1">self</span>):
+        <span class="pl-k">return</span> <span class="pl-en">len</span>(<span class="pl-s1">self</span>.<span class="pl-s1">dataset</span>)
+
+    <span class="pl-k">def</span> <span class="pl-en">__getitem__</span>(<span class="pl-s1">self</span>, <span class="pl-s1">idx</span>):
+        <span class="pl-s1">item</span> <span class="pl-c1">=</span> <span class="pl-s1">self</span>.<span class="pl-s1">dataset</span>[<span class="pl-s1">idx</span>][<span class="pl-s">'x'</span>]
+        <span class="pl-s1">label</span> <span class="pl-c1">=</span> <span class="pl-s1">self</span>.<span class="pl-s1">dataset</span>[<span class="pl-s1">idx</span>][<span class="pl-s">'label'</span>]
+        <span class="pl-k">return</span> <span class="pl-s1">torch</span>.<span class="pl-en">tensor</span>(<span class="pl-s1">item</span>), <span class="pl-s1">torch</span>.<span class="pl-en">tensor</span>(<span class="pl-s1">label</span>)
+
+
+
+<span class="pl-k">class</span> <span class="pl-v">NaiLongTrainer</span>(<span class="pl-v">Trainer</span>):
+    <span class="pl-k">def</span> <span class="pl-en">__init__</span>(<span class="pl-s1">self</span>, <span class="pl-s1">config</span>):
+        <span class="pl-en">super</span>().<span class="pl-en">__init__</span>(<span class="pl-s1">config</span>)
+
+    <span class="pl-k">def</span> <span class="pl-en">build_model</span>(<span class="pl-s1">self</span>):
+        <span class="pl-c"># model = resnet18()</span>
+        <span class="pl-c"># model.fc = torch.nn.Linear(model.fc.in_features, 2)</span>
+        <span class="pl-c"># return model</span>
+        <span class="pl-k">return</span> <span class="pl-en">convnext_base</span>(<span class="pl-s1">pretrained</span><span class="pl-c1">=</span><span class="pl-c1">False</span>, <span class="pl-s1">num_classes</span><span class="pl-c1">=</span><span class="pl-c1">5</span>)
+    
+    <span class="pl-k">def</span> <span class="pl-en">build_criterion</span>(<span class="pl-s1">self</span>):
+        <span class="pl-k">return</span> <span class="pl-s1">torch</span>.<span class="pl-s1">nn</span>.<span class="pl-v">CrossEntropyLoss</span>()
+    
+    <span class="pl-k">def</span> <span class="pl-en">build_scheduler</span>(<span class="pl-s1">self</span>):
+        <span class="pl-k">return</span> <span class="pl-v">LinearWarmUpCosineAnnealingLR</span>(<span class="pl-s1">self</span>.<span class="pl-s1">optimizer</span>, <span class="pl-s1">warmup_iters</span><span class="pl-c1">=</span><span class="pl-s1">self</span>.<span class="pl-s1">config</span>[<span class="pl-s">'warmup_iters'</span>], <span class="pl-s1">max_learning_rate</span><span class="pl-c1">=</span><span class="pl-s1">self</span>.<span class="pl-s1">config</span>[<span class="pl-s">'max_learning_rate'</span>], <span class="pl-s1">min_lr</span><span class="pl-c1">=</span><span class="pl-s1">self</span>.<span class="pl-s1">config</span>[<span class="pl-s">'min_lr'</span>], <span class="pl-s1">lr_decay_iters</span><span class="pl-c1">=</span><span class="pl-s1">self</span>.<span class="pl-s1">config</span>[<span class="pl-s">'lr_decay_iters'</span>])
+    
+    <span class="pl-k">def</span> <span class="pl-en">build_dataloader</span>(<span class="pl-s1">self</span>, <span class="pl-s1">mode</span><span class="pl-c1">=</span><span class="pl-s">'train'</span>):
+        <span class="pl-s1">dataset</span> <span class="pl-c1">=</span> <span class="pl-v">NaiLongDataset</span>(<span class="pl-s1">mode</span><span class="pl-c1">=</span><span class="pl-s">"train"</span>)
+        <span class="pl-k">return</span> <span class="pl-v">DataLoader</span>(<span class="pl-s1">dataset</span>, <span class="pl-s1">batch_size</span><span class="pl-c1">=</span><span class="pl-s1">batch_size</span>, <span class="pl-s1">shuffle</span><span class="pl-c1">=</span><span class="pl-c1">True</span>)
+    
+    <span class="pl-k">def</span> <span class="pl-en">train_step</span>(<span class="pl-s1">self</span>, <span class="pl-s1">batch</span>):
+        <span class="pl-s1">x</span>, <span class="pl-s1">y</span> <span class="pl-c1">=</span> <span class="pl-s1">batch</span>
+        <span class="pl-s1">x</span>, <span class="pl-s1">y</span> <span class="pl-c1">=</span> <span class="pl-s1">x</span>.<span class="pl-en">to</span>(<span class="pl-s1">device</span>), <span class="pl-s1">y</span>.<span class="pl-en">to</span>(<span class="pl-s1">device</span>)
+        <span class="pl-k">return</span> <span class="pl-s1">self</span>.<span class="pl-en">criterion</span>(<span class="pl-s1">self</span>.<span class="pl-en">model</span>(<span class="pl-s1">x</span>), <span class="pl-s1">y</span>)
+    
+    <span class="pl-k">def</span> <span class="pl-en">validate</span>(<span class="pl-s1">self</span>):
+        <span class="pl-s1">self</span>.<span class="pl-s1">logger</span>.<span class="pl-en">info</span>(<span class="pl-s">"Validating..."</span>)
+        <span class="pl-s1">self</span>.<span class="pl-s1">model</span>.<span class="pl-en">eval</span>()
+        <span class="pl-s1">dataloader</span> <span class="pl-c1">=</span> <span class="pl-s1">self</span>.<span class="pl-en">build_dataloader</span>(<span class="pl-s1">mode</span><span class="pl-c1">=</span><span class="pl-s">'test'</span>)
+        <span class="pl-s1">acc</span> <span class="pl-c1">=</span> []
+        <span class="pl-s1">f1</span> <span class="pl-c1">=</span> [[], []]
+        <span class="pl-k">with</span> <span class="pl-s1">torch</span>.<span class="pl-en">no_grad</span>(): 
+            <span class="pl-k">for</span> <span class="pl-s1">i</span>, (<span class="pl-s1">x</span>, <span class="pl-s1">y</span>) <span class="pl-c1">in</span> <span class="pl-en">enumerate</span>(<span class="pl-s1">dataloader</span>):
+                <span class="pl-s1">x</span>, <span class="pl-s1">y</span> <span class="pl-c1">=</span> <span class="pl-s1">x</span>.<span class="pl-en">to</span>(<span class="pl-s1">device</span>), <span class="pl-s1">y</span>.<span class="pl-en">to</span>(<span class="pl-s1">device</span>)
+                <span class="pl-c"># print(f"Validation: {i}, {y}")</span>
+                <span class="pl-s1">y_hat</span> <span class="pl-c1">=</span> <span class="pl-s1">self</span>.<span class="pl-en">model</span>(<span class="pl-s1">x</span>)
+                <span class="pl-s1">acc</span>.<span class="pl-en">append</span>(<span class="pl-s1">torch</span>.<span class="pl-en">sum</span>(<span class="pl-s1">torch</span>.<span class="pl-en">argmax</span>(<span class="pl-s1">y_hat</span>, <span class="pl-s1">dim</span><span class="pl-c1">=</span><span class="pl-c1">1</span>) <span class="pl-c1">==</span> <span class="pl-s1">y</span>).<span class="pl-en">item</span>() <span class="pl-c1">/</span> <span class="pl-en">len</span>(<span class="pl-s1">y</span>))
+                <span class="pl-s1">f1</span>[<span class="pl-c1">0</span>].<span class="pl-en">extend</span>(<span class="pl-s1">y</span>.<span class="pl-en">cpu</span>().<span class="pl-en">tolist</span>())
+                <span class="pl-s1">f1</span>[<span class="pl-c1">1</span>].<span class="pl-en">extend</span>(<span class="pl-s1">torch</span>.<span class="pl-en">argmax</span>(<span class="pl-s1">y_hat</span>, <span class="pl-s1">dim</span><span class="pl-c1">=</span><span class="pl-c1">1</span>).<span class="pl-en">cpu</span>().<span class="pl-en">tolist</span>())
+            <span class="pl-s1">f1_scores</span> <span class="pl-c1">=</span> <span class="pl-en">f1_score</span>(<span class="pl-s1">f1</span>[<span class="pl-c1">0</span>], <span class="pl-s1">f1</span>[<span class="pl-c1">1</span>], <span class="pl-s1">average</span><span class="pl-c1">=</span><span class="pl-s">'macro'</span>)
+        <span class="pl-k">return</span> {<span class="pl-s">'acc'</span>: <span class="pl-en">sum</span>(<span class="pl-s1">acc</span>) <span class="pl-c1">/</span> <span class="pl-en">len</span>(<span class="pl-s1">acc</span>), <span class="pl-s">'f1'</span>: <span class="pl-s1">f1_scores</span>}
+
+
+<span class="pl-k">def</span> <span class="pl-en">main</span>():
+    <span class="pl-s1">config</span> <span class="pl-c1">=</span> {  <span class="pl-c"># test</span>
+        <span class="pl-s">"model"</span>: <span class="pl-s">"convnext_tiny"</span>,
+        <span class="pl-s">"checkpoint_dir"</span>: <span class="pl-s">"./checkpoints"</span>,
+        <span class="pl-s">"tensorboard_dir"</span>: <span class="pl-s">"./tensorboard"</span>,
+        <span class="pl-s">"device"</span>: <span class="pl-s">"cuda"</span>,
+        <span class="pl-s">"enable_cudnn_benchmark"</span>: <span class="pl-c1">True</span>,
+        <span class="pl-s">"enable_amp"</span>: <span class="pl-c1">False</span>,
+        <span class="pl-s">"learning_rate"</span>: <span class="pl-c1">1</span>,  <span class="pl-c"># 启动lr_scheduler 这里必须是1</span>
+        <span class="pl-s">"betas"</span>: [<span class="pl-c1">0.9</span>, <span class="pl-c1">0.999</span>],
+        <span class="pl-s">"eps"</span>: <span class="pl-c1">1e-8</span>,
+        <span class="pl-s">"enable_compile"</span>: <span class="pl-c1">False</span>,
+        <span class="pl-s">"weight_decay"</span>: <span class="pl-c1">0.0</span>,
+        <span class="pl-s">"max_steps"</span>: <span class="pl-c1">5000</span>,
+        <span class="pl-s">"max_grad_norm"</span>: <span class="pl-c1">1.0</span>,
+        <span class="pl-s">"save_every"</span>: <span class="pl-c1">500</span>,
+        <span class="pl-s">"gradient_accumulation_steps"</span>: <span class="pl-c1">1</span>,
+        <span class="pl-s">"warmup_iters"</span>: <span class="pl-c1">500</span>,
+        <span class="pl-s">"max_learning_rate"</span>: <span class="pl-c1">1e-3</span>,
+        <span class="pl-s">"min_lr"</span>: <span class="pl-c1">1e-4</span>,
+        <span class="pl-s">'lr_decay_iters'</span>: <span class="pl-c1">1000</span>
+    }
+    <span class="pl-s1">os</span>.<span class="pl-en">makedirs</span>(<span class="pl-s1">config</span>[<span class="pl-s">'checkpoint_dir'</span>], <span class="pl-s1">exist_ok</span><span class="pl-c1">=</span><span class="pl-c1">True</span>)
+    <span class="pl-s1">os</span>.<span class="pl-en">makedirs</span>(<span class="pl-s1">config</span>[<span class="pl-s">'tensorboard_dir'</span>], <span class="pl-s1">exist_ok</span><span class="pl-c1">=</span><span class="pl-c1">True</span>)
+    <span class="pl-s1">trainer</span> <span class="pl-c1">=</span> <span class="pl-v">NaiLongTrainer</span>(<span class="pl-s1">config</span>)
+    <span class="pl-s1">trainer</span>.<span class="pl-en">train</span>()
+
+<span class="pl-k">if</span> <span class="pl-s1">__name__</span> <span class="pl-c1">==</span> <span class="pl-s">"__main__"</span>:
+    <span class="pl-c"># 删除tensorboard下的文件, 但不删除文件夹</span>
+    <span class="pl-k">for</span> <span class="pl-s1">i</span> <span class="pl-c1">in</span> <span class="pl-s1">os</span>.<span class="pl-en">listdir</span>(<span class="pl-s">'./tensorboard'</span>):
+        <span class="pl-s1">os</span>.<span class="pl-en">remove</span>(<span class="pl-s1">os</span>.<span class="pl-s1">path</span>.<span class="pl-en">join</span>(<span class="pl-s">'./tensorboard'</span>, <span class="pl-s1">i</span>))
+    <span class="pl-c"># 删除checkpoints下的文件</span>
+    <span class="pl-k">for</span> <span class="pl-s1">i</span> <span class="pl-c1">in</span> <span class="pl-s1">os</span>.<span class="pl-en">listdir</span>(<span class="pl-s">'./checkpoints'</span>):
+        <span class="pl-s1">os</span>.<span class="pl-en">remove</span>(<span class="pl-s1">os</span>.<span class="pl-s1">path</span>.<span class="pl-en">join</span>(<span class="pl-s">'./checkpoints'</span>, <span class="pl-s1">i</span>))
+    <span class="pl-k">try</span>:
+        <span class="pl-en">main</span>()
+    <span class="pl-k">except</span> <span class="pl-v">KeyboardInterrupt</span>:
+        <span class="pl-en">print</span>(<span class="pl-s">"KeyboardInterrupt"</span>)
+        </pre></div>
+<p></p>
+</details> 
+<blockquote>
+<p>TODO 补充trainer的用例与用法</p>
 </blockquote>
 <h3>数据增广</h3>
 <p>原始数据集只有两百多张图片, 这个时候无法避免的要做数据增广, 扩展 nailong 标签的数据, 这里因为是初版方案, 也没有非常精细的增广方案, 这里使用了以下几种方式(代码在如上train.py中):</p>
@@ -1740,8 +3841,273 @@ TODO 补充超参搜索相关内容, 以及其用例与用法</p>
 <li>在负样本中嵌入正样本<br>
 很经典的增广数据的手法</li>
 <li>图片轴对称</li>
-<li>等</li>
-</ul></div>
+<li>取图像的一半镜像翻转</li>
+</ul>
+<h3>训练</h3>
+<h4>参数搜索</h4>
+<p>虽然是个人小项目, 简单的参数搜索不能少, 继续上面写的 <code class="notranslate">trainer.py</code>, 我也写了一个简单的 <code class="notranslate">hyperparameter_seacher.py</code> 来搜索超参</p>
+<details><summary>Details</summary>
+<p>
+</p><div class="highlight highlight-source-python"><pre class="notranslate"><span class="pl-k">from</span> <span class="pl-s1">trainer</span> <span class="pl-k">import</span> <span class="pl-v">Trainer</span>
+<span class="pl-k">import</span> <span class="pl-s1">optuna</span>
+
+
+<span class="pl-s1">example_config</span> <span class="pl-c1">=</span> {
+    <span class="pl-s">"model"</span>: <span class="pl-s">"convnext_tiny"</span>,
+    <span class="pl-s">"checkpoint_dir"</span>: <span class="pl-s">"./checkpoints"</span>,
+    <span class="pl-s">"tensorboard_dir"</span>: <span class="pl-s">"./tensorboard"</span>,
+    <span class="pl-s">"device"</span>: <span class="pl-s">"cuda"</span>,
+    <span class="pl-s">"enable_cudnn_benchmark"</span>: <span class="pl-c1">True</span>,
+    <span class="pl-s">"enable_amp"</span>: <span class="pl-c1">False</span>,
+    <span class="pl-s">"learning_rate"</span>: <span class="pl-c1">1e-4</span>,
+    <span class="pl-s">"betas"</span>: [<span class="pl-c1">0.9</span>, <span class="pl-c1">0.999</span>],
+    <span class="pl-s">"eps"</span>: <span class="pl-c1">1e-8</span>,
+    <span class="pl-s">"enable_compile"</span>: <span class="pl-c1">False</span>,
+    <span class="pl-s">"weight_decay"</span>: <span class="pl-c1">0.05</span>,
+    <span class="pl-s">"max_steps"</span>: <span class="pl-c1">100</span>,
+    <span class="pl-s">"max_grad_norm"</span>: <span class="pl-c1">1.0</span>,
+    <span class="pl-s">"save_every"</span>: <span class="pl-c1">1000000</span>,  <span class="pl-c"># 不保存</span>
+    <span class="pl-s">"gradient_accumulation_steps"</span>: <span class="pl-c1">4</span>
+}
+
+<span class="pl-s1">example_search_config</span> <span class="pl-c1">=</span> {
+    <span class="pl-s">'params'</span>: {
+        <span class="pl-s">"learning_rate"</span>: {
+            <span class="pl-s">"type"</span>: <span class="pl-s">"float"</span>,
+            <span class="pl-s">"range"</span>: [<span class="pl-c1">1e-5</span>, <span class="pl-c1">1e-2</span>],
+            <span class="pl-s">"log"</span>: <span class="pl-c1">True</span>
+        },
+        <span class="pl-s">"gradient_accumulation_steps"</span>: {
+            <span class="pl-s">"type"</span>: <span class="pl-s">"int"</span>,
+            <span class="pl-s">"range"</span>: [<span class="pl-c1">1</span>, <span class="pl-c1">8</span>],
+            <span class="pl-s">"log"</span>: <span class="pl-c1">False</span>
+        }
+    },
+    <span class="pl-s">"if_save_info"</span>: <span class="pl-c1">False</span>,
+    <span class="pl-s">"n_trials"</span>: <span class="pl-c1">10</span>
+}
+
+<span class="pl-k">class</span> <span class="pl-v">HyperparameterSearcher</span>:
+    <span class="pl-k">def</span> <span class="pl-en">__init__</span>(<span class="pl-s1">self</span>, <span class="pl-s1">config</span>, <span class="pl-s1">trainer</span>):
+        <span class="pl-k">assert</span> <span class="pl-en">isinstance</span>(<span class="pl-s1">trainer</span>, <span class="pl-v">Trainer</span>), <span class="pl-s">"trainer must be an instance of Trainer"</span>
+        <span class="pl-s1">self</span>.<span class="pl-s1">config</span> <span class="pl-c1">=</span> <span class="pl-s1">config</span>
+        <span class="pl-s1">self</span>.<span class="pl-s1">trainer</span> <span class="pl-c1">=</span> <span class="pl-s1">trainer</span>
+        
+    <span class="pl-k">def</span> <span class="pl-en">objective</span>(<span class="pl-s1">self</span>, <span class="pl-s1">trial</span>):
+        <span class="pl-s1">search_params</span> <span class="pl-c1">=</span> <span class="pl-s1">self</span>.<span class="pl-s1">config</span>[<span class="pl-s">'params'</span>]
+        
+        <span class="pl-k">for</span> <span class="pl-s1">param_name</span>, <span class="pl-s1">param_config</span> <span class="pl-c1">in</span> <span class="pl-s1">search_params</span>.<span class="pl-en">items</span>():
+            <span class="pl-k">if</span> <span class="pl-s1">param_config</span>[<span class="pl-s">"type"</span>] <span class="pl-c1">==</span> <span class="pl-s">"float"</span>:
+                <span class="pl-s1">self</span>.<span class="pl-s1">trainer</span>.<span class="pl-s1">config</span>[<span class="pl-s1">param_name</span>] <span class="pl-c1">=</span> <span class="pl-s1">trial</span>.<span class="pl-en">suggest_float</span>(
+                    <span class="pl-s1">param_name</span>,
+                    <span class="pl-s1">param_config</span>[<span class="pl-s">"range"</span>][<span class="pl-c1">0</span>],
+                    <span class="pl-s1">param_config</span>[<span class="pl-s">"range"</span>][<span class="pl-c1">1</span>],
+                    <span class="pl-s1">log</span><span class="pl-c1">=</span><span class="pl-s1">param_config</span>.<span class="pl-en">get</span>(<span class="pl-s">"log"</span>, <span class="pl-c1">False</span>)
+                )
+            <span class="pl-k">elif</span> <span class="pl-s1">param_config</span>[<span class="pl-s">"type"</span>] <span class="pl-c1">==</span> <span class="pl-s">"int"</span>:
+                <span class="pl-s1">self</span>.<span class="pl-s1">trainer</span>.<span class="pl-s1">config</span>[<span class="pl-s1">param_name</span>] <span class="pl-c1">=</span> <span class="pl-s1">trial</span>.<span class="pl-en">suggest_int</span>(
+                    <span class="pl-s1">param_name</span>,
+                    <span class="pl-s1">param_config</span>[<span class="pl-s">"range"</span>][<span class="pl-c1">0</span>],
+                    <span class="pl-s1">param_config</span>[<span class="pl-s">"range"</span>][<span class="pl-c1">1</span>]
+                )
+            <span class="pl-k">elif</span> <span class="pl-s1">param_config</span>[<span class="pl-s">'type'</span>] <span class="pl-c1">==</span> <span class="pl-s">'list'</span>:
+                <span class="pl-s1">self</span>.<span class="pl-s1">trainer</span>.<span class="pl-s1">config</span>[<span class="pl-s1">param_name</span>] <span class="pl-c1">=</span> <span class="pl-s1">trial</span>.<span class="pl-en">suggest_categorical</span>(
+                    <span class="pl-s1">param_name</span>,
+                    <span class="pl-s1">param_config</span>[<span class="pl-s">'range'</span>]
+                )
+            <span class="pl-k">else</span>:
+                <span class="pl-k">raise</span> <span class="pl-v">ValueError</span>(<span class="pl-s">f"Unsupported parameter type: <span class="pl-s1"><span class="pl-kos">{</span><span class="pl-s1">param_config</span>[<span class="pl-s">'type'</span>]<span class="pl-kos">}</span></span>, only support float and int"</span>)
+        
+        <span class="pl-s1">self</span>.<span class="pl-s1">trainer</span>.<span class="pl-en">setup_training</span>()
+        <span class="pl-s1">self</span>.<span class="pl-s1">trainer</span>.<span class="pl-en">train</span>()
+        <span class="pl-s1">metric</span> <span class="pl-c1">=</span> <span class="pl-s1">self</span>.<span class="pl-s1">trainer</span>.<span class="pl-en">validate</span>()
+        <span class="pl-k">if</span> <span class="pl-s">'acc'</span> <span class="pl-c1">not</span> <span class="pl-c1">in</span> <span class="pl-s1">metric</span>:
+            <span class="pl-k">raise</span> <span class="pl-v">ValueError</span>(<span class="pl-s">"metric must contain 'acc'"</span>)
+        <span class="pl-k">return</span> <span class="pl-c1">-</span><span class="pl-s1">metric</span>[<span class="pl-s">'acc'</span>]  <span class="pl-c"># only support maximizing acc</span>
+    
+    <span class="pl-k">def</span> <span class="pl-en">search</span>(<span class="pl-s1">self</span>):
+        <span class="pl-s1">study</span> <span class="pl-c1">=</span> <span class="pl-s1">optuna</span>.<span class="pl-en">create_study</span>(<span class="pl-s1">direction</span><span class="pl-c1">=</span><span class="pl-s">"maximize"</span>)
+        <span class="pl-s1">study</span>.<span class="pl-en">optimize</span>(<span class="pl-s1">self</span>.<span class="pl-s1">objective</span>, <span class="pl-s1">n_trials</span><span class="pl-c1">=</span><span class="pl-s1">self</span>.<span class="pl-s1">config</span>[<span class="pl-s">'n_trials'</span>])
+        <span class="pl-en">print</span>(<span class="pl-s">"Best params:"</span>, <span class="pl-s1">study</span>.<span class="pl-s1">best_params</span>)
+        <span class="pl-en">print</span>(<span class="pl-s">"Best value:"</span>, <span class="pl-c1">-</span><span class="pl-s1">study</span>.<span class="pl-s1">best_value</span>)
+        <span class="pl-k">if</span> <span class="pl-s1">self</span>.<span class="pl-s1">config</span>[<span class="pl-s">'if_save_info'</span>]:
+            <span class="pl-s1">study</span>.<span class="pl-en">trials_dataframe</span>().<span class="pl-en">to_csv</span>(<span class="pl-s">"./output/optuna_results.csv"</span>)
+        <span class="pl-k">return</span> <span class="pl-s1">study</span>.<span class="pl-s1">best_params</span>
+    
+<span class="pl-k">def</span> <span class="pl-en">main</span>():
+    
+    <span class="pl-k">pass</span>
+
+<span class="pl-k">if</span> <span class="pl-s1">__name__</span> <span class="pl-c1">==</span> <span class="pl-s">'__main__'</span>:
+    <span class="pl-k">try</span>:
+        <span class="pl-en">main</span>()
+    <span class="pl-k">except</span> <span class="pl-v">KeyboardInterrupt</span>:
+        <span class="pl-k">pass</span></pre></div>
+<p></p>
+</details> 
+<p>超参搜索需要 trainer 的配合, 使用了与模型无关的 optuna 来跑给定范围的超参值, 这个时候可以给trainer一个比较容易训练的超参设置(短的epoch等), 同时关闭保存模式</p>
+<p>我也写了个简单的超参搜索的例子</p>
+<details><summary>Details</summary>
+<p>
+</p><p>from example_trainer import Cifer10Trainer<br>
+from hyperparameter_seacher import HyperparameterSearcher</p>
+<p>class Cifer10HyperparameterSearcher(HyperparameterSearcher):<br>
+def <strong>init</strong>(self, config, trainer):<br>
+super().<strong>init</strong>(config, trainer)</p>
+<p>def main():<br>
+search_config = {<br>
+'params': {<br>
+"learning_rate": {<br>
+"type": "float",<br>
+"range": [1e-5, 1e-2],<br>
+"log": True<br>
+},<br>
+"gradient_accumulation_steps": {<br>
+"type": "int",<br>
+"range": [1, 8],<br>
+"log": False<br>
+}<br>
+},<br>
+"if_save_info": True,<br>
+"n_trials": 10<br>
+}</p>
+<pre class="notranslate"><code class="notranslate">trainer_config = {
+    "model": "resnet18",
+    "checkpoint_dir": "./checkpoints",
+    "tensorboard_dir": "./tensorboard",
+    "device": "cuda",
+    "enable_cudnn_benchmark": True,
+    "enable_amp": False,
+    "learning_rate": 1e-3,
+    "betas": [0.9, 0.999],
+    "eps": 1e-8,
+    "enable_compile": False,
+    "weight_decay": 0.05,
+    "max_steps": 500,
+    "max_grad_norm": 1.0,
+    "save_every": 10000,  # large than max_steps, no save
+    "gradient_accumulation_steps": 4,
+    'batch_size': 32
+}
+trainer = Cifer10Trainer(trainer_config)
+searcher = Cifer10HyperparameterSearcher(search_config, trainer)
+best_params = searcher.search()
+print(best_params)
+</code></pre>
+<p>if <strong>name</strong> == '<strong>main</strong>':<br>
+main()</p>
+<p></p>
+</details> 
+<blockquote>
+<p>搜索上面那个例子中的合适的超参数</p>
+</blockquote>
+<p>在准备好这些后, 编写我们项目的超参搜索器</p>
+<details><summary>之后补充</summary>
+<p>
+</p>
+</details> 
+<blockquote>
+<p>搜索出来的最佳超参是一个很长的小数, 四舍五入合适的位数即可</p>
+</blockquote>
+<h4>第一次训练</h4>
+<p>在准备好后, 开始第一次训练</p>
+<p>在较新的GPU下, 训练以前较小的模型可谓降维打击, 不到一个小时训练完毕</p>
+<p>然而, 第一个问题出来了</p>
+<p>acc很高, f1很低</p>
+<p>编写测试代码:</p>
+<details><summary>test.py(非初版代码, 仅供参考)</summary>
+<p>
+</p><div class="highlight highlight-source-python"><pre class="notranslate"><span class="pl-k">from</span> <span class="pl-s1">sklearn</span>.<span class="pl-s1">metrics</span> <span class="pl-k">import</span> <span class="pl-s1">f1_score</span>
+<span class="pl-k">import</span> <span class="pl-s1">torch</span>
+
+<span class="pl-k">from</span> <span class="pl-s1">model</span> <span class="pl-k">import</span> <span class="pl-s1">convnext_base</span>
+<span class="pl-k">from</span> <span class="pl-v">PIL</span> <span class="pl-k">import</span> <span class="pl-v">Image</span>
+<span class="pl-k">import</span> <span class="pl-s1">numpy</span> <span class="pl-k">as</span> <span class="pl-s1">np</span>
+<span class="pl-k">from</span> <span class="pl-s1">glob</span> <span class="pl-k">import</span> <span class="pl-s1">glob</span>
+<span class="pl-k">from</span> <span class="pl-s1">torchvision</span> <span class="pl-k">import</span> <span class="pl-s1">transforms</span>
+
+<span class="pl-s1">device</span> <span class="pl-c1">=</span> <span class="pl-s">"cuda"</span>
+<span class="pl-s1">image_size</span> <span class="pl-c1">=</span> <span class="pl-c1">224</span>
+
+<span class="pl-s1">model</span> <span class="pl-c1">=</span> <span class="pl-en">convnext_base</span>(<span class="pl-s1">pretrained</span><span class="pl-c1">=</span><span class="pl-c1">False</span>, <span class="pl-s1">num_classes</span><span class="pl-c1">=</span><span class="pl-c1">5</span>).<span class="pl-en">to</span>(<span class="pl-s1">device</span>)
+<span class="pl-c"># model = resnet18()</span>
+<span class="pl-c"># model.fc = torch.nn.Linear(model.fc.in_features, 2)</span>
+<span class="pl-s1">checkpoint</span> <span class="pl-c1">=</span> <span class="pl-s1">torch</span>.<span class="pl-en">load</span>(<span class="pl-s">'./checkpoints/best.pt'</span>, <span class="pl-s1">map_location</span><span class="pl-c1">=</span><span class="pl-s1">device</span>)
+<span class="pl-s1">model</span>.<span class="pl-en">load_state_dict</span>(<span class="pl-s1">checkpoint</span>[<span class="pl-s">'model'</span>])
+
+<span class="pl-s1">transform</span> <span class="pl-c1">=</span> <span class="pl-s1">transforms</span>.<span class="pl-v">Compose</span>([
+    <span class="pl-s1">transforms</span>.<span class="pl-v">Resize</span>((<span class="pl-s1">image_size</span>, <span class="pl-s1">image_size</span>)),
+    <span class="pl-s1">transforms</span>.<span class="pl-v">ToTensor</span>(),
+    <span class="pl-s1">transforms</span>.<span class="pl-v">Normalize</span>(<span class="pl-s1">mean</span><span class="pl-c1">=</span>[<span class="pl-c1">0.485</span>, <span class="pl-c1">0.456</span>, <span class="pl-c1">0.406</span>], <span class="pl-s1">std</span><span class="pl-c1">=</span>[<span class="pl-c1">0.229</span>, <span class="pl-c1">0.224</span>, <span class="pl-c1">0.225</span>]),
+])
+
+<span class="pl-k">def</span> <span class="pl-en">transform_img</span>(<span class="pl-s1">img</span>):
+    <span class="pl-c"># 处理图片</span>
+    <span class="pl-s1">img_np</span> <span class="pl-c1">=</span> <span class="pl-s1">np</span>.<span class="pl-en">array</span>(<span class="pl-s1">img</span>)
+    <span class="pl-s1">img_tensor</span> <span class="pl-c1">=</span> <span class="pl-s1">torch</span>.<span class="pl-en">from_numpy</span>(<span class="pl-s1">img_np</span>).<span class="pl-en">permute</span>(<span class="pl-c1">2</span>, <span class="pl-c1">0</span>, <span class="pl-c1">1</span>)  <span class="pl-c"># C, H, W</span>
+    <span class="pl-s1">img_tensor</span> <span class="pl-c1">=</span> <span class="pl-s1">torch</span>.<span class="pl-s1">nn</span>.<span class="pl-s1">functional</span>.<span class="pl-en">interpolate</span>(<span class="pl-s1">img_tensor</span>.<span class="pl-en">unsqueeze</span>(<span class="pl-c1">0</span>), <span class="pl-s1">size</span><span class="pl-c1">=</span>(<span class="pl-s1">image_size</span>, <span class="pl-s1">image_size</span>), <span class="pl-s1">mode</span><span class="pl-c1">=</span><span class="pl-s">'bilinear'</span>, <span class="pl-s1">align_corners</span><span class="pl-c1">=</span><span class="pl-c1">False</span>).<span class="pl-en">squeeze</span>(<span class="pl-c1">0</span>)
+    <span class="pl-c"># normalize</span>
+    <span class="pl-s1">normalized_img</span> <span class="pl-c1">=</span> <span class="pl-s1">img_tensor</span>.<span class="pl-en">float</span>() <span class="pl-c1">/</span> <span class="pl-c1">255.0</span>
+    <span class="pl-k">return</span> <span class="pl-s1">normalized_img</span>
+
+
+<span class="pl-k">def</span> <span class="pl-en">get_input_images</span>(<span class="pl-s1">image_path</span>):
+    <span class="pl-s1">img</span> <span class="pl-c1">=</span> <span class="pl-v">Image</span>.<span class="pl-en">open</span>(<span class="pl-s1">image_path</span>).<span class="pl-en">convert</span>(<span class="pl-s">"RGB"</span>)
+    <span class="pl-s1">img</span> <span class="pl-c1">=</span> <span class="pl-en">transform</span>(<span class="pl-s1">img</span>)
+    <span class="pl-k">return</span> <span class="pl-s1">torch</span>.<span class="pl-en">tensor</span>(<span class="pl-s1">img</span>).<span class="pl-en">to</span>(<span class="pl-s1">device</span>).<span class="pl-en">unsqueeze</span>(<span class="pl-c1">0</span>)
+
+<span class="pl-s1">model</span>.<span class="pl-en">eval</span>()
+
+<span class="pl-c"># 导出onnx</span>
+<span class="pl-s1">input_names</span> <span class="pl-c1">=</span> [<span class="pl-s">"input"</span>]
+<span class="pl-s1">output_names</span> <span class="pl-c1">=</span> [<span class="pl-s">"output"</span>]
+<span class="pl-s1">dynamic_axes</span> <span class="pl-c1">=</span> {
+    <span class="pl-s">"input"</span>: {<span class="pl-c1">0</span>: <span class="pl-s">"batch_size"</span>},  <span class="pl-c"># 输入的第一个维度是动态的</span>
+    <span class="pl-s">"output"</span>: {<span class="pl-c1">0</span>: <span class="pl-s">"batch_size"</span>}  <span class="pl-c"># 输出的第一个维度是动态的</span>
+}
+<span class="pl-s1">torch</span>.<span class="pl-s1">onnx</span>.<span class="pl-en">export</span>(<span class="pl-s1">model</span>, <span class="pl-s1">torch</span>.<span class="pl-en">randn</span>(<span class="pl-c1">1</span>, <span class="pl-c1">3</span>, <span class="pl-c1">224</span>, <span class="pl-c1">224</span>).<span class="pl-en">to</span>(<span class="pl-s1">device</span>), <span class="pl-s">"model.onnx"</span>, <span class="pl-s1">input_names</span><span class="pl-c1">=</span><span class="pl-s1">input_names</span>, <span class="pl-s1">output_names</span><span class="pl-c1">=</span><span class="pl-s1">output_names</span>, <span class="pl-s1">dynamic_axes</span><span class="pl-c1">=</span><span class="pl-s1">dynamic_axes</span>, <span class="pl-s1">opset_version</span><span class="pl-c1">=</span><span class="pl-c1">11</span>)
+
+<span class="pl-k">with</span> <span class="pl-s1">torch</span>.<span class="pl-en">no_grad</span>():
+    <span class="pl-c"># image = torch.randn(1, 3, 256, 256)</span>
+    <span class="pl-en">print</span>(<span class="pl-s1">torch</span>.<span class="pl-en">softmax</span>(<span class="pl-en">model</span>(<span class="pl-en">get_input_images</span>(<span class="pl-s">'1.jpg'</span>)), <span class="pl-s1">dim</span><span class="pl-c1">=</span><span class="pl-c1">1</span>))
+    <span class="pl-en">input</span>()
+    <span class="pl-en">print</span>(<span class="pl-s1">torch</span>.<span class="pl-en">softmax</span>(<span class="pl-en">model</span>(<span class="pl-en">get_input_images</span>(<span class="pl-s">'3.jpg'</span>)), <span class="pl-s1">dim</span><span class="pl-c1">=</span><span class="pl-c1">1</span>))
+    <span class="pl-en">input</span>()
+    <span class="pl-s1">acc</span> <span class="pl-c1">=</span> []
+    <span class="pl-s1">f1</span> <span class="pl-c1">=</span> [[], []]
+    
+    
+    <span class="pl-k">for</span> <span class="pl-s1">file</span> <span class="pl-c1">in</span> <span class="pl-en">glob</span>(<span class="pl-s">'./datasets/nailong/*'</span>):
+        <span class="pl-s1">y_hat</span>, <span class="pl-s1">y</span> <span class="pl-c1">=</span> <span class="pl-en">model</span>(<span class="pl-en">get_input_images</span>(<span class="pl-s1">file</span>)), <span class="pl-s1">torch</span>.<span class="pl-en">tensor</span>([<span class="pl-c1">0</span>]).<span class="pl-en">to</span>(<span class="pl-s1">device</span>)
+        <span class="pl-s1">acc</span>.<span class="pl-en">append</span>(<span class="pl-s1">torch</span>.<span class="pl-en">sum</span>(<span class="pl-s1">torch</span>.<span class="pl-en">argmax</span>(<span class="pl-s1">y_hat</span>, <span class="pl-s1">dim</span><span class="pl-c1">=</span><span class="pl-c1">1</span>) <span class="pl-c1">==</span> <span class="pl-s1">y</span>).<span class="pl-en">item</span>() <span class="pl-c1">/</span> <span class="pl-en">len</span>(<span class="pl-s1">y</span>))
+        <span class="pl-s1">f1</span>[<span class="pl-c1">0</span>].<span class="pl-en">append</span>(<span class="pl-s1">y</span>.<span class="pl-en">cpu</span>().<span class="pl-en">tolist</span>()[<span class="pl-c1">0</span>])
+        <span class="pl-s1">f1</span>[<span class="pl-c1">1</span>].<span class="pl-en">append</span>(<span class="pl-s1">torch</span>.<span class="pl-en">argmax</span>(<span class="pl-s1">y_hat</span>, <span class="pl-s1">dim</span><span class="pl-c1">=</span><span class="pl-c1">1</span>).<span class="pl-en">cpu</span>().<span class="pl-en">tolist</span>()[<span class="pl-c1">0</span>])
+        
+
+    <span class="pl-c"># for file in glob('./datasets/cifer10/*'):</span>
+    <span class="pl-c">#     y_hat, y = model(get_input_images(file)), torch.tensor([3]).to(device)</span>
+    <span class="pl-c">#     acc.append(torch.sum(torch.argmax(y_hat, dim=1) == y).item() / len(y))</span>
+    <span class="pl-c">#     f1[0].append(y.cpu().tolist()[0])</span>
+    <span class="pl-c">#     f1[1].append(torch.argmax(y_hat, dim=1).cpu().tolist()[0])</span>
+
+<span class="pl-en">print</span>(<span class="pl-en">sum</span>(<span class="pl-s1">acc</span>) <span class="pl-c1">/</span> <span class="pl-en">len</span>(<span class="pl-s1">acc</span>))
+<span class="pl-s1">f1_scores</span> <span class="pl-c1">=</span> <span class="pl-en">f1_score</span>(<span class="pl-s1">f1</span>[<span class="pl-c1">0</span>], <span class="pl-s1">f1</span>[<span class="pl-c1">1</span>], <span class="pl-s1">average</span><span class="pl-c1">=</span><span class="pl-s">'macro'</span>)
+<span class="pl-en">print</span>(<span class="pl-s1">f1_scores</span>)</pre></div>
+<p></p>
+</details> 
+<p>发现 acc 与 f1 的值非常低(百分之10到百分之20附近)</p>
+<p>这个时候查看模型的输出, 发现模型的输出接近初始化的输出(softmax后), 模型没有怎么被训练</p>
+<p>这个时候怀疑是训练代码出了问题, 然而 cifer10 的 训练并没有什么问题<br>
+检查数据增广代码, 查看增广后的图片, 发现增广做的不是很好, 正样本内嵌负样本没嵌好</p>
+<p>在经过修改后, 重启训练<br>
+然而, 问题变成了, 模型的输出接近<a href="%E4%BA%8C%E5%88%86%E7%B1%BB%E4%BB%BB%E5%8A%A1">0.5, 0.5</a></p>
+<p>跟人讨论后, 认为是数据集难度太大, 检查表情包数据集, 都是一些分布与 nailong 数据差异很大的图片.</p>
+<blockquote>
+<p>非严格推理, 纯脑测<br>
+模型发现, 给一张新的图片预测 nailong 类, 还是其他类, 都会导致loss上升, 于是干脆摆烂乱猜,  最终的概率分布会输出数据分布, 经过数据增广后的数据恰好是两类 1:1, 模型退化成统计数据集了</p>
+</blockquote>
+<p>导致这个的最直接原因是输入特征不够, 换算到图片就是模型找不到决定图片分类的模式</p>
+<p>于是, 第一阶段的训练结束了</p></div>
 <div style="font-size:small;margin-top:8px;float:right;">转载无需注明出处</div>
 
 <button class="btn btn-block" type="button" onclick="openComments()" id="cmButton">评论</button>
