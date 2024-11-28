@@ -1052,8 +1052,6 @@ if __name__ == "__main__":
 </p>
 </details> 
 
-> TODO 补充trainer的用例与用法
-
 ### 数据增广
 
 原始数据集只有两百多张图片, 这个时候无法避免的要做数据增广, 扩展 nailong 标签的数据, 这里因为是初版方案, 也没有非常精细的增广方案, 这里使用了以下几种方式(代码在如上train.py中):
@@ -1071,7 +1069,7 @@ if __name__ == "__main__":
 
 虽然是个人小项目, 简单的参数搜索不能少, 继续上面写的 `trainer.py`, 我也写了一个简单的 `hyperparameter_seacher.py` 来搜索超参
 
-<details><summary>Details</summary>
+<details><summary>hyperparameter_seacher.py</summary>
 <p>
 
 ```python
@@ -1179,7 +1177,7 @@ if __name__ == '__main__':
 
 我也写了个简单的超参搜索的例子
 
-<details><summary>Details</summary>
+<details><summary>hyperparameter_seacher使用案例</summary>
 <p>
 
 from example_trainer import Cifer10Trainer
@@ -1357,13 +1355,17 @@ print(f1_scores)
 检查数据增广代码, 查看增广后的图片, 发现增广做的不是很好, 正样本内嵌负样本没嵌好
 
 在经过修改后, 重启训练
-然而, 问题变成了, 模型的输出接近[0.5, 0.5](二分类任务)
+然而, 问题变成了, 模型的输出接近(0.5, 0.5)(二分类任务)
 
 跟人讨论后, 认为是数据集难度太大, 检查表情包数据集, 都是一些分布与 nailong 数据差异很大的图片. 
 
 > 非严格推理, 纯脑测
 模型发现, 给一张新的图片预测 nailong 类, 还是其他类, 都会导致loss上升, 于是干脆摆烂乱猜,  最终的概率分布会输出数据分布, 经过数据增广后的数据恰好是两类 1:1, 模型退化成统计数据集了
 
-导致这个的最直接原因是输入特征不够, 换算到图片就是模型找不到决定图片分类的模式
+导致这个的最直接原因是输入特征不够, 到图像分类就是模型找不到决定图片分类的模式
 
 于是, 第一阶段的训练结束了
+
+#### 第二次训练
+
+TODO
