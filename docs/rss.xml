@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0"><channel><title>FairyOwO 的 Blog</title><link>https://FairyOwO.github.io</link><description>记录一些琐事</description><copyright>FairyOwO 的 Blog</copyright><docs>http://www.rssboard.org/rss-specification</docs><generator>python-feedgen</generator><image><url>https://github.githubassets.com/favicons/favicon.svg</url><title>avatar</title><link>https://FairyOwO.github.io</link></image><lastBuildDate>Fri, 29 Nov 2024 01:38:50 +0000</lastBuildDate><managingEditor>FairyOwO 的 Blog</managingEditor><ttl>60</ttl><webMaster>FairyOwO 的 Blog</webMaster><item><title>nailong数据集, 检测nailong的模型, 训练与推理 (一)</title><link>https://FairyOwO.github.io/post/nailong-shu-ju-ji-%2C%20-jian-ce-nailong-de-mo-xing-%2C%20-xun-lian-yu-tui-li-%20%28-yi-%29.html</link><description>&gt; 回归 老本行&#13;
+<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0"><channel><title>FairyOwO 的 Blog</title><link>https://FairyOwO.github.io</link><description>记录一些琐事</description><copyright>FairyOwO 的 Blog</copyright><docs>http://www.rssboard.org/rss-specification</docs><generator>python-feedgen</generator><image><url>https://github.githubassets.com/favicons/favicon.svg</url><title>avatar</title><link>https://FairyOwO.github.io</link></image><lastBuildDate>Fri, 29 Nov 2024 01:43:26 +0000</lastBuildDate><managingEditor>FairyOwO 的 Blog</managingEditor><ttl>60</ttl><webMaster>FairyOwO 的 Blog</webMaster><item><title>nailong数据集, 检测nailong的模型, 训练与推理 (一)</title><link>https://FairyOwO.github.io/post/nailong-shu-ju-ji-%2C%20-jian-ce-nailong-de-mo-xing-%2C%20-xun-lian-yu-tui-li-%20%28-yi-%29.html</link><description>&gt; 回归 老本行&#13;
 &#13;
 偶然得到 nailong 数据集, 分为两块, 一种是给[分类模型使用的数据集](https://huggingface.co/datasets/refoundd/NailongClassification), 另一种是给[目标检测模型使用的数据集](https://huggingface.co/datasets/refoundd/NailongDetection)&#13;
 &#13;
@@ -1384,7 +1384,7 @@ print(f1_scores)&#13;
 修改好后数据加载的代码后并注释掉先前的数据增广代码后(后续研究), 第二次训练开始了&#13;
 &#13;
 这次结果好过头了&#13;
-模型的 loss 收敛到了 $1e^{-5}$, acc跟f1更是到达了 $100%$&#13;
+模型的 loss 收敛到了 $1e^{-5}$, acc跟f1更是到达了 $100\%$&#13;
 &#13;
 使用测试代码简单测试, 发现在数据集的数据都能完美分类, 不在数据集的分类只要分不出是奶龙即可. 检查模型输出权重, 也没啥问题, 看起来是完美了?&#13;
 &#13;
