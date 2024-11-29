@@ -1368,4 +1368,105 @@ print(f1_scores)
 
 #### 第二次训练
 
+在数据集作者不断的努力下, nailong 数据集有了一些完善, 主要的完善点在于: 
+1. 新添更多 nailong
+2. 不是二分类了, 新增了表情包分类, 动画分类等五分类, 不过不同类别的数据数量差异很大(两个数量级)
+3. 加入了一些 corner case, 比如 藤田琴音等其他颜色为黄色的图像
+
+因为第一次训练代码已经写好了, 改起来也不是很麻烦, 只需要换个数据集定义与读取. 作者的数据集放在 huggingface 上, 于是我们使用 datasets 进行读取.
+
+> 我也不知道是不是我写的问题, datasets读起来很慢, dataloader 后, 会把 label 自动变成torch.tensor格式, 但是 n, c, h, w 格式的图片只会把 w 维度变成 torch.tensor 格式, 其他维度还是 List, 需要在 dataset 类定义的时候使用 __getitem__() 将数据提前变为 torch.tensor
+> 然后不支持多线程读取(会卡住), 单线程读取读起来很慢, gpu 的 cuda 呈现尖刺状
+> 然后, dataset 的读取**要先**读取 id 再读取 x 跟 label
+> 没怎么用过 dataset, 这次属实是学到了
+
+修改好后数据加载的代码后并注释掉先前的数据增广代码后(后续研究), 第二次训练开始了
+
+这次结果好过头了
+模型的 loss 收敛到了 $1e^{-5}$, acc跟f1更是到达了 $100%$
+
+使用测试代码简单测试, 发现在数据集的数据都能完美分类, 不在数据集的分类只要分不出是奶龙即可. 检查模型输出权重, 也没啥问题, 看起来是完美了?
+
+然而 这张图还是给了模型一拳
+
+<details><summary>图</summary>
+<p>
+
+![22](https://github.com/user-attachments/assets/3cb2b111-e01f-44dd-8e71-0509ab2bb6c0)
+
+</p>
+</details> 
+
+
+他会识别成 nailong, 不过我觉得问题不大(确实有人把他抽象的认成 nailong)
+
+上面的 `test.py` 中 写了onnx导出的代码, 支持任意 batch 的输入(解锁了 n, c, h, w 的 n 维度)
+
+简单编写onnx推理代码
+
+<details><summary>onnx_inference.py</summary>
+<p>
+
+```python
+# from torchvision import transforms
+import onnxruntime as ort
+from PIL import Image
+import numpy as np
+
+img_size = 224
+
+# transform = transforms.Compose([
+#     transforms.Resize((img_size, img_size)),
+#     transforms.ToTensor(),
+#     transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+# ])
+
+def transform_img(img: Image, image_size=224, mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]):
+    img = img.convert("RGB").resize((image_size, image_size), Image.Resampling.LANCZOS)
+    img = np.array(img)
+    img = (img / 255 - mean) / std
+    img = img.transpose((2, 0, 1))
+    img = np.expand_dims(img, axis=0)
+    return img.astype(np.float32)
+
+
+label_mapping = {
+    "nailong": 0,
+    "emoji": 1,
+    "anime": 2,
+    "others": 3,
+    "long": 4
+}
+
+reverse_label_mapping = {v: k for k, v in label_mapping.items()}
+
+model_path = 'model.onnx'
+session = ort.InferenceSession(model_path)
+
+image_path = '3.jpg'
+image = Image.open(image_path).convert("RGB")
+# image = transform(image).unsqueeze(0).numpy()
+image = transform_img(image)
+
+# 运行推理
+input_name = session.get_inputs()[0].name
+output_name = session.get_outputs()[0].name
+outputs = session.run([output_name], {input_name: image})
+
+# 获取分类结果
+output = outputs[0]
+predicted_class = np.argmax(output, axis=1)
+predicted_label = reverse_label_mapping[predicted_class[0]]
+
+print(f"Predicted class: {predicted_label}")
+
+```
+
+</p>
+</details> 
+
+> 训练的时候引入了 torchvision 的 transforms, 这里为了减少依赖, 选择手动实现, 有需要也可以自行取消注释并修改
+
+### 部署
+
 TODO

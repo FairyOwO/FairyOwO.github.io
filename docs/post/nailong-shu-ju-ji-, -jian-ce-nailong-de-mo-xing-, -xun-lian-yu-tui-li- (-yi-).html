@@ -1380,7 +1380,109 @@ print(f1_scores)
 
 #### 第二次训练
 
-TODO。">
+在数据集作者不断的努力下, nailong 数据集有了一些完善, 主要的完善点在于: 
+1. 新添更多 nailong
+2. 不是二分类了, 新增了表情包分类, 动画分类等五分类, 不过不同类别的数据数量差异很大(两个数量级)
+3. 加入了一些 corner case, 比如 藤田琴音等其他颜色为黄色的图像
+
+因为第一次训练代码已经写好了, 改起来也不是很麻烦, 只需要换个数据集定义与读取. 作者的数据集放在 huggingface 上, 于是我们使用 datasets 进行读取.
+
+> 我也不知道是不是我写的问题, datasets读起来很慢, dataloader 后, 会把 label 自动变成torch.tensor格式, 但是 n, c, h, w 格式的图片只会把 w 维度变成 torch.tensor 格式, 其他维度还是 List, 需要在 dataset 类定义的时候使用 __getitem__() 将数据提前变为 torch.tensor
+> 然后不支持多线程读取(会卡住), 单线程读取读起来很慢, gpu 的 cuda 呈现尖刺状
+> 然后, dataset 的读取**要先**读取 id 再读取 x 跟 label
+> 没怎么用过 dataset, 这次属实是学到了
+
+修改好后数据加载的代码后并注释掉先前的数据增广代码后(后续研究), 第二次训练开始了
+
+这次结果好过头了
+模型的 loss 收敛到了 $1e^{-5}$, acc跟f1更是到达了 $100%$
+
+使用测试代码简单测试, 发现在数据集的数据都能完美分类, 不在数据集的分类只要分不出是奶龙即可. 检查模型输出权重, 也没啥问题, 看起来是完美了?
+
+然而 这张图还是给了模型一拳
+
+<details><summary>图</summary>
+<p>
+
+![22](https://github.com/user-attachments/assets/3cb2b111-e01f-44dd-8e71-0509ab2bb6c0)
+
+</p>
+</details> 
+
+
+他会识别成 nailong, 不过我觉得问题不大(确实有人把他抽象的认成 nailong)
+
+上面的 `test.py` 中 写了onnx导出的代码, 支持任意 batch 的输入(解锁了 n, c, h, w 的 n 维度)
+
+简单编写onnx推理代码
+
+<details><summary>onnx_inference.py</summary>
+<p>
+
+```python
+# from torchvision import transforms
+import onnxruntime as ort
+from PIL import Image
+import numpy as np
+
+img_size = 224
+
+# transform = transforms.Compose([
+#     transforms.Resize((img_size, img_size)),
+#     transforms.ToTensor(),
+#     transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+# ])
+
+def transform_img(img: Image, image_size=224, mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]):
+    img = img.convert('RGB').resize((image_size, image_size), Image.Resampling.LANCZOS)
+    img = np.array(img)
+    img = (img / 255 - mean) / std
+    img = img.transpose((2, 0, 1))
+    img = np.expand_dims(img, axis=0)
+    return img.astype(np.float32)
+
+
+label_mapping = {
+    'nailong': 0,
+    'emoji': 1,
+    'anime': 2,
+    'others': 3,
+    'long': 4
+}
+
+reverse_label_mapping = {v: k for k, v in label_mapping.items()}
+
+model_path = 'model.onnx'
+session = ort.InferenceSession(model_path)
+
+image_path = '3.jpg'
+image = Image.open(image_path).convert('RGB')
+# image = transform(image).unsqueeze(0).numpy()
+image = transform_img(image)
+
+# 运行推理
+input_name = session.get_inputs()[0].name
+output_name = session.get_outputs()[0].name
+outputs = session.run([output_name], {input_name: image})
+
+# 获取分类结果
+output = outputs[0]
+predicted_class = np.argmax(output, axis=1)
+predicted_label = reverse_label_mapping[predicted_class[0]]
+
+print(f'Predicted class: {predicted_label}')
+
+```
+
+</p>
+</details> 
+
+> 训练的时候引入了 torchvision 的 transforms, 这里为了减少依赖, 选择手动实现, 有需要也可以自行取消注释并修改
+
+### 部署
+
+TODO
+。">
 <meta property="og:title" content="nailong数据集, 检测nailong的模型, 训练与推理 (一)">
 <meta property="og:description" content="> 回归 老本行
 
@@ -2752,7 +2854,109 @@ print(f1_scores)
 
 #### 第二次训练
 
-TODO。">
+在数据集作者不断的努力下, nailong 数据集有了一些完善, 主要的完善点在于: 
+1. 新添更多 nailong
+2. 不是二分类了, 新增了表情包分类, 动画分类等五分类, 不过不同类别的数据数量差异很大(两个数量级)
+3. 加入了一些 corner case, 比如 藤田琴音等其他颜色为黄色的图像
+
+因为第一次训练代码已经写好了, 改起来也不是很麻烦, 只需要换个数据集定义与读取. 作者的数据集放在 huggingface 上, 于是我们使用 datasets 进行读取.
+
+> 我也不知道是不是我写的问题, datasets读起来很慢, dataloader 后, 会把 label 自动变成torch.tensor格式, 但是 n, c, h, w 格式的图片只会把 w 维度变成 torch.tensor 格式, 其他维度还是 List, 需要在 dataset 类定义的时候使用 __getitem__() 将数据提前变为 torch.tensor
+> 然后不支持多线程读取(会卡住), 单线程读取读起来很慢, gpu 的 cuda 呈现尖刺状
+> 然后, dataset 的读取**要先**读取 id 再读取 x 跟 label
+> 没怎么用过 dataset, 这次属实是学到了
+
+修改好后数据加载的代码后并注释掉先前的数据增广代码后(后续研究), 第二次训练开始了
+
+这次结果好过头了
+模型的 loss 收敛到了 $1e^{-5}$, acc跟f1更是到达了 $100%$
+
+使用测试代码简单测试, 发现在数据集的数据都能完美分类, 不在数据集的分类只要分不出是奶龙即可. 检查模型输出权重, 也没啥问题, 看起来是完美了?
+
+然而 这张图还是给了模型一拳
+
+<details><summary>图</summary>
+<p>
+
+![22](https://github.com/user-attachments/assets/3cb2b111-e01f-44dd-8e71-0509ab2bb6c0)
+
+</p>
+</details> 
+
+
+他会识别成 nailong, 不过我觉得问题不大(确实有人把他抽象的认成 nailong)
+
+上面的 `test.py` 中 写了onnx导出的代码, 支持任意 batch 的输入(解锁了 n, c, h, w 的 n 维度)
+
+简单编写onnx推理代码
+
+<details><summary>onnx_inference.py</summary>
+<p>
+
+```python
+# from torchvision import transforms
+import onnxruntime as ort
+from PIL import Image
+import numpy as np
+
+img_size = 224
+
+# transform = transforms.Compose([
+#     transforms.Resize((img_size, img_size)),
+#     transforms.ToTensor(),
+#     transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+# ])
+
+def transform_img(img: Image, image_size=224, mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]):
+    img = img.convert('RGB').resize((image_size, image_size), Image.Resampling.LANCZOS)
+    img = np.array(img)
+    img = (img / 255 - mean) / std
+    img = img.transpose((2, 0, 1))
+    img = np.expand_dims(img, axis=0)
+    return img.astype(np.float32)
+
+
+label_mapping = {
+    'nailong': 0,
+    'emoji': 1,
+    'anime': 2,
+    'others': 3,
+    'long': 4
+}
+
+reverse_label_mapping = {v: k for k, v in label_mapping.items()}
+
+model_path = 'model.onnx'
+session = ort.InferenceSession(model_path)
+
+image_path = '3.jpg'
+image = Image.open(image_path).convert('RGB')
+# image = transform(image).unsqueeze(0).numpy()
+image = transform_img(image)
+
+# 运行推理
+input_name = session.get_inputs()[0].name
+output_name = session.get_outputs()[0].name
+outputs = session.run([output_name], {input_name: image})
+
+# 获取分类结果
+output = outputs[0]
+predicted_class = np.argmax(output, axis=1)
+predicted_label = reverse_label_mapping[predicted_class[0]]
+
+print(f'Predicted class: {predicted_label}')
+
+```
+
+</p>
+</details> 
+
+> 训练的时候引入了 torchvision 的 transforms, 这里为了减少依赖, 选择手动实现, 有需要也可以自行取消注释并修改
+
+### 部署
+
+TODO
+。">
 <meta property="og:type" content="article">
 <meta property="og:url" content="https://FairyOwO.github.io/post/nailong-shu-ju-ji-%2C%20-jian-ce-nailong-de-mo-xing-%2C%20-xun-lian-yu-tui-li-%20%28-yi-%29.html">
 <meta property="og:image" content="https://github.githubassets.com/favicons/favicon.svg">
@@ -4110,6 +4314,91 @@ main()</p>
 <p>导致这个的最直接原因是输入特征不够, 到图像分类就是模型找不到决定图片分类的模式</p>
 <p>于是, 第一阶段的训练结束了</p>
 <h4>第二次训练</h4>
+<p>在数据集作者不断的努力下, nailong 数据集有了一些完善, 主要的完善点在于:</p>
+<ol>
+<li>新添更多 nailong</li>
+<li>不是二分类了, 新增了表情包分类, 动画分类等五分类, 不过不同类别的数据数量差异很大(两个数量级)</li>
+<li>加入了一些 corner case, 比如 藤田琴音等其他颜色为黄色的图像</li>
+</ol>
+<p>因为第一次训练代码已经写好了, 改起来也不是很麻烦, 只需要换个数据集定义与读取. 作者的数据集放在 huggingface 上, 于是我们使用 datasets 进行读取.</p>
+<blockquote>
+<p>我也不知道是不是我写的问题, datasets读起来很慢, dataloader 后, 会把 label 自动变成torch.tensor格式, 但是 n, c, h, w 格式的图片只会把 w 维度变成 torch.tensor 格式, 其他维度还是 List, 需要在 dataset 类定义的时候使用 <strong>getitem</strong>() 将数据提前变为 torch.tensor<br>
+然后不支持多线程读取(会卡住), 单线程读取读起来很慢, gpu 的 cuda 呈现尖刺状<br>
+然后, dataset 的读取<strong>要先</strong>读取 id 再读取 x 跟 label<br>
+没怎么用过 dataset, 这次属实是学到了</p>
+</blockquote>
+<p>修改好后数据加载的代码后并注释掉先前的数据增广代码后(后续研究), 第二次训练开始了</p>
+<p>这次结果好过头了<br>
+模型的 loss 收敛到了 $1e^{-5}$, acc跟f1更是到达了 $100%$</p>
+<p>使用测试代码简单测试, 发现在数据集的数据都能完美分类, 不在数据集的分类只要分不出是奶龙即可. 检查模型输出权重, 也没啥问题, 看起来是完美了?</p>
+<p>然而 这张图还是给了模型一拳</p>
+<details><summary>图</summary>
+<p>
+</p><p><a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/3cb2b111-e01f-44dd-8e71-0509ab2bb6c0"><img src="https://github.com/user-attachments/assets/3cb2b111-e01f-44dd-8e71-0509ab2bb6c0" alt="22" style="max-width: 100%;"></a></p>
+<p></p>
+</details> 
+<p>他会识别成 nailong, 不过我觉得问题不大(确实有人把他抽象的认成 nailong)</p>
+<p>上面的 <code class="notranslate">test.py</code> 中 写了onnx导出的代码, 支持任意 batch 的输入(解锁了 n, c, h, w 的 n 维度)</p>
+<p>简单编写onnx推理代码</p>
+<details><summary>onnx_inference.py</summary>
+<p>
+</p><div class="highlight highlight-source-python"><pre class="notranslate"><span class="pl-c"># from torchvision import transforms</span>
+<span class="pl-k">import</span> <span class="pl-s1">onnxruntime</span> <span class="pl-k">as</span> <span class="pl-s1">ort</span>
+<span class="pl-k">from</span> <span class="pl-v">PIL</span> <span class="pl-k">import</span> <span class="pl-v">Image</span>
+<span class="pl-k">import</span> <span class="pl-s1">numpy</span> <span class="pl-k">as</span> <span class="pl-s1">np</span>
+
+<span class="pl-s1">img_size</span> <span class="pl-c1">=</span> <span class="pl-c1">224</span>
+
+<span class="pl-c"># transform = transforms.Compose([</span>
+<span class="pl-c">#     transforms.Resize((img_size, img_size)),</span>
+<span class="pl-c">#     transforms.ToTensor(),</span>
+<span class="pl-c">#     transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),</span>
+<span class="pl-c"># ])</span>
+
+<span class="pl-k">def</span> <span class="pl-en">transform_img</span>(<span class="pl-s1">img</span>: <span class="pl-v">Image</span>, <span class="pl-s1">image_size</span><span class="pl-c1">=</span><span class="pl-c1">224</span>, <span class="pl-s1">mean</span><span class="pl-c1">=</span>[<span class="pl-c1">0.485</span>, <span class="pl-c1">0.456</span>, <span class="pl-c1">0.406</span>], <span class="pl-s1">std</span><span class="pl-c1">=</span>[<span class="pl-c1">0.229</span>, <span class="pl-c1">0.224</span>, <span class="pl-c1">0.225</span>]):
+    <span class="pl-s1">img</span> <span class="pl-c1">=</span> <span class="pl-s1">img</span>.<span class="pl-en">convert</span>(<span class="pl-s">"RGB"</span>).<span class="pl-en">resize</span>((<span class="pl-s1">image_size</span>, <span class="pl-s1">image_size</span>), <span class="pl-v">Image</span>.<span class="pl-v">Resampling</span>.<span class="pl-v">LANCZOS</span>)
+    <span class="pl-s1">img</span> <span class="pl-c1">=</span> <span class="pl-s1">np</span>.<span class="pl-en">array</span>(<span class="pl-s1">img</span>)
+    <span class="pl-s1">img</span> <span class="pl-c1">=</span> (<span class="pl-s1">img</span> <span class="pl-c1">/</span> <span class="pl-c1">255</span> <span class="pl-c1">-</span> <span class="pl-s1">mean</span>) <span class="pl-c1">/</span> <span class="pl-s1">std</span>
+    <span class="pl-s1">img</span> <span class="pl-c1">=</span> <span class="pl-s1">img</span>.<span class="pl-en">transpose</span>((<span class="pl-c1">2</span>, <span class="pl-c1">0</span>, <span class="pl-c1">1</span>))
+    <span class="pl-s1">img</span> <span class="pl-c1">=</span> <span class="pl-s1">np</span>.<span class="pl-en">expand_dims</span>(<span class="pl-s1">img</span>, <span class="pl-s1">axis</span><span class="pl-c1">=</span><span class="pl-c1">0</span>)
+    <span class="pl-k">return</span> <span class="pl-s1">img</span>.<span class="pl-en">astype</span>(<span class="pl-s1">np</span>.<span class="pl-s1">float32</span>)
+
+
+<span class="pl-s1">label_mapping</span> <span class="pl-c1">=</span> {
+    <span class="pl-s">"nailong"</span>: <span class="pl-c1">0</span>,
+    <span class="pl-s">"emoji"</span>: <span class="pl-c1">1</span>,
+    <span class="pl-s">"anime"</span>: <span class="pl-c1">2</span>,
+    <span class="pl-s">"others"</span>: <span class="pl-c1">3</span>,
+    <span class="pl-s">"long"</span>: <span class="pl-c1">4</span>
+}
+
+<span class="pl-s1">reverse_label_mapping</span> <span class="pl-c1">=</span> {<span class="pl-s1">v</span>: <span class="pl-s1">k</span> <span class="pl-k">for</span> <span class="pl-s1">k</span>, <span class="pl-s1">v</span> <span class="pl-c1">in</span> <span class="pl-s1">label_mapping</span>.<span class="pl-en">items</span>()}
+
+<span class="pl-s1">model_path</span> <span class="pl-c1">=</span> <span class="pl-s">'model.onnx'</span>
+<span class="pl-s1">session</span> <span class="pl-c1">=</span> <span class="pl-s1">ort</span>.<span class="pl-v">InferenceSession</span>(<span class="pl-s1">model_path</span>)
+
+<span class="pl-s1">image_path</span> <span class="pl-c1">=</span> <span class="pl-s">'3.jpg'</span>
+<span class="pl-s1">image</span> <span class="pl-c1">=</span> <span class="pl-v">Image</span>.<span class="pl-en">open</span>(<span class="pl-s1">image_path</span>).<span class="pl-en">convert</span>(<span class="pl-s">"RGB"</span>)
+<span class="pl-c"># image = transform(image).unsqueeze(0).numpy()</span>
+<span class="pl-s1">image</span> <span class="pl-c1">=</span> <span class="pl-en">transform_img</span>(<span class="pl-s1">image</span>)
+
+<span class="pl-c"># 运行推理</span>
+<span class="pl-s1">input_name</span> <span class="pl-c1">=</span> <span class="pl-s1">session</span>.<span class="pl-en">get_inputs</span>()[<span class="pl-c1">0</span>].<span class="pl-s1">name</span>
+<span class="pl-s1">output_name</span> <span class="pl-c1">=</span> <span class="pl-s1">session</span>.<span class="pl-en">get_outputs</span>()[<span class="pl-c1">0</span>].<span class="pl-s1">name</span>
+<span class="pl-s1">outputs</span> <span class="pl-c1">=</span> <span class="pl-s1">session</span>.<span class="pl-en">run</span>([<span class="pl-s1">output_name</span>], {<span class="pl-s1">input_name</span>: <span class="pl-s1">image</span>})
+
+<span class="pl-c"># 获取分类结果</span>
+<span class="pl-s1">output</span> <span class="pl-c1">=</span> <span class="pl-s1">outputs</span>[<span class="pl-c1">0</span>]
+<span class="pl-s1">predicted_class</span> <span class="pl-c1">=</span> <span class="pl-s1">np</span>.<span class="pl-en">argmax</span>(<span class="pl-s1">output</span>, <span class="pl-s1">axis</span><span class="pl-c1">=</span><span class="pl-c1">1</span>)
+<span class="pl-s1">predicted_label</span> <span class="pl-c1">=</span> <span class="pl-s1">reverse_label_mapping</span>[<span class="pl-s1">predicted_class</span>[<span class="pl-c1">0</span>]]
+
+<span class="pl-en">print</span>(<span class="pl-s">f"Predicted class: <span class="pl-s1"><span class="pl-kos">{</span><span class="pl-s1">predicted_label</span><span class="pl-kos">}</span></span>"</span>)</pre></div>
+<p></p>
+</details> 
+<blockquote>
+<p>训练的时候引入了 torchvision 的 transforms, 这里为了减少依赖, 选择手动实现, 有需要也可以自行取消注释并修改</p>
+</blockquote>
+<h3>部署</h3>
 <p>TODO</p></div>
 <div style="font-size:small;margin-top:8px;float:right;">转载无需注明出处</div>
 
@@ -4274,6 +4563,6 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 </script>
-
+<script>MathJax = {tex: {inlineMath: [["$", "$"]]}};</script><script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 
 </html>
