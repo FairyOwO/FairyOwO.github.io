@@ -1400,6 +1400,8 @@ print(f1_scores)
 
 他会识别成 nailong, 不过我觉得问题不大(确实有人把他抽象的认成 nailong)
 
+### 部署
+
 上面的 `test.py` 中 写了onnx导出的代码, 支持任意 batch 的输入(解锁了 n, c, h, w 的 n 维度)
 
 简单编写onnx推理代码
@@ -1466,7 +1468,3 @@ print(f"Predicted class: {predicted_label}")
 </details> 
 
 > 训练的时候引入了 torchvision 的 transforms, 这里为了减少依赖, 选择手动实现, 有需要也可以自行取消注释并修改
-
-### 部署
-
-TODO

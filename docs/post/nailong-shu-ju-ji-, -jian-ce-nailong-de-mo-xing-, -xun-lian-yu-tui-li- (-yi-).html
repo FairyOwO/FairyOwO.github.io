@@ -1412,6 +1412,8 @@ print(f1_scores)
 
 他会识别成 nailong, 不过我觉得问题不大(确实有人把他抽象的认成 nailong)
 
+### 部署
+
 上面的 `test.py` 中 写了onnx导出的代码, 支持任意 batch 的输入(解锁了 n, c, h, w 的 n 维度)
 
 简单编写onnx推理代码
@@ -1478,10 +1480,6 @@ print(f'Predicted class: {predicted_label}')
 </details> 
 
 > 训练的时候引入了 torchvision 的 transforms, 这里为了减少依赖, 选择手动实现, 有需要也可以自行取消注释并修改
-
-### 部署
-
-TODO
 。">
 <meta property="og:title" content="nailong数据集, 检测nailong的模型, 训练与推理 (一)">
 <meta property="og:description" content="> 回归 老本行
@@ -2886,6 +2884,8 @@ print(f1_scores)
 
 他会识别成 nailong, 不过我觉得问题不大(确实有人把他抽象的认成 nailong)
 
+### 部署
+
 上面的 `test.py` 中 写了onnx导出的代码, 支持任意 batch 的输入(解锁了 n, c, h, w 的 n 维度)
 
 简单编写onnx推理代码
@@ -2952,10 +2952,6 @@ print(f'Predicted class: {predicted_label}')
 </details> 
 
 > 训练的时候引入了 torchvision 的 transforms, 这里为了减少依赖, 选择手动实现, 有需要也可以自行取消注释并修改
-
-### 部署
-
-TODO
 。">
 <meta property="og:type" content="article">
 <meta property="og:url" content="https://FairyOwO.github.io/post/nailong-shu-ju-ji-%2C%20-jian-ce-nailong-de-mo-xing-%2C%20-xun-lian-yu-tui-li-%20%28-yi-%29.html">
@@ -4338,6 +4334,7 @@ main()</p>
 <p></p>
 </details> 
 <p>他会识别成 nailong, 不过我觉得问题不大(确实有人把他抽象的认成 nailong)</p>
+<h3>部署</h3>
 <p>上面的 <code class="notranslate">test.py</code> 中 写了onnx导出的代码, 支持任意 batch 的输入(解锁了 n, c, h, w 的 n 维度)</p>
 <p>简单编写onnx推理代码</p>
 <details><summary>onnx_inference.py</summary>
@@ -4397,9 +4394,7 @@ main()</p>
 </details> 
 <blockquote>
 <p>训练的时候引入了 torchvision 的 transforms, 这里为了减少依赖, 选择手动实现, 有需要也可以自行取消注释并修改</p>
-</blockquote>
-<h3>部署</h3>
-<p>TODO</p></div>
+</blockquote></div>
 <div style="font-size:small;margin-top:8px;float:right;">转载无需注明出处</div>
 
 <button class="btn btn-block" type="button" onclick="openComments()" id="cmButton">评论</button>
