@@ -46,7 +46,21 @@
 做好准备后 需要对 harbor 进行信任
 > 没有 https 导致的, 有 https 可以跳过这一步
 
-TODO
+向 `/etc/docker/daemon.json` 写入
+```text
+"insecure-registries": ["harbor_ip:port"]
+```
+
+> 你需要自行处理他的json语法
+
+后, 使用
+
+```sh
+systemctl daemon-reload
+systemctl restart docker
+```
+
+重启 docker
 
 在配置好后, 可以推一个简单的 helloworld镜像
 

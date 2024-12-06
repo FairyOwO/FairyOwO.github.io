@@ -58,7 +58,21 @@
 做好准备后 需要对 harbor 进行信任
 > 没有 https 导致的, 有 https 可以跳过这一步
 
-TODO
+向 `/etc/docker/daemon.json` 写入
+```text
+'insecure-registries': ['harbor_ip:port']
+```
+
+> 你需要自行处理他的json语法
+
+后, 使用
+
+```sh
+systemctl daemon-reload
+systemctl restart docker
+```
+
+重启 docker
 
 在配置好后, 可以推一个简单的 helloworld镜像
 
@@ -251,7 +265,21 @@ harborAdminPassword: 'Harbor12345'
 做好准备后 需要对 harbor 进行信任
 > 没有 https 导致的, 有 https 可以跳过这一步
 
-TODO
+向 `/etc/docker/daemon.json` 写入
+```text
+'insecure-registries': ['harbor_ip:port']
+```
+
+> 你需要自行处理他的json语法
+
+后, 使用
+
+```sh
+systemctl daemon-reload
+systemctl restart docker
+```
+
+重启 docker
 
 在配置好后, 可以推一个简单的 helloworld镜像
 
@@ -511,7 +539,16 @@ helm --namespace harbor install harbor <span class="pl-c1">.</span></pre></div>
 <blockquote>
 <p>没有 https 导致的, 有 https 可以跳过这一步</p>
 </blockquote>
-<p>TODO</p>
+<p>向 <code class="notranslate">/etc/docker/daemon.json</code> 写入</p>
+<pre lang="text" class="notranslate"><code class="notranslate">"insecure-registries": ["harbor_ip:port"]
+</code></pre>
+<blockquote>
+<p>你需要自行处理他的json语法</p>
+</blockquote>
+<p>后, 使用</p>
+<div class="highlight highlight-source-shell"><pre class="notranslate">systemctl daemon-reload
+systemctl restart docker</pre></div>
+<p>重启 docker</p>
 <p>在配置好后, 可以推一个简单的 helloworld镜像</p>
 <div class="highlight highlight-source-shell"><pre class="notranslate">docker login harbor_ip:port
 <span class="pl-c"><span class="pl-c">#</span> 这里填入你的账号与密码. 我这里是 admin 与相对于的密码</span>
