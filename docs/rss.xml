@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0"><channel><title>FairyOwO 的 Blog</title><link>https://FairyOwO.github.io</link><description>记录一些琐事</description><copyright>FairyOwO 的 Blog</copyright><docs>http://www.rssboard.org/rss-specification</docs><generator>python-feedgen</generator><image><url>https://github.githubassets.com/favicons/favicon.svg</url><title>avatar</title><link>https://FairyOwO.github.io</link></image><lastBuildDate>Fri, 06 Dec 2024 09:36:05 +0000</lastBuildDate><managingEditor>FairyOwO 的 Blog</managingEditor><ttl>60</ttl><webMaster>FairyOwO 的 Blog</webMaster><item><title>2024 Advent of Code 复盘与答案</title><link>https://FairyOwO.github.io/post/2024%20Advent%20of%20Code%20-fu-pan-yu-da-an.html</link><description>[Advent of Code](https://adventofcode.com/)&#13;
+<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0"><channel><title>FairyOwO 的 Blog</title><link>https://FairyOwO.github.io</link><description>记录一些琐事</description><copyright>FairyOwO 的 Blog</copyright><docs>http://www.rssboard.org/rss-specification</docs><generator>python-feedgen</generator><image><url>https://github.githubassets.com/favicons/favicon.svg</url><title>avatar</title><link>https://FairyOwO.github.io</link></image><lastBuildDate>Fri, 06 Dec 2024 09:37:15 +0000</lastBuildDate><managingEditor>FairyOwO 的 Blog</managingEditor><ttl>60</ttl><webMaster>FairyOwO 的 Blog</webMaster><item><title>2024 Advent of Code 复盘与答案</title><link>https://FairyOwO.github.io/post/2024%20Advent%20of%20Code%20-fu-pan-yu-da-an.html</link><description>[Advent of Code](https://adventofcode.com/)&#13;
 &#13;
 TODO, 每天更新一题一周前的题目。</description><guid isPermaLink="true">https://FairyOwO.github.io/post/2024%20Advent%20of%20Code%20-fu-pan-yu-da-an.html</guid><pubDate>Mon, 02 Dec 2024 07:16:27 +0000</pubDate></item><item><title>使用k3s搭建的k8s集群搭建一些简单的应用</title><link>https://FairyOwO.github.io/post/shi-yong-k3s-da-jian-de-k8s-ji-qun-da-jian-yi-xie-jian-dan-de-ying-yong.html</link><description>&gt; 可能并非最佳实现, 没有进行系统性学习, 欢迎交流&#13;
 &#13;
@@ -18,8 +18,8 @@ TODO, 每天更新一题一周前的题目。</description><guid isPermaLink="tr
   前往 release, 下载源代码, 解压之后拿到其中的 `templates` 文件夹, `Chart.yaml` 文件, `values.yaml` 文件&#13;
 2. 修改 `values.yaml` 文件&#13;
   详见 附录一&#13;
-  &gt; 我们的小集群既没有https, 又没有持久化存储, 所以这些都不需要写在配置文件中, 直接关掉这些功能即可&#13;
-  &gt; admin 的初始化密码在网页登陆后也能改&#13;
+    &gt; 我们的小集群既没有https, 又没有持久化存储, 所以这些都不需要写在配置文件中, 直接关掉这些功能即可&#13;
+    &gt; admin 的初始化密码在网页登陆后也能改&#13;
 3. 创建 harbor 专属的 namespace&#13;
   ```sh&#13;
   kubectl create namespace harbor&#13;

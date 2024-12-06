@@ -27,8 +27,8 @@
   前往 release, 下载源代码, 解压之后拿到其中的 `templates` 文件夹, `Chart.yaml` 文件, `values.yaml` 文件
 2. 修改 `values.yaml` 文件
   详见 附录一
-  > 我们的小集群既没有https, 又没有持久化存储, 所以这些都不需要写在配置文件中, 直接关掉这些功能即可
-  > admin 的初始化密码在网页登陆后也能改
+    > 我们的小集群既没有https, 又没有持久化存储, 所以这些都不需要写在配置文件中, 直接关掉这些功能即可
+    > admin 的初始化密码在网页登陆后也能改
 3. 创建 harbor 专属的 namespace
   ```sh
   kubectl create namespace harbor
@@ -237,8 +237,8 @@ harborAdminPassword: 'Harbor12345'
   前往 release, 下载源代码, 解压之后拿到其中的 `templates` 文件夹, `Chart.yaml` 文件, `values.yaml` 文件
 2. 修改 `values.yaml` 文件
   详见 附录一
-  > 我们的小集群既没有https, 又没有持久化存储, 所以这些都不需要写在配置文件中, 直接关掉这些功能即可
-  > admin 的初始化密码在网页登陆后也能改
+    > 我们的小集群既没有https, 又没有持久化存储, 所以这些都不需要写在配置文件中, 直接关掉这些功能即可
+    > admin 的初始化密码在网页登陆后也能改
 3. 创建 harbor 专属的 namespace
   ```sh
   kubectl create namespace harbor
@@ -512,13 +512,12 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
 前往 <a href="harbor-helm">harbor-helm</a> 的 github 仓库<br>
 前往 release, 下载源代码, 解压之后拿到其中的 <code class="notranslate">templates</code> 文件夹, <code class="notranslate">Chart.yaml</code> 文件, <code class="notranslate">values.yaml</code> 文件</li>
 <li>修改 <code class="notranslate">values.yaml</code> 文件<br>
-详见 附录一</li>
-</ol>
+详见 附录一
 <blockquote>
 <p>我们的小集群既没有https, 又没有持久化存储, 所以这些都不需要写在配置文件中, 直接关掉这些功能即可<br>
 admin 的初始化密码在网页登陆后也能改</p>
 </blockquote>
-<ol start="3">
+</li>
 <li>创建 harbor 专属的 namespace</li>
 </ol>
 <div class="highlight highlight-source-shell"><pre class="notranslate">kubectl create namespace harbor</pre></div>

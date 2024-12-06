@@ -15,8 +15,8 @@
   前往 release, 下载源代码, 解压之后拿到其中的 `templates` 文件夹, `Chart.yaml` 文件, `values.yaml` 文件
 2. 修改 `values.yaml` 文件
   详见 附录一
-  > 我们的小集群既没有https, 又没有持久化存储, 所以这些都不需要写在配置文件中, 直接关掉这些功能即可
-  > admin 的初始化密码在网页登陆后也能改
+    > 我们的小集群既没有https, 又没有持久化存储, 所以这些都不需要写在配置文件中, 直接关掉这些功能即可
+    > admin 的初始化密码在网页登陆后也能改
 3. 创建 harbor 专属的 namespace
   ```sh
   kubectl create namespace harbor
