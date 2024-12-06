@@ -129,10 +129,10 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
 <p>
 </p><div class="highlight highlight-source-python"><pre class="notranslate"><span class="pl-s1">list1</span>, <span class="pl-s1">list2</span> <span class="pl-c1">=</span> [], []
 
-<span class="pl-k">for</span> <span class="pl-s1">i</span> <span class="pl-c1">in</span> <span class="pl-s1">a</span>.<span class="pl-en">split</span>(<span class="pl-s">"<span class="pl-cce">\n</span>"</span>):
-    <span class="pl-s1">m</span>, <span class="pl-s1">n</span> <span class="pl-c1">=</span> <span class="pl-s1">i</span>.<span class="pl-en">split</span>(<span class="pl-s">"   "</span>)
-    <span class="pl-s1">list1</span>.<span class="pl-en">append</span>(<span class="pl-en">int</span>(<span class="pl-s1">m</span>))
-    <span class="pl-s1">list2</span>.<span class="pl-en">append</span>(<span class="pl-en">int</span>(<span class="pl-s1">n</span>))
+<span class="pl-k">for</span> <span class="pl-s1">i</span> <span class="pl-c1">in</span> <span class="pl-s1">a</span>.<span class="pl-c1">split</span>(<span class="pl-s">"<span class="pl-cce">\n</span>"</span>):
+    <span class="pl-s1">m</span>, <span class="pl-s1">n</span> <span class="pl-c1">=</span> <span class="pl-s1">i</span>.<span class="pl-c1">split</span>(<span class="pl-s">"   "</span>)
+    <span class="pl-s1">list1</span>.<span class="pl-c1">append</span>(<span class="pl-en">int</span>(<span class="pl-s1">m</span>))
+    <span class="pl-s1">list2</span>.<span class="pl-c1">append</span>(<span class="pl-en">int</span>(<span class="pl-s1">n</span>))
 
 <span class="pl-s1">ans</span> <span class="pl-c1">=</span> <span class="pl-c1">0</span>
 <span class="pl-k">for</span> <span class="pl-s1">i</span> <span class="pl-c1">in</span> <span class="pl-en">zip</span>(<span class="pl-en">sorted</span>(<span class="pl-s1">list1</span>), <span class="pl-en">sorted</span>(<span class="pl-s1">list2</span>)):
@@ -148,10 +148,10 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
 <p>
 </p><div class="highlight highlight-source-python"><pre class="notranslate"><span class="pl-s1">list1</span>, <span class="pl-s1">list2</span> <span class="pl-c1">=</span> [], []
 
-<span class="pl-k">for</span> <span class="pl-s1">i</span> <span class="pl-c1">in</span> <span class="pl-s1">a</span>.<span class="pl-en">split</span>(<span class="pl-s">"<span class="pl-cce">\n</span>"</span>):
-    <span class="pl-s1">m</span>, <span class="pl-s1">n</span> <span class="pl-c1">=</span> <span class="pl-s1">i</span>.<span class="pl-en">split</span>(<span class="pl-s">"   "</span>)
-    <span class="pl-s1">list1</span>.<span class="pl-en">append</span>(<span class="pl-en">int</span>(<span class="pl-s1">m</span>))
-    <span class="pl-s1">list2</span>.<span class="pl-en">append</span>(<span class="pl-en">int</span>(<span class="pl-s1">n</span>))
+<span class="pl-k">for</span> <span class="pl-s1">i</span> <span class="pl-c1">in</span> <span class="pl-s1">a</span>.<span class="pl-c1">split</span>(<span class="pl-s">"<span class="pl-cce">\n</span>"</span>):
+    <span class="pl-s1">m</span>, <span class="pl-s1">n</span> <span class="pl-c1">=</span> <span class="pl-s1">i</span>.<span class="pl-c1">split</span>(<span class="pl-s">"   "</span>)
+    <span class="pl-s1">list1</span>.<span class="pl-c1">append</span>(<span class="pl-en">int</span>(<span class="pl-s1">m</span>))
+    <span class="pl-s1">list2</span>.<span class="pl-c1">append</span>(<span class="pl-en">int</span>(<span class="pl-s1">n</span>))
 
 <span class="pl-s1">t</span> <span class="pl-c1">=</span> {}
 <span class="pl-k">for</span> <span class="pl-s1">i</span> <span class="pl-c1">in</span> <span class="pl-s1">list2</span>:
