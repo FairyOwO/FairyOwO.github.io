@@ -126,9 +126,11 @@ systemctl restart k3s  # systemctl restart k3s-agent if agent
 
 ### 一
 这里给出常用的 harbor 的 values.yaml 的选项, 复制自 [(https://blog.starry-s.moe/posts/2023/harbor-helm-chart/)](https://blog.starry-s.moe/posts/2023/harbor-helm-chart/)
+
 <details><summary>修改的选项</summary>
 <p>
-  
+
+```yaml
 expose:
 # expose type, 可以设置为 ingress, clusterIP, nodePort, nodeBalancer，区分大小写
 # 默认为 ingress（如果不想使用 80/443 标准端口，可以设置为 nodePort，端口为高位 3000X）
@@ -211,6 +213,7 @@ persistentVolumeClaim:
 
 # Admin 初始密码
 harborAdminPassword: 'Harbor12345'
+```
 
 </p>
 </details> 
@@ -333,9 +336,11 @@ systemctl restart k3s  # systemctl restart k3s-agent if agent
 
 ### 一
 这里给出常用的 harbor 的 values.yaml 的选项, 复制自 [(https://blog.starry-s.moe/posts/2023/harbor-helm-chart/)](https://blog.starry-s.moe/posts/2023/harbor-helm-chart/)
+
 <details><summary>修改的选项</summary>
 <p>
-  
+
+```yaml
 expose:
 # expose type, 可以设置为 ingress, clusterIP, nodePort, nodeBalancer，区分大小写
 # 默认为 ingress（如果不想使用 80/443 标准端口，可以设置为 nodePort，端口为高位 3000X）
@@ -418,6 +423,7 @@ persistentVolumeClaim:
 
 # Admin 初始密码
 harborAdminPassword: 'Harbor12345'
+```
 
 </p>
 </details> 
@@ -590,85 +596,88 @@ docker push harbor_ip:port/library/hello-world:latest</pre></div>
 <p>这里给出常用的 harbor 的 values.yaml 的选项, 复制自 <a href="https://blog.starry-s.moe/posts/2023/harbor-helm-chart/" rel="nofollow">(https://blog.starry-s.moe/posts/2023/harbor-helm-chart/)</a></p>
 <details><summary>修改的选项</summary>
 <p>
-</p><p>expose:</p>
-<h1>expose type, 可以设置为 ingress, clusterIP, nodePort, nodeBalancer，区分大小写</h1>
-<h1>默认为 ingress（如果不想使用 80/443 标准端口，可以设置为 nodePort，端口为高位 3000X）</h1>
-<p>type: ingress<br>
-tls:</p>
-<h1>是否启用 TLS (HTTPS)，建议启用</h1>
-<p>enabled: true</p>
-<h1>TLS Certificate 的来源，可以为 auto, secret 或 none</h1>
-<h1>如果为 secret，需要在安装 Chart 之前先创建 TLS Secret</h1>
-<h1>1) auto: generate the tls certificate automatically</h1>
-<h1>2) secret: read the tls certificate from the specified secret.</h1>
-<h1>The tls certificate can be generated manually or by cert manager</h1>
-<h1>3) none: configure no tls certificate for the ingress. If the default</h1>
-<h1>tls certificate is configured in the ingress controller, choose this option</h1>
-<p>certSource: secret<br>
-secret:<br>
-# The name of secret which contains keys named:<br>
-# "tls.crt" - the certificate<br>
-# "tls.key" - the private key<br>
-secretName: "harbor-tls"<br>
-# Only needed when the "expose.type" is "ingress".<br>
-notarySecretName: "harbor-tls"<br>
-ingress:<br>
-hosts:<br>
-# Ingress Host，如果需要允许任意域名/IP 都能访问，将其设置为空字符串（不建议）<br>
-# 这里填写的域名务必能解析到当前集群<br>
-core: harbor.example.com<br>
-notary: notary.example.com</p>
-<h1>Harbor external URL</h1>
-<h1>与 Ingress Host 相对应，如果启用了 TLS，那就是 https://</h1>
-<h1>如果没启用 TLS，那就是 http://</h1>
-<h1>如果 expose type 为 nodePort，则填写 http(s)://&lt;IP_ADDRESS&gt;:3000X (端口号不能丢)</h1>
-<p>externalURL: <a href="https://harbor.example.com" rel="nofollow">https://harbor.example.com</a></p>
-<h1>持久卷配置，默认为 true，如果是测试环境可以设置为 enabled: false (重新安装 Chart 时仓库里所有的数据都会丢失，不建议！)</h1>
-<h1>如果需要启用持久卷，可以在安装 Chart 之前提前创建好 PVC，并配置 subPath</h1>
-<p>persistence:<br>
-enabled: true<br>
-resourcePolicy: "keep"<br>
-persistentVolumeClaim:<br>
-registry:<br>
-# 填写已经创建好的 PVC<br>
-existingClaim: "harbor-pvc"<br>
-storageClass: ""<br>
-# 如果共用一个 PVC，需要设置子目录<br>
-subPath: "registry"<br>
-accessMode: ReadWriteOnce<br>
-size: 5Gi<br>
-annotations: {}<br>
-jobservice:<br>
-jobLog:<br>
-existingClaim: "harbor-pvc"<br>
-storageClass: ""<br>
-subPath: "jobservice"<br>
-accessMode: ReadWriteOnce<br>
-size: 1Gi<br>
-annotations: {}<br>
-database:<br>
-existingClaim: "harbor-pvc"<br>
-storageClass: ""<br>
-subPath: "database"<br>
-accessMode: ReadWriteOnce<br>
-size: 1Gi<br>
-annotations: {}<br>
-redis:<br>
-existingClaim: "harbor-pvc"<br>
-storageClass: ""<br>
-subPath: "redis"<br>
-accessMode: ReadWriteOnce<br>
-size: 1Gi<br>
-annotations: {}<br>
-trivy:<br>
-existingClaim: "harbor-pvc"<br>
-storageClass: ""<br>
-subPath: "trivy"<br>
-accessMode: ReadWriteOnce<br>
-size: 5Gi<br>
-annotations: {}</p>
-<h1>Admin 初始密码</h1>
-<p>harborAdminPassword: "Harbor12345"</p>
+</p><div class="highlight highlight-source-yaml"><pre class="notranslate"><span class="pl-ent">expose</span>:
+<span class="pl-c"><span class="pl-c">#</span> expose type, 可以设置为 ingress, clusterIP, nodePort, nodeBalancer，区分大小写</span>
+<span class="pl-c"><span class="pl-c">#</span> 默认为 ingress（如果不想使用 80/443 标准端口，可以设置为 nodePort，端口为高位 3000X）</span>
+<span class="pl-ent">type</span>: <span class="pl-s">ingress</span>
+<span class="pl-ent">tls</span>:
+  <span class="pl-c"><span class="pl-c">#</span> 是否启用 TLS (HTTPS)，建议启用</span>
+  <span class="pl-ent">enabled</span>: <span class="pl-c1">true</span>
+  <span class="pl-c"><span class="pl-c">#</span> TLS Certificate 的来源，可以为 auto, secret 或 none</span>
+  <span class="pl-c"><span class="pl-c">#</span> 如果为 secret，需要在安装 Chart 之前先创建 TLS Secret</span>
+  <span class="pl-c"><span class="pl-c">#</span> 1) auto: generate the tls certificate automatically</span>
+  <span class="pl-c"><span class="pl-c">#</span> 2) secret: read the tls certificate from the specified secret.</span>
+  <span class="pl-c"><span class="pl-c">#</span> The tls certificate can be generated manually or by cert manager</span>
+  <span class="pl-c"><span class="pl-c">#</span> 3) none: configure no tls certificate for the ingress. If the default</span>
+  <span class="pl-c"><span class="pl-c">#</span> tls certificate is configured in the ingress controller, choose this option</span>
+  <span class="pl-ent">certSource</span>: <span class="pl-s">secret</span>
+  <span class="pl-ent">secret</span>:
+    <span class="pl-c"><span class="pl-c">#</span> The name of secret which contains keys named:</span>
+    <span class="pl-c"><span class="pl-c">#</span> "tls.crt" - the certificate</span>
+    <span class="pl-c"><span class="pl-c">#</span> "tls.key" - the private key</span>
+    <span class="pl-ent">secretName</span>: <span class="pl-s"><span class="pl-pds">"</span>harbor-tls<span class="pl-pds">"</span></span>
+    <span class="pl-c"><span class="pl-c">#</span> Only needed when the "expose.type" is "ingress".</span>
+    <span class="pl-ent">notarySecretName</span>: <span class="pl-s"><span class="pl-pds">"</span>harbor-tls<span class="pl-pds">"</span></span>
+<span class="pl-ent">ingress</span>:
+  <span class="pl-ent">hosts</span>:
+    <span class="pl-c"><span class="pl-c">#</span> Ingress Host，如果需要允许任意域名/IP 都能访问，将其设置为空字符串（不建议）</span>
+    <span class="pl-c"><span class="pl-c">#</span> 这里填写的域名务必能解析到当前集群</span>
+    <span class="pl-ent">core</span>: <span class="pl-s">harbor.example.com</span>
+    <span class="pl-ent">notary</span>: <span class="pl-s">notary.example.com</span>
+
+<span class="pl-c"><span class="pl-c">#</span> Harbor external URL</span>
+<span class="pl-c"><span class="pl-c">#</span> 与 Ingress Host 相对应，如果启用了 TLS，那就是 https://&lt;domain&gt;</span>
+<span class="pl-c"><span class="pl-c">#</span> 如果没启用 TLS，那就是 http://&lt;domain&gt;</span>
+<span class="pl-c"><span class="pl-c">#</span> 如果 expose type 为 nodePort，则填写 http(s)://&lt;IP_ADDRESS&gt;:3000X (端口号不能丢)</span>
+<span class="pl-ent">externalURL</span>: <span class="pl-s">https://harbor.example.com</span>
+
+<span class="pl-c"><span class="pl-c">#</span> 持久卷配置，默认为 true，如果是测试环境可以设置为 enabled: false (重新安装 Chart 时仓库里所有的数据都会丢失，不建议！)</span>
+<span class="pl-c"><span class="pl-c">#</span> 如果需要启用持久卷，可以在安装 Chart 之前提前创建好 PVC，并配置 subPath</span>
+<span class="pl-ent">persistence</span>:
+<span class="pl-ent">enabled</span>: <span class="pl-c1">true</span>
+<span class="pl-ent">resourcePolicy</span>: <span class="pl-s"><span class="pl-pds">"</span>keep<span class="pl-pds">"</span></span>
+<span class="pl-ent">persistentVolumeClaim</span>:
+  <span class="pl-ent">registry</span>:
+    <span class="pl-c"><span class="pl-c">#</span> 填写已经创建好的 PVC</span>
+    <span class="pl-ent">existingClaim</span>: <span class="pl-s"><span class="pl-pds">"</span>harbor-pvc<span class="pl-pds">"</span></span>
+    <span class="pl-ent">storageClass</span>: <span class="pl-s"><span class="pl-pds">"</span><span class="pl-pds">"</span></span>
+    <span class="pl-c"><span class="pl-c">#</span> 如果共用一个 PVC，需要设置子目录</span>
+    <span class="pl-ent">subPath</span>: <span class="pl-s"><span class="pl-pds">"</span>registry<span class="pl-pds">"</span></span>
+    <span class="pl-ent">accessMode</span>: <span class="pl-s">ReadWriteOnce</span>
+    <span class="pl-ent">size</span>: <span class="pl-s">5Gi</span>
+    <span class="pl-ent">annotations</span>: <span class="pl-s">{}</span>
+  <span class="pl-ent">jobservice</span>:
+    <span class="pl-ent">jobLog</span>:
+      <span class="pl-ent">existingClaim</span>: <span class="pl-s"><span class="pl-pds">"</span>harbor-pvc<span class="pl-pds">"</span></span>
+      <span class="pl-ent">storageClass</span>: <span class="pl-s"><span class="pl-pds">"</span><span class="pl-pds">"</span></span>
+      <span class="pl-ent">subPath</span>: <span class="pl-s"><span class="pl-pds">"</span>jobservice<span class="pl-pds">"</span></span>
+      <span class="pl-ent">accessMode</span>: <span class="pl-s">ReadWriteOnce</span>
+      <span class="pl-ent">size</span>: <span class="pl-s">1Gi</span>
+      <span class="pl-ent">annotations</span>: <span class="pl-s">{}</span>
+  <span class="pl-ent">database</span>:
+    <span class="pl-ent">existingClaim</span>: <span class="pl-s"><span class="pl-pds">"</span>harbor-pvc<span class="pl-pds">"</span></span>
+    <span class="pl-ent">storageClass</span>: <span class="pl-s"><span class="pl-pds">"</span><span class="pl-pds">"</span></span>
+    <span class="pl-ent">subPath</span>: <span class="pl-s"><span class="pl-pds">"</span>database<span class="pl-pds">"</span></span>
+    <span class="pl-ent">accessMode</span>: <span class="pl-s">ReadWriteOnce</span>
+    <span class="pl-ent">size</span>: <span class="pl-s">1Gi</span>
+    <span class="pl-ent">annotations</span>: <span class="pl-s">{}</span>
+  <span class="pl-ent">redis</span>:
+    <span class="pl-ent">existingClaim</span>: <span class="pl-s"><span class="pl-pds">"</span>harbor-pvc<span class="pl-pds">"</span></span>
+    <span class="pl-ent">storageClass</span>: <span class="pl-s"><span class="pl-pds">"</span><span class="pl-pds">"</span></span>
+    <span class="pl-ent">subPath</span>: <span class="pl-s"><span class="pl-pds">"</span>redis<span class="pl-pds">"</span></span>
+    <span class="pl-ent">accessMode</span>: <span class="pl-s">ReadWriteOnce</span>
+    <span class="pl-ent">size</span>: <span class="pl-s">1Gi</span>
+    <span class="pl-ent">annotations</span>: <span class="pl-s">{}</span>
+  <span class="pl-ent">trivy</span>:
+    <span class="pl-ent">existingClaim</span>: <span class="pl-s"><span class="pl-pds">"</span>harbor-pvc<span class="pl-pds">"</span></span>
+    <span class="pl-ent">storageClass</span>: <span class="pl-s"><span class="pl-pds">"</span><span class="pl-pds">"</span></span>
+    <span class="pl-ent">subPath</span>: <span class="pl-s"><span class="pl-pds">"</span>trivy<span class="pl-pds">"</span></span>
+    <span class="pl-ent">accessMode</span>: <span class="pl-s">ReadWriteOnce</span>
+    <span class="pl-ent">size</span>: <span class="pl-s">5Gi</span>
+    <span class="pl-ent">annotations</span>: <span class="pl-s">{}</span>
+
+<span class="pl-c"><span class="pl-c">#</span> Admin 初始密码</span>
+<span class="pl-ent">harborAdminPassword</span>: <span class="pl-s"><span class="pl-pds">"</span>Harbor12345<span class="pl-pds">"</span></span></pre></div>
 <p></p>
 </details> </div>
 <div style="font-size:small;margin-top:8px;float:right;">转载无需注明出处</div>

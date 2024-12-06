@@ -114,9 +114,11 @@ systemctl restart k3s  # systemctl restart k3s-agent if agent
 
 ### 一
 这里给出常用的 harbor 的 values.yaml 的选项, 复制自 [(https://blog.starry-s.moe/posts/2023/harbor-helm-chart/)](https://blog.starry-s.moe/posts/2023/harbor-helm-chart/)
+
 <details><summary>修改的选项</summary>
 <p>
-  
+
+```yaml
 expose:
 # expose type, 可以设置为 ingress, clusterIP, nodePort, nodeBalancer，区分大小写
 # 默认为 ingress（如果不想使用 80/443 标准端口，可以设置为 nodePort，端口为高位 3000X）
@@ -199,6 +201,7 @@ persistentVolumeClaim:
 
 # Admin 初始密码
 harborAdminPassword: "Harbor12345"
+```
 
 </p>
 </details> 
