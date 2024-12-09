@@ -31,7 +31,7 @@
   helm --namespace harbor upgrade harbor .
   ```
 
-到 kebupi 中, 即可看到 harbor 的相关镜像在拉取了, 如果镜像配置正确的话, 过一段时间就会拉取成功
+到 kubepi 中, 即可看到 harbor 的相关镜像在拉取了, 如果镜像配置正确的话, 过一段时间就会拉取成功
 > 在 kubepi 中他会不断重试拉取, 实际上会缓慢拉取成功
 > 我是2M小服务器拉了半个小时+
 
@@ -109,6 +109,151 @@ systemctl restart k3s  # systemctl restart k3s-agent if agent
 
 在编写好 kubectl 使用的 yaml 后, 即可从 harbor 拉取镜像
 > 感谢 claude-sonnet 帮我写yaml
+
+## 实战
+
+这里搭建了一个求生之路2的服务器
+
+> 这里应该有一个求生之路2的简单介绍
+
+### docker机子拉取镜像
+
+这里使用的是 [HoshinoRei/l4d2server-docker](https://github.com/HoshinoRei/l4d2server-docker)
+
+```sh
+docker pull hoshinorei/l4d2server:edge
+```
+
+### 提交镜像
+
+```sh
+docker tag hoshinorei/l4d2server:edge harbor_ip:port/library/hoshinorei/l4d2server:edge
+docker push harbor_ip:port/library/hoshinorei/l4d2server:edge
+```
+
+### 编写 kubectl 使用的 yaml
+
+<details><summary>Details</summary>
+<p>
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: l4d2server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: l4d2server
+  template:
+    metadata:
+      labels:
+        app: l4d2server
+    spec:
+      containers:
+      - name: l4d2server
+        image: harbor_ip:port/library/hoshinorei/l4d2server:edge
+        command: ["/home/steam/l4d2server/srcds_run", "-game left4dead2", "-secure", "+exec", "server.cfg", "+map", "c1m1_hotel", "-port", "27015", "-tickrate 60", "+sv_setmax 31"]
+        ports:
+        - containerPort: 27015
+          name: tcp-game
+        - containerPort: 27015
+          protocol: UDP
+          name: udp-game
+        volumeMounts:
+        - name: addons
+          mountPath: /home/steam/l4d2server/left4dead2/addons/
+        - name: server-config
+          mountPath: /home/steam/l4d2server/left4dead2/cfg/server.cfg
+          subPath: server.cfg
+        - name: host-file
+          mountPath: /home/steam/l4d2server/left4dead2/host.txt
+          subPath: host.txt
+        - name: motd-file
+          mountPath: /home/steam/l4d2server/left4dead2/motd.txt
+          subPath: motd.txt
+        - name: cfg
+          mountPath: /home/steam/l4d2server/left4dead2/cfg/
+        
+      volumes:
+        - name: addons
+          hostPath:
+            path: /root/l4d2/addons/
+            type: Directory
+        - name: server-config
+          hostPath:
+            path: /root/l4d2/cfg/
+        - name: host-file
+          configMap:
+            name: l4d2server-host
+        - name: motd-file
+          configMap:
+            name: l4d2server-motd
+        - name: cfg
+          hostPath:
+            path: /root/l4d2/cfg/
+            type: Directory
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: l4d2server
+spec:
+  type: NodePort
+  ports:
+  - name: tcp-game
+    port: 27015
+    targetPort: 27015
+    protocol: TCP
+    nodePort: 30015
+  - name: udp-game
+    port: 27015
+    targetPort: 27015
+    protocol: UDP
+    nodePort: 30016
+  selector:
+    app: l4d2server
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: l4d2server-host
+data:
+  host.txt: |
+    # 这里放置 host.txt 的内容
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: l4d2server-motd
+data:
+  motd.txt: |
+    # 这里放置 motd.txt 的内容
+```
+
+</p>
+</details> 
+
+> 具体的参数细节参考 [这里](https://www.bilibili.com/opus/736922474423255104)
+> 需要在当前目录创建 `host.txt` 与 `motd.txt`, 并在里面输入内容, 在服务器进入的时候会显示这些内容
+
+执行
+
+```sh
+kubectl apply -f l4d2server.yaml
+```
+
+### 其他
+
+> 挂载了宿主机的目录来放置 l4d2 mod
+
+进入 kubepi 中, 查看具体被分配到了哪台机子上, 然后去那台机子的 ~/cfg 中, 放置 原始 l4d2 服务器的 cfg (可以通过刚开始的 docker 机子, 进入 docke 容器取得), 之后在 kubepi 重启即可
+
+如果需要添加 mods, 则将 mod 移动到 addons 跟 cfg 中即可(注意 linux 兼容性), 然后重启, 如果需要更改启动命令则需要修改原 yaml
 
 ## 附录
 
