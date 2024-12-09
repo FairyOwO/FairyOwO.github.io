@@ -168,7 +168,72 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
 <span class="pl-en">print</span>(<span class="pl-s1">ans</span>)</pre></div>
 <p></p>
 </details> 
-<p>经典的签到2题</p></div>
+<p>经典的签到2题</p>
+<h2>第二题</h2>
+<p><a href="https://adventofcode.com/2024/day/2" rel="nofollow">https://adventofcode.com/2024/day/2</a></p>
+<h3>1题</h3>
+<p>检测严格单调序列, 相邻两项之间差距在 [1, 3]</p>
+<details><summary>Details</summary>
+<p>
+</p><div class="highlight highlight-source-python"><pre class="notranslate"><span class="pl-s1">t</span> <span class="pl-c1">=</span> []
+<span class="pl-k">for</span> <span class="pl-s1">i</span> <span class="pl-c1">in</span> <span class="pl-s1">a</span>.<span class="pl-c1">split</span>(<span class="pl-s">'<span class="pl-cce">\n</span>'</span>):
+    <span class="pl-s1">t</span>.<span class="pl-c1">append</span>(<span class="pl-en">list</span>(<span class="pl-en">map</span>(<span class="pl-s1">int</span>, <span class="pl-s1">i</span>.<span class="pl-c1">split</span>())))
+
+<span class="pl-s1">ans</span> <span class="pl-c1">=</span> <span class="pl-c1">0</span>
+<span class="pl-k">for</span> <span class="pl-s1">i</span> <span class="pl-c1">in</span> <span class="pl-s1">t</span>:
+    <span class="pl-s1">temp</span> <span class="pl-c1">=</span> <span class="pl-c1">1</span> <span class="pl-k">if</span> <span class="pl-s1">i</span>[<span class="pl-c1">1</span>] <span class="pl-c1">-</span> <span class="pl-s1">i</span>[<span class="pl-c1">0</span>] <span class="pl-c1">&gt;</span> <span class="pl-c1">0</span> <span class="pl-k">else</span> <span class="pl-c1">-</span><span class="pl-c1">1</span>
+    <span class="pl-k">for</span> <span class="pl-s1">j</span> <span class="pl-c1">in</span> <span class="pl-en">range</span>(<span class="pl-c1">1</span>, <span class="pl-en">len</span>(<span class="pl-s1">i</span>)):
+
+        <span class="pl-k">if</span> <span class="pl-c1">0</span> <span class="pl-c1">&lt;</span> (<span class="pl-s1">i</span>[<span class="pl-s1">j</span>] <span class="pl-c1">-</span> <span class="pl-s1">i</span>[<span class="pl-s1">j</span> <span class="pl-c1">-</span> <span class="pl-c1">1</span>]) <span class="pl-c1">*</span> <span class="pl-s1">temp</span> <span class="pl-c1">&lt;</span> <span class="pl-c1">4</span>:
+            <span class="pl-k">continue</span>
+        <span class="pl-k">else</span>:
+            <span class="pl-s1">ans</span> <span class="pl-c1">+=</span> <span class="pl-c1">1</span>
+            <span class="pl-k">break</span>
+
+
+<span class="pl-en">print</span>(<span class="pl-c1">1000</span><span class="pl-c1">-</span><span class="pl-s1">ans</span>)</pre></div>
+<p></p>
+</details> 
+<p>检测错误的, 总数减去错误的即可</p>
+<h3>2题</h3>
+<p>在一题的基础上, 错误的一行允许剔除一项, 检测剔除一项后能变成正确的一行</p>
+<details><summary>Details</summary>
+<p>
+</p><div class="highlight highlight-source-python"><pre class="notranslate"><span class="pl-s1">t</span> <span class="pl-c1">=</span> []
+<span class="pl-k">for</span> <span class="pl-s1">i</span> <span class="pl-c1">in</span> <span class="pl-s1">a</span>.<span class="pl-c1">split</span>(<span class="pl-s">'<span class="pl-cce">\n</span>'</span>):
+    <span class="pl-s1">t</span>.<span class="pl-c1">append</span>(<span class="pl-en">list</span>(<span class="pl-en">map</span>(<span class="pl-s1">int</span>, <span class="pl-s1">i</span>.<span class="pl-c1">split</span>())))
+
+<span class="pl-s1">ans</span> <span class="pl-c1">=</span> <span class="pl-c1">0</span>
+<span class="pl-k">for</span> <span class="pl-s1">i</span> <span class="pl-c1">in</span> <span class="pl-s1">t</span>:
+    <span class="pl-s1">temp</span> <span class="pl-c1">=</span> <span class="pl-c1">1</span> <span class="pl-k">if</span> <span class="pl-s1">i</span>[<span class="pl-c1">1</span>] <span class="pl-c1">-</span> <span class="pl-s1">i</span>[<span class="pl-c1">0</span>] <span class="pl-c1">&gt;</span> <span class="pl-c1">0</span> <span class="pl-k">else</span> <span class="pl-c1">-</span><span class="pl-c1">1</span>
+    <span class="pl-k">for</span> <span class="pl-s1">j</span> <span class="pl-c1">in</span> <span class="pl-en">range</span>(<span class="pl-c1">1</span>, <span class="pl-en">len</span>(<span class="pl-s1">i</span>)):
+        <span class="pl-k">if</span> <span class="pl-c1">0</span> <span class="pl-c1">&lt;</span> (<span class="pl-s1">i</span>[<span class="pl-s1">j</span>] <span class="pl-c1">-</span> <span class="pl-s1">i</span>[<span class="pl-s1">j</span> <span class="pl-c1">-</span> <span class="pl-c1">1</span>]) <span class="pl-c1">*</span> <span class="pl-s1">temp</span> <span class="pl-c1">&lt;</span> <span class="pl-c1">4</span>:
+            <span class="pl-k">continue</span>
+        <span class="pl-k">else</span>:
+            <span class="pl-c"># ans += 1</span>
+            <span class="pl-k">for</span> <span class="pl-s1">k</span> <span class="pl-c1">in</span> <span class="pl-en">range</span>(<span class="pl-en">len</span>(<span class="pl-s1">i</span>)):
+                <span class="pl-s1">copy</span> <span class="pl-c1">=</span> <span class="pl-en">deepcopy</span>(<span class="pl-s1">i</span>)
+                <span class="pl-k">del</span> <span class="pl-s1">copy</span>[<span class="pl-s1">k</span>]
+                <span class="pl-s1">temp</span> <span class="pl-c1">=</span> <span class="pl-c1">1</span> <span class="pl-k">if</span> <span class="pl-s1">copy</span>[<span class="pl-c1">1</span>] <span class="pl-c1">-</span> <span class="pl-s1">copy</span>[<span class="pl-c1">0</span>] <span class="pl-c1">&gt;</span> <span class="pl-c1">0</span> <span class="pl-k">else</span> <span class="pl-c1">-</span><span class="pl-c1">1</span>
+                <span class="pl-k">for</span> <span class="pl-s1">t</span> <span class="pl-c1">in</span> <span class="pl-en">range</span>(<span class="pl-c1">1</span>, <span class="pl-en">len</span>(<span class="pl-s1">copy</span>)):
+                    <span class="pl-k">if</span> <span class="pl-c1">0</span> <span class="pl-c1">&lt;</span> (<span class="pl-s1">copy</span>[<span class="pl-s1">t</span>] <span class="pl-c1">-</span> <span class="pl-s1">copy</span>[<span class="pl-s1">t</span> <span class="pl-c1">-</span> <span class="pl-c1">1</span>]) <span class="pl-c1">*</span> <span class="pl-s1">temp</span> <span class="pl-c1">&lt;</span> <span class="pl-c1">4</span>:
+                        <span class="pl-k">continue</span>
+                    <span class="pl-k">else</span>:
+                        <span class="pl-k">break</span>
+                <span class="pl-k">else</span>:
+                    <span class="pl-s1">ans</span> <span class="pl-c1">+=</span> <span class="pl-c1">1</span>
+                    <span class="pl-k">break</span>
+            <span class="pl-k">break</span>
+    <span class="pl-k">else</span>:
+        <span class="pl-s1">ans</span> <span class="pl-c1">+=</span> <span class="pl-c1">1</span>
+
+<span class="pl-en">print</span>(<span class="pl-s1">ans</span>)</pre></div>
+<p></p>
+</details> 
+<p>没想到这题的捷径(想了一个捷径但是不对), 纯暴力解决, 每一项都遍历剔除的情况</p>
+<blockquote>
+<p>需要注意的是, 不同语言的 拷贝 是否为深拷贝 (复制一份新值)</p>
+</blockquote></div>
 <div style="font-size:small;margin-top:8px;float:right;">转载无需注明出处</div>
 
 <button class="btn btn-block" type="button" onclick="openComments()" id="cmButton">评论</button>

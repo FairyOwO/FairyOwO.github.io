@@ -77,3 +77,85 @@ print(ans)
 </details> 
 
 经典的签到2题
+
+## 第二题
+
+[https://adventofcode.com/2024/day/2](https://adventofcode.com/2024/day/2)
+
+### 1题
+
+检测严格单调序列, 相邻两项之间差距在 [1, 3]
+
+<details><summary>Details</summary>
+<p>
+
+```python
+t = []
+for i in a.split('\n'):
+    t.append(list(map(int, i.split())))
+
+ans = 0
+for i in t:
+    temp = 1 if i[1] - i[0] > 0 else -1
+    for j in range(1, len(i)):
+
+        if 0 < (i[j] - i[j - 1]) * temp < 4:
+            continue
+        else:
+            ans += 1
+            break
+
+
+print(1000-ans)
+```
+
+</p>
+</details> 
+
+检测错误的, 总数减去错误的即可
+
+### 2题
+
+在一题的基础上, 错误的一行允许剔除一项, 检测剔除一项后能变成正确的一行
+
+<details><summary>Details</summary>
+<p>
+
+```python
+t = []
+for i in a.split('\n'):
+    t.append(list(map(int, i.split())))
+
+ans = 0
+for i in t:
+    temp = 1 if i[1] - i[0] > 0 else -1
+    for j in range(1, len(i)):
+        if 0 < (i[j] - i[j - 1]) * temp < 4:
+            continue
+        else:
+            # ans += 1
+            for k in range(len(i)):
+                copy = deepcopy(i)
+                del copy[k]
+                temp = 1 if copy[1] - copy[0] > 0 else -1
+                for t in range(1, len(copy)):
+                    if 0 < (copy[t] - copy[t - 1]) * temp < 4:
+                        continue
+                    else:
+                        break
+                else:
+                    ans += 1
+                    break
+            break
+    else:
+        ans += 1
+
+print(ans)
+```
+
+</p>
+</details> 
+
+没想到这题的捷径(想了一个捷径但是不对), 纯暴力解决, 每一项都遍历剔除的情况
+
+> 需要注意的是, 不同语言的 拷贝 是否为深拷贝 (复制一份新值)
