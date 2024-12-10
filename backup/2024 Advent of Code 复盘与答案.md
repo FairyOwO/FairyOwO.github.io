@@ -159,3 +159,57 @@ print(ans)
 没想到这题的捷径(想了一个捷径但是不对), 纯暴力解决, 每一项都遍历剔除的情况
 
 > 需要注意的是, 不同语言的 拷贝 是否为深拷贝 (复制一份新值)
+
+## 第三题
+
+[https://adventofcode.com/2024/day/3](https://adventofcode.com/2024/day/3)
+
+### 1题
+
+正则提取 mul\((\d{1,3}),(\d{1,3})\), 然后把两个捕获组捕获出来的东西乘起来
+
+<details><summary>Details</summary>
+<p>
+
+```python
+temp = re.findall(r'mul\((\d{1,3}),(\d{1,3})\)', a)
+print(temp)
+ans = 0
+for i in temp:
+    ans += int(i[0]) * int(i[1])
+
+print(ans)
+```
+
+</p>
+</details> 
+
+### 2题
+
+在一题的基础上加入开关, 在"开"后捕获, 在"关"后不捕获
+
+<details><summary>Details</summary>
+<p>
+
+```python
+allsearch = r'mul\((\d{1,3}),(\d{1,3})\)|(do\(\))|(don\'t\(\))'
+
+aaa = re.findall(allsearch, a)
+print(aaa)
+ans = 0
+flag = True
+for i in aaa:
+    if i[2]:
+        flag = True
+    if i[3]:
+        flag = False
+    if i[0] == '':
+        continue
+    if flag:
+        ans += int(i[0]) * int(i[1])
+
+print(ans)
+```
+
+</p>
+</details> 
