@@ -212,4 +212,115 @@ print(ans)
 ```
 
 </p>
+</details>
+
+## 第四题
+
+[https://adventofcode.com/2024/day/4](https://adventofcode.com/2024/day/4)
+
+### 1题
+
+检测正反的 横着竖着斜着的字符串
+
+<details><summary>Details</summary>
+<p>
+
+```python
+
+t = a.split('\n')
+aaa = []
+for i in t:
+    aaa.append(list(i))
+
+print(aaa)
+ans = 0
+
+i = 0
+while i < len(aaa):
+    j = 0
+    while j < len(aaa[i]):
+        # 检测正的
+        if aaa[i][j] == 'X':
+            # 检测横着的
+            if j + 3 < len(aaa[i]):
+                if aaa[i][j+1] == 'M' and aaa[i][j+2] == 'A' and aaa[i][j+3] == 'S':
+                    ans += 1
+            # 检测竖着的
+            if i + 3 < len(aaa):
+                if aaa[i+1][j] == 'M' and aaa[i+2][j] == 'A' and aaa[i+3][j] == 'S':
+                    ans += 1
+            # 检测对角
+            if j + 3 < len(aaa[i]) and i + 3 < len(aaa):
+                if aaa[i+1][j+1] == 'M' and aaa[i+2][j+2] == 'A' and aaa[i+3][j+3] == 'S':
+                    ans += 1
+            if j - 3 >= 0 and i + 3 < len(aaa):
+                if aaa[i+1][j-1] == 'M' and aaa[i+2][j-2] == 'A' and aaa[i+3][j-3] == 'S':
+                    ans += 1
+        # 检测反的
+        if aaa[i][j] == 'S':
+            # 检测横着的
+            if j + 3 < len(aaa[i]):
+                if aaa[i][j+1] == 'A' and aaa[i][j+2] == 'M' and aaa[i][j+3] == 'X':
+                    ans += 1
+            # 检测竖着的
+            if i + 3 < len(aaa):
+                if aaa[i+1][j] == 'A' and aaa[i+2][j] == 'M' and aaa[i+3][j] == 'X':
+                    ans += 1
+            # 检测对角
+            if j + 3 < len(aaa[i]) and i + 3 < len(aaa):
+                if aaa[i+1][j+1] == 'A' and aaa[i+2][j+2] == 'M' and aaa[i+3][j+3] == 'X':
+                    ans += 1
+            if j - 3 >= 0 and i + 3 < len(aaa):
+                if aaa[i+1][j-1] == 'A' and aaa[i+2][j-2] == 'M' and aaa[i+3][j-3] == 'X':
+                    ans += 1
+        j += 1
+    i += 1
+
+print(ans)
+
+```
+
+</p>
+</details> 
+
+### 2题
+
+检测特殊的形状, 形状有多种可能(正反)
+
+<details><summary>Details</summary>
+<p>
+
+```python
+t = a.split('\n')
+aaa = []
+for i in t:
+    aaa.append(list(i))
+
+print(aaa)
+ans = 0
+
+i = 0
+while i + 2 < len(aaa):
+    j = 0
+    while j + 2 < len(aaa[i]):
+        if aaa[i][j] == 'M':
+            if aaa[i+1][j+1] == 'A' and aaa[i+2][j+2] == 'S':
+                if aaa[i][j+2] =='S' and aaa[i+2][j] == 'M':
+                    ans += 1
+                elif aaa[i][j+2] == 'M' and aaa[i+2][j] == 'S':
+                    ans += 1
+        if aaa[i][j] == 'S':
+            if aaa[i+1][j+1] == 'A' and aaa[i+2][j+2] == 'M':
+                if aaa[i][j+2] =='M' and aaa[i+2][j] == 'S':
+                    ans += 1
+                elif aaa[i][j+2] == 'S' and aaa[i+2][j] == 'M':
+                    ans += 1
+
+        j += 1
+    i += 1
+
+print(ans)
+```
+
+</p>
 </details> 
