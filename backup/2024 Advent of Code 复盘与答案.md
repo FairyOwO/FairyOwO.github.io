@@ -332,6 +332,7 @@ print(ans)
 ### 1题
 
 分为两部分, 第一部分指定数字的顺序, 第二部分是待检测的数组
+答案返回所有符合条件数组的最中间那个之和
 
 <details><summary>Details</summary>
 <p>
@@ -377,6 +378,7 @@ print(ans)
 ### 2题
 
 修改数组中的数字顺序, 使之满足第一部分给定的顺序排列
+答案返回 不满足第一题条件的 修改好的, 所有最中间的那个数之和
 
 <details><summary>Details</summary>
 <p>
