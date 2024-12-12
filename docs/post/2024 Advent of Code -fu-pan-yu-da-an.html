@@ -364,6 +364,95 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
 
 <span class="pl-en">print</span>(<span class="pl-s1">ans</span>)</pre></div>
 <p></p>
+</details> 
+<h2>第五题</h2>
+<p><a href="https://adventofcode.com/2024/day/5" rel="nofollow">https://adventofcode.com/2024/day/5</a></p>
+<h3>1题</h3>
+<p>分为两部分, 第一部分指定数字的顺序, 第二部分是待检测的数组</p>
+<details><summary>Details</summary>
+<p>
+</p><div class="highlight highlight-source-python"><pre class="notranslate"><span class="pl-s1">ahead</span>, <span class="pl-s1">after</span> <span class="pl-c1">=</span> <span class="pl-s1">a</span>.<span class="pl-c1">split</span>(<span class="pl-s">'<span class="pl-cce">\n</span><span class="pl-cce">\n</span>'</span>)
+
+<span class="pl-s1">ahead_procress</span> <span class="pl-c1">=</span> {}
+<span class="pl-k">for</span> <span class="pl-s1">i</span> <span class="pl-c1">in</span> <span class="pl-s1">ahead</span>.<span class="pl-c1">split</span>(<span class="pl-s">'<span class="pl-cce">\n</span>'</span>):
+    <span class="pl-s1">t</span> <span class="pl-c1">=</span> <span class="pl-en">list</span>(<span class="pl-en">map</span>(<span class="pl-s1">int</span>, <span class="pl-s1">i</span>.<span class="pl-c1">split</span>(<span class="pl-s">'|'</span>)))
+    <span class="pl-k">if</span> <span class="pl-s1">t</span>[<span class="pl-c1">0</span>] <span class="pl-c1"><span class="pl-c1">not</span> <span class="pl-c1">in</span></span> <span class="pl-s1">ahead_procress</span>:
+        <span class="pl-s1">ahead_procress</span>[<span class="pl-s1">t</span>[<span class="pl-c1">0</span>]] <span class="pl-c1">=</span> [<span class="pl-s1">t</span>[<span class="pl-c1">1</span>]]
+    <span class="pl-k">else</span>:
+        <span class="pl-s1">ahead_procress</span>[<span class="pl-s1">t</span>[<span class="pl-c1">0</span>]].<span class="pl-c1">append</span>(<span class="pl-s1">t</span>[<span class="pl-c1">1</span>])
+
+<span class="pl-en">print</span>(<span class="pl-s1">ahead_procress</span>)
+
+<span class="pl-s1">after_procress</span> <span class="pl-c1">=</span> []
+<span class="pl-k">for</span> <span class="pl-s1">i</span> <span class="pl-c1">in</span> <span class="pl-s1">after</span>.<span class="pl-c1">split</span>(<span class="pl-s">'<span class="pl-cce">\n</span>'</span>):
+    <span class="pl-s1">after_procress</span>.<span class="pl-c1">append</span>(<span class="pl-en">list</span>(<span class="pl-en">map</span>(<span class="pl-s1">int</span>, <span class="pl-s1">i</span>.<span class="pl-c1">split</span>(<span class="pl-s">','</span>))))
+
+<span class="pl-s1">ans</span> <span class="pl-c1">=</span> <span class="pl-c1">0</span>
+
+<span class="pl-k">for</span> <span class="pl-s1">i</span> <span class="pl-c1">in</span> <span class="pl-s1">after_procress</span>:
+    <span class="pl-s1">aaa</span> <span class="pl-c1">=</span> []
+    <span class="pl-k">for</span> <span class="pl-s1">j</span> <span class="pl-c1">in</span> <span class="pl-s1">i</span>[::<span class="pl-c1">-</span><span class="pl-c1">1</span>]:
+        <span class="pl-k">if</span> <span class="pl-s1">j</span> <span class="pl-c1"><span class="pl-c1">not</span> <span class="pl-c1">in</span></span> <span class="pl-s1">aaa</span>:
+            <span class="pl-k">if</span> <span class="pl-s1">j</span> <span class="pl-c1">in</span> <span class="pl-s1">ahead_procress</span>:
+                <span class="pl-s1">aaa</span>.<span class="pl-c1">extend</span>(<span class="pl-s1">ahead_procress</span>[<span class="pl-s1">j</span>])
+        <span class="pl-k">else</span>:
+            <span class="pl-k">break</span>
+    <span class="pl-k">else</span>:
+        <span class="pl-s1">ans</span> <span class="pl-c1">+=</span> <span class="pl-s1">i</span>[<span class="pl-en">len</span>(<span class="pl-s1">i</span>)<span class="pl-c1">//</span><span class="pl-c1">2</span>]
+
+<span class="pl-en">print</span>(<span class="pl-s1">ans</span>)</pre></div>
+<p></p>
+</details>
+<h3>2题</h3>
+<p>修改数组中的数字顺序, 使之满足第一部分给定的顺序排列</p>
+<details><summary>Details</summary>
+<p>
+</p><div class="highlight highlight-source-python"><pre class="notranslate"><span class="pl-s1">ahead</span>, <span class="pl-s1">after</span> <span class="pl-c1">=</span> <span class="pl-s1">a</span>.<span class="pl-c1">split</span>(<span class="pl-s">'<span class="pl-cce">\n</span><span class="pl-cce">\n</span>'</span>)
+
+<span class="pl-s1">ahead_procress</span> <span class="pl-c1">=</span> {}
+<span class="pl-s1">ahead_procress2</span> <span class="pl-c1">=</span> {}
+<span class="pl-k">for</span> <span class="pl-s1">i</span> <span class="pl-c1">in</span> <span class="pl-s1">ahead</span>.<span class="pl-c1">split</span>(<span class="pl-s">'<span class="pl-cce">\n</span>'</span>):
+    <span class="pl-s1">t</span> <span class="pl-c1">=</span> <span class="pl-en">list</span>(<span class="pl-en">map</span>(<span class="pl-s1">int</span>, <span class="pl-s1">i</span>.<span class="pl-c1">split</span>(<span class="pl-s">'|'</span>)))
+    <span class="pl-k">if</span> <span class="pl-s1">t</span>[<span class="pl-c1">0</span>] <span class="pl-c1"><span class="pl-c1">not</span> <span class="pl-c1">in</span></span> <span class="pl-s1">ahead_procress</span>:
+        <span class="pl-s1">ahead_procress</span>[<span class="pl-s1">t</span>[<span class="pl-c1">0</span>]] <span class="pl-c1">=</span> [<span class="pl-s1">t</span>[<span class="pl-c1">1</span>]]
+    <span class="pl-k">else</span>:
+        <span class="pl-s1">ahead_procress</span>[<span class="pl-s1">t</span>[<span class="pl-c1">0</span>]].<span class="pl-c1">append</span>(<span class="pl-s1">t</span>[<span class="pl-c1">1</span>])
+
+    <span class="pl-k">if</span> <span class="pl-s1">t</span>[<span class="pl-c1">1</span>] <span class="pl-c1"><span class="pl-c1">not</span> <span class="pl-c1">in</span></span> <span class="pl-s1">ahead_procress2</span>:
+        <span class="pl-s1">ahead_procress2</span>[<span class="pl-s1">t</span>[<span class="pl-c1">1</span>]] <span class="pl-c1">=</span> [<span class="pl-s1">t</span>[<span class="pl-c1">0</span>]]
+    <span class="pl-k">else</span>:
+        <span class="pl-s1">ahead_procress2</span>[<span class="pl-s1">t</span>[<span class="pl-c1">1</span>]].<span class="pl-c1">append</span>(<span class="pl-s1">t</span>[<span class="pl-c1">0</span>])
+
+<span class="pl-en">print</span>(<span class="pl-s1">ahead_procress</span>)
+
+<span class="pl-s1">after_procress</span> <span class="pl-c1">=</span> []
+<span class="pl-k">for</span> <span class="pl-s1">i</span> <span class="pl-c1">in</span> <span class="pl-s1">after</span>.<span class="pl-c1">split</span>(<span class="pl-s">'<span class="pl-cce">\n</span>'</span>):
+    <span class="pl-s1">after_procress</span>.<span class="pl-c1">append</span>(<span class="pl-en">list</span>(<span class="pl-en">map</span>(<span class="pl-s1">int</span>, <span class="pl-s1">i</span>.<span class="pl-c1">split</span>(<span class="pl-s">','</span>))))
+
+<span class="pl-s1">ans</span> <span class="pl-c1">=</span> <span class="pl-c1">0</span>
+
+<span class="pl-k">for</span> <span class="pl-s1">i</span> <span class="pl-c1">in</span> <span class="pl-s1">after_procress</span>:
+    <span class="pl-s1">aaa</span> <span class="pl-c1">=</span> []
+    <span class="pl-s1">bbb</span> <span class="pl-c1">=</span> []
+    <span class="pl-s1">flag</span> <span class="pl-c1">=</span> <span class="pl-c1">True</span>
+    <span class="pl-k">for</span> <span class="pl-s1">j</span> <span class="pl-c1">in</span> <span class="pl-s1">i</span>[::<span class="pl-c1">-</span><span class="pl-c1">1</span>]:
+        <span class="pl-s1">bbb</span>.<span class="pl-c1">append</span>(<span class="pl-s1">j</span>)
+        <span class="pl-k">if</span> <span class="pl-s1">j</span> <span class="pl-c1"><span class="pl-c1">not</span> <span class="pl-c1">in</span></span> <span class="pl-s1">aaa</span>:
+            <span class="pl-k">if</span> <span class="pl-s1">j</span> <span class="pl-c1">in</span> <span class="pl-s1">ahead_procress</span>:
+                <span class="pl-s1">aaa</span>.<span class="pl-c1">extend</span>(<span class="pl-s1">ahead_procress</span>[<span class="pl-s1">j</span>])
+        <span class="pl-k">else</span>:
+            <span class="pl-s1">bbb</span>.<span class="pl-c1">pop</span>()
+            <span class="pl-s1">flag</span> <span class="pl-c1">=</span> <span class="pl-c1">False</span>
+            <span class="pl-k">for</span> <span class="pl-s1">k</span> <span class="pl-c1">in</span> <span class="pl-s1">bbb</span>:
+                <span class="pl-k">if</span> <span class="pl-s1">k</span> <span class="pl-c1">in</span> <span class="pl-s1">ahead_procress2</span>[<span class="pl-s1">j</span>]:
+                    <span class="pl-s1">bbb</span>.<span class="pl-c1">insert</span>(<span class="pl-s1">bbb</span>.<span class="pl-c1">index</span>(<span class="pl-s1">k</span>), <span class="pl-s1">j</span>)
+                    <span class="pl-k">break</span>
+            
+    <span class="pl-k">if</span> <span class="pl-s1">flag</span> <span class="pl-c1">is</span> <span class="pl-c1">False</span>:
+        <span class="pl-s1">ans</span> <span class="pl-c1">+=</span> <span class="pl-s1">bbb</span>[<span class="pl-en">len</span>(<span class="pl-s1">bbb</span>)<span class="pl-c1">//</span><span class="pl-c1">2</span>]
+
+<span class="pl-en">print</span>(<span class="pl-s1">ans</span>)</pre></div>
+<p></p>
 </details> </div>
 <div style="font-size:small;margin-top:8px;float:right;">转载无需注明出处</div>
 

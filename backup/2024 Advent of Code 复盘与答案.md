@@ -324,3 +324,112 @@ print(ans)
 
 </p>
 </details> 
+
+## 第五题
+
+[https://adventofcode.com/2024/day/5](https://adventofcode.com/2024/day/5)
+
+### 1题
+
+分为两部分, 第一部分指定数字的顺序, 第二部分是待检测的数组
+
+<details><summary>Details</summary>
+<p>
+
+```python
+
+ahead, after = a.split('\n\n')
+
+ahead_procress = {}
+for i in ahead.split('\n'):
+    t = list(map(int, i.split('|')))
+    if t[0] not in ahead_procress:
+        ahead_procress[t[0]] = [t[1]]
+    else:
+        ahead_procress[t[0]].append(t[1])
+
+print(ahead_procress)
+
+after_procress = []
+for i in after.split('\n'):
+    after_procress.append(list(map(int, i.split(','))))
+
+ans = 0
+
+for i in after_procress:
+    aaa = []
+    for j in i[::-1]:
+        if j not in aaa:
+            if j in ahead_procress:
+                aaa.extend(ahead_procress[j])
+        else:
+            break
+    else:
+        ans += i[len(i)//2]
+
+print(ans)
+
+```
+
+</p>
+</details>
+
+### 2题
+
+修改数组中的数字顺序, 使之满足第一部分给定的顺序排列
+
+<details><summary>Details</summary>
+<p>
+
+```python
+
+ahead, after = a.split('\n\n')
+
+ahead_procress = {}
+ahead_procress2 = {}
+for i in ahead.split('\n'):
+    t = list(map(int, i.split('|')))
+    if t[0] not in ahead_procress:
+        ahead_procress[t[0]] = [t[1]]
+    else:
+        ahead_procress[t[0]].append(t[1])
+
+    if t[1] not in ahead_procress2:
+        ahead_procress2[t[1]] = [t[0]]
+    else:
+        ahead_procress2[t[1]].append(t[0])
+
+print(ahead_procress)
+
+after_procress = []
+for i in after.split('\n'):
+    after_procress.append(list(map(int, i.split(','))))
+
+ans = 0
+
+for i in after_procress:
+    aaa = []
+    bbb = []
+    flag = True
+    for j in i[::-1]:
+        bbb.append(j)
+        if j not in aaa:
+            if j in ahead_procress:
+                aaa.extend(ahead_procress[j])
+        else:
+            bbb.pop()
+            flag = False
+            for k in bbb:
+                if k in ahead_procress2[j]:
+                    bbb.insert(bbb.index(k), j)
+                    break
+            
+    if flag is False:
+        ans += bbb[len(bbb)//2]
+
+print(ans)
+
+```
+
+</p>
+</details> 
