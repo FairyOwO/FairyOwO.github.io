@@ -435,3 +435,145 @@ print(ans)
 
 </p>
 </details> 
+
+## 第六题
+
+[https://adventofcode.com/2024/day/5](https://adventofcode.com/2024/day/5)
+
+### 1题
+
+一个图, 遇到障碍物往右转, 否则往前走, 访问多少个不同位置
+
+<details><summary>Details</summary>
+<p>
+
+```python
+
+aaa = [list(i) for i in a.split('\n')]
+
+
+begin_pos = (0, 0)
+for i in range(len(aaa)):
+    for j in range(len(aaa[i])):
+        if aaa[i][j] == '^':
+            begin_pos = (i, j)
+            aaa[i][j] = 'X'
+
+print(begin_pos)
+t = (-1, 0)
+
+def turn(t):
+    if t == (1, 0):
+        return (0, -1)
+    elif t == (0, 1):
+        return (1, 0)
+    elif t == (-1, 0):
+        return (0, 1)
+    elif t == (0, -1):
+        return (-1, 0)
+
+
+while 1:
+    if aaa[begin_pos[0] + t[0]][begin_pos[1] + t[1]] == '#':
+        t = turn(t)
+    else:
+        aaa[begin_pos[0] + t[0]][begin_pos[1] + t[1]] = 'X'
+        begin_pos = (begin_pos[0] + t[0], begin_pos[1] + t[1])
+
+    if begin_pos[0] in [0, len(aaa) - 1] or begin_pos[1] in [0, len(aaa[0]) - 1]:
+        break
+
+ans = 0
+for i in range(len(aaa)):
+    for j in range(len(aaa[0])):
+        if aaa[i][j] == 'X':
+            ans += 1
+
+print(ans)
+```
+
+</p>
+</details> 
+
+### 2题
+
+在1的基础上, 添加一个障碍物, 使得其循环
+
+<details><summary>Details</summary>
+<p>
+
+```python
+aaa = [list(i) for i in a.split('\n')]
+
+
+begin_pos = (0, 0)
+for i in range(len(aaa)):
+    for j in range(len(aaa[i])):
+        if aaa[i][j] == '^':
+            begin_pos = (i, j)
+            aaa[i][j] = 'X'
+
+bak_begin_pos = deepcopy(begin_pos)
+print(begin_pos)
+t = (-1, 0)
+
+def turn(t):
+    if t == (1, 0):
+        return (0, -1)
+    elif t == (0, 1):
+        return (1, 0)
+    elif t == (-1, 0):
+        return (0, 1)
+    elif t == (0, -1):
+        return (-1, 0)
+
+
+while 1:
+    if aaa[begin_pos[0] + t[0]][begin_pos[1] + t[1]] == '#':
+        t = turn(t)
+        continue
+    else:
+        aaa[begin_pos[0] + t[0]][begin_pos[1] + t[1]] = 'X'
+        begin_pos = (begin_pos[0] + t[0], begin_pos[1] + t[1])
+
+    if begin_pos[0] in [0, len(aaa) - 1] or begin_pos[1] in [0, len(aaa[0]) - 1]:
+        break
+
+ttt = [0, 0, 0, 0]
+ttt = [deepcopy(ttt) for _ in range(len(aaa[0]))]
+ttt = [deepcopy(ttt) for _ in range(len(aaa))]
+
+ans = 0
+aaa[bak_begin_pos[0]][bak_begin_pos[1]] = '.'
+for i in tqdm(range(len(aaa))):
+    for j in tqdm(range(len(aaa[i]))):
+        if aaa[i][j] == 'X':
+            begin_pos = deepcopy(bak_begin_pos)
+            temp = deepcopy(aaa)
+            temp[i][j] = '#'
+            ttt_b = deepcopy(ttt)
+            t = (-1, 0)
+            flag = 0
+            ttt_b[begin_pos[0]][begin_pos[1]][flag] = 1
+            while 1:
+                if temp[begin_pos[0] + t[0]][begin_pos[1] + t[1]] == '#':
+                    t = turn(t)
+                    flag = (flag + 1) % 4
+                    continue
+                else:
+                    begin_pos = (begin_pos[0] + t[0], begin_pos[1] + t[1])
+                    if ttt_b[begin_pos[0]][begin_pos[1]][flag] == 0:
+                        ttt_b[begin_pos[0]][begin_pos[1]][flag] = 1
+                    else:
+                        ans += 1
+                        break
+                if begin_pos[0] in [0, len(ttt_b) - 1] or begin_pos[1] in [0, len(ttt_b[0]) - 1]:
+                    break
+print(ans)
+
+```
+
+</p>
+</details> 
+
+> 需要一个状态数组, 记录当前块下 运动方向, 如果运动方向相同的出现了两次, 则认为是循环
