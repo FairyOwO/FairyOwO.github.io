@@ -438,7 +438,7 @@ print(ans)
 
 ## 第六题
 
-[https://adventofcode.com/2024/day/5](https://adventofcode.com/2024/day/5)
+[https://adventofcode.com/2024/day/6](https://adventofcode.com/2024/day/6)
 
 ### 1题
 
@@ -577,3 +577,222 @@ print(ans)
 </details> 
 
 > 需要一个状态数组, 记录当前块下 运动方向, 如果运动方向相同的出现了两次, 则认为是循环
+
+## 第七题
+
+[https://adventofcode.com/2024/day/7](https://adventofcode.com/2024/day/7)
+
+### 1题
+
+给定运算符 相加 与 相乘(运算顺序固定从左往右, 无优先级), 给几个数字, 问他能不能变成另一个数字
+
+<details><summary>Details</summary>
+<p>
+
+```python
+def cal(numbers, ops):
+    result = numbers[0]
+    for i in range(len(ops)):
+        if ops[i] == '+':
+            result += numbers[i + 1]
+        else:
+            result *= numbers[i + 1]
+    return result
+
+
+ans = 0
+ops = ['+', '*']
+for line in a.splitlines():
+    aa, bb = line.split(': ')
+    b_int = [int(i) for i in bb.split()]
+    aa = int(aa)
+    for i in itertools.product(ops, repeat=len(b_int)-1):
+        if aa == cal(b_int, i):
+            ans += aa
+            break
+    
+print(ans)
+```
+
+</p>
+</details> 
+
+> 任意个相同数组的笛卡尔积, 使用 `itertools.product` 生成
+
+### 2题
+
+在一题的基础上多了个类似于 合并 str (str1+str2) 的运算符
+
+<details><summary>Details</summary>
+<p>
+
+```python
+
+def cal(numbers, ops):
+    result = numbers[0]
+    for i in range(len(ops)):
+        if ops[i] == '+':
+            result += numbers[i + 1]
+        elif ops[i] == '*':
+            result *= numbers[i + 1]
+        else:
+            result = int(str(result) + str(numbers[i+1]))
+    return result
+
+
+ans = 0
+ops = ['+', '*', '||']
+for line in a.splitlines():
+    aa, bb = line.split(': ')
+    b_int = [int(i) for i in bb.split()]
+    aa = int(aa)
+    for i in itertools.product(ops, repeat=len(b_int)-1):
+        if aa == cal(b_int, i):
+            ans += aa
+            break
+    
+print(ans)
+
+```
+
+</p>
+</details> 
+
+> `ops` 多一个 合并运算符, `cal` 多一种计算方法, 本质与第一题相同
+
+## 第八题
+
+[https://adventofcode.com/2024/day/8](https://adventofcode.com/2024/day/8)
+
+## 1题
+
+二维数组中, 字母/数字 连线, 向两边延长线延长 连线间的距离, 要求1. 在二维数组中2. 可以与其他字母数字重合 3. 与另一组 字母/数字 的延长处重合算一次
+
+<details><summary>Details</summary>
+<p>
+
+```python
+
+aaa = []
+for i in a.splitlines():
+    aaa.append(list(i))
+
+print(aaa)
+
+all_char = list(set(a))
+all_char.remove('\n')
+all_char.remove('.')
+
+print(all_char)
+
+def get_all_char_pos(char):
+    char_pos = []
+    for i in range(len(aaa)):
+        for j in range(len(aaa[i])):
+            if aaa[i][j] == char:
+                char_pos.append((i, j))
+    return char_pos
+
+def is_valid(pos):
+    if 0 <= pos[0] < len(aaa) and 0 <= pos[1] < len(aaa[0]):
+        return True
+    return False
+
+
+empty_aaa = np.zeros((len(aaa), len(aaa[0])))
+
+for i in all_char:
+    char_pos = get_all_char_pos(i)
+    for j in range(len(char_pos)):
+        for k in range(j + 1, len(char_pos)):
+            pos = (char_pos[j][0] - char_pos[k][0], char_pos[j][1] - char_pos[k][1])
+            negative_pos = (-pos[0], -pos[1])
+            if is_valid((char_pos[j][0] + pos[0], char_pos[j][1] + pos[1])):
+                empty_aaa[char_pos[j][0] + pos[0]][char_pos[j][1] + pos[1]] = 1
+            if is_valid((char_pos[k][0] + negative_pos[0], char_pos[k][1] + negative_pos[1])):
+                empty_aaa[char_pos[k][0] + negative_pos[0]][char_pos[k][1] + negative_pos[1]] = 1
+
+ans = 0
+for i in range(len(empty_aaa)):
+    for j in range(len(empty_aaa[i])):
+        if empty_aaa[i][j] == 1:
+            ans += 1
+                
+print(ans)
+
+```
+
+</p>
+</details>
+
+### 2题
+
+在一题的基础上, 延长连线间的距离的k倍
+
+<details><summary>Details</summary>
+<p>
+
+```python
+
+aaa = []
+for i in a.splitlines():
+    aaa.append(list(i))
+
+print(aaa)
+
+all_char = list(set(a))
+all_char.remove('\n')
+all_char.remove('.')
+
+print(all_char)
+
+def get_all_char_pos(char):
+    char_pos = []
+    for i in range(len(aaa)):
+        for j in range(len(aaa[i])):
+            if aaa[i][j] == char:
+                char_pos.append((i, j))
+    return char_pos
+
+def is_valid(pos):
+    if 0 <= pos[0] < len(aaa) and 0 <= pos[1] < len(aaa[0]):
+        return True
+    return False
+
+def get_k(pos):
+    return min(len(aaa) // abs(pos[0]), len(aaa[0]) // abs(pos[1])) + 1
+
+
+empty_aaa = np.zeros((len(aaa), len(aaa[0])))
+
+for i in all_char:
+    char_pos = get_all_char_pos(i)
+    if len(char_pos) > 1:
+        for j in char_pos:
+            empty_aaa[j[0]][j[1]] = 1
+    for j in range(len(char_pos)):
+        for k in range(j + 1, len(char_pos)):
+            pos = (char_pos[j][0] - char_pos[k][0], char_pos[j][1] - char_pos[k][1])
+            k = get_k(pos)
+            negative_pos = (-pos[0], -pos[1])
+            for m in range(1, k + 1):
+                new_pos = (char_pos[j][0] + pos[0] * m, char_pos[j][1] + pos[1] * m)
+                if is_valid(new_pos):
+                    empty_aaa[new_pos[0]][new_pos[1]] = 1
+                new_negative_pos = (char_pos[j][0] + negative_pos[0] * m, char_pos[j][1] + negative_pos[1] * m)
+                if is_valid(new_negative_pos):
+                    empty_aaa[new_negative_pos[0]][new_negative_pos[1]] = 1
+
+
+ans = 0
+for i in range(len(empty_aaa)):
+    for j in range(len(empty_aaa[i])):
+        if empty_aaa[i][j] != 0:
+            ans += 1
+                
+print(ans)
+
+```
+
+</p>
+</details> 

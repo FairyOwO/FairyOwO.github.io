@@ -457,7 +457,7 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
 <p></p>
 </details> 
 <h2>第六题</h2>
-<p><a href="https://adventofcode.com/2024/day/5" rel="nofollow">https://adventofcode.com/2024/day/5</a></p>
+<p><a href="https://adventofcode.com/2024/day/6" rel="nofollow">https://adventofcode.com/2024/day/6</a></p>
 <h3>1题</h3>
 <p>一个图, 遇到障碍物往右转, 否则往前走, 访问多少个不同位置</p>
 <details><summary>Details</summary>
@@ -580,7 +580,190 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
 </details> 
 <blockquote>
 <p>需要一个状态数组, 记录当前块下 运动方向, 如果运动方向相同的出现了两次, 则认为是循环</p>
-</blockquote></div>
+</blockquote>
+<h2>第七题</h2>
+<p><a href="https://adventofcode.com/2024/day/7" rel="nofollow">https://adventofcode.com/2024/day/7</a></p>
+<h3>1题</h3>
+<p>给定运算符 相加 与 相乘(运算顺序固定从左往右, 无优先级), 给几个数字, 问他能不能变成另一个数字</p>
+<details><summary>Details</summary>
+<p>
+</p><div class="highlight highlight-source-python"><pre class="notranslate"><span class="pl-k">def</span> <span class="pl-en">cal</span>(<span class="pl-s1">numbers</span>, <span class="pl-s1">ops</span>):
+    <span class="pl-s1">result</span> <span class="pl-c1">=</span> <span class="pl-s1">numbers</span>[<span class="pl-c1">0</span>]
+    <span class="pl-k">for</span> <span class="pl-s1">i</span> <span class="pl-c1">in</span> <span class="pl-en">range</span>(<span class="pl-en">len</span>(<span class="pl-s1">ops</span>)):
+        <span class="pl-k">if</span> <span class="pl-s1">ops</span>[<span class="pl-s1">i</span>] <span class="pl-c1">==</span> <span class="pl-s">'+'</span>:
+            <span class="pl-s1">result</span> <span class="pl-c1">+=</span> <span class="pl-s1">numbers</span>[<span class="pl-s1">i</span> <span class="pl-c1">+</span> <span class="pl-c1">1</span>]
+        <span class="pl-k">else</span>:
+            <span class="pl-s1">result</span> <span class="pl-c1">*=</span> <span class="pl-s1">numbers</span>[<span class="pl-s1">i</span> <span class="pl-c1">+</span> <span class="pl-c1">1</span>]
+    <span class="pl-k">return</span> <span class="pl-s1">result</span>
+
+
+<span class="pl-s1">ans</span> <span class="pl-c1">=</span> <span class="pl-c1">0</span>
+<span class="pl-s1">ops</span> <span class="pl-c1">=</span> [<span class="pl-s">'+'</span>, <span class="pl-s">'*'</span>]
+<span class="pl-k">for</span> <span class="pl-s1">line</span> <span class="pl-c1">in</span> <span class="pl-s1">a</span>.<span class="pl-c1">splitlines</span>():
+    <span class="pl-s1">aa</span>, <span class="pl-s1">bb</span> <span class="pl-c1">=</span> <span class="pl-s1">line</span>.<span class="pl-c1">split</span>(<span class="pl-s">': '</span>)
+    <span class="pl-s1">b_int</span> <span class="pl-c1">=</span> [<span class="pl-en">int</span>(<span class="pl-s1">i</span>) <span class="pl-k">for</span> <span class="pl-s1">i</span> <span class="pl-c1">in</span> <span class="pl-s1">bb</span>.<span class="pl-c1">split</span>()]
+    <span class="pl-s1">aa</span> <span class="pl-c1">=</span> <span class="pl-en">int</span>(<span class="pl-s1">aa</span>)
+    <span class="pl-k">for</span> <span class="pl-s1">i</span> <span class="pl-c1">in</span> <span class="pl-s1">itertools</span>.<span class="pl-c1">product</span>(<span class="pl-s1">ops</span>, <span class="pl-s1">repeat</span><span class="pl-c1">=</span><span class="pl-en">len</span>(<span class="pl-s1">b_int</span>)<span class="pl-c1">-</span><span class="pl-c1">1</span>):
+        <span class="pl-k">if</span> <span class="pl-s1">aa</span> <span class="pl-c1">==</span> <span class="pl-en">cal</span>(<span class="pl-s1">b_int</span>, <span class="pl-s1">i</span>):
+            <span class="pl-s1">ans</span> <span class="pl-c1">+=</span> <span class="pl-s1">aa</span>
+            <span class="pl-k">break</span>
+    
+<span class="pl-en">print</span>(<span class="pl-s1">ans</span>)</pre></div>
+<p></p>
+</details> 
+<blockquote>
+<p>任意个相同数组的笛卡尔积, 使用 <code class="notranslate">itertools.product</code> 生成</p>
+</blockquote>
+<h3>2题</h3>
+<p>在一题的基础上多了个类似于 合并 str (str1+str2) 的运算符</p>
+<details><summary>Details</summary>
+<p>
+</p><div class="highlight highlight-source-python"><pre class="notranslate"><span class="pl-k">def</span> <span class="pl-en">cal</span>(<span class="pl-s1">numbers</span>, <span class="pl-s1">ops</span>):
+    <span class="pl-s1">result</span> <span class="pl-c1">=</span> <span class="pl-s1">numbers</span>[<span class="pl-c1">0</span>]
+    <span class="pl-k">for</span> <span class="pl-s1">i</span> <span class="pl-c1">in</span> <span class="pl-en">range</span>(<span class="pl-en">len</span>(<span class="pl-s1">ops</span>)):
+        <span class="pl-k">if</span> <span class="pl-s1">ops</span>[<span class="pl-s1">i</span>] <span class="pl-c1">==</span> <span class="pl-s">'+'</span>:
+            <span class="pl-s1">result</span> <span class="pl-c1">+=</span> <span class="pl-s1">numbers</span>[<span class="pl-s1">i</span> <span class="pl-c1">+</span> <span class="pl-c1">1</span>]
+        <span class="pl-k">elif</span> <span class="pl-s1">ops</span>[<span class="pl-s1">i</span>] <span class="pl-c1">==</span> <span class="pl-s">'*'</span>:
+            <span class="pl-s1">result</span> <span class="pl-c1">*=</span> <span class="pl-s1">numbers</span>[<span class="pl-s1">i</span> <span class="pl-c1">+</span> <span class="pl-c1">1</span>]
+        <span class="pl-k">else</span>:
+            <span class="pl-s1">result</span> <span class="pl-c1">=</span> <span class="pl-en">int</span>(<span class="pl-en">str</span>(<span class="pl-s1">result</span>) <span class="pl-c1">+</span> <span class="pl-en">str</span>(<span class="pl-s1">numbers</span>[<span class="pl-s1">i</span><span class="pl-c1">+</span><span class="pl-c1">1</span>]))
+    <span class="pl-k">return</span> <span class="pl-s1">result</span>
+
+
+<span class="pl-s1">ans</span> <span class="pl-c1">=</span> <span class="pl-c1">0</span>
+<span class="pl-s1">ops</span> <span class="pl-c1">=</span> [<span class="pl-s">'+'</span>, <span class="pl-s">'*'</span>, <span class="pl-s">'||'</span>]
+<span class="pl-k">for</span> <span class="pl-s1">line</span> <span class="pl-c1">in</span> <span class="pl-s1">a</span>.<span class="pl-c1">splitlines</span>():
+    <span class="pl-s1">aa</span>, <span class="pl-s1">bb</span> <span class="pl-c1">=</span> <span class="pl-s1">line</span>.<span class="pl-c1">split</span>(<span class="pl-s">': '</span>)
+    <span class="pl-s1">b_int</span> <span class="pl-c1">=</span> [<span class="pl-en">int</span>(<span class="pl-s1">i</span>) <span class="pl-k">for</span> <span class="pl-s1">i</span> <span class="pl-c1">in</span> <span class="pl-s1">bb</span>.<span class="pl-c1">split</span>()]
+    <span class="pl-s1">aa</span> <span class="pl-c1">=</span> <span class="pl-en">int</span>(<span class="pl-s1">aa</span>)
+    <span class="pl-k">for</span> <span class="pl-s1">i</span> <span class="pl-c1">in</span> <span class="pl-s1">itertools</span>.<span class="pl-c1">product</span>(<span class="pl-s1">ops</span>, <span class="pl-s1">repeat</span><span class="pl-c1">=</span><span class="pl-en">len</span>(<span class="pl-s1">b_int</span>)<span class="pl-c1">-</span><span class="pl-c1">1</span>):
+        <span class="pl-k">if</span> <span class="pl-s1">aa</span> <span class="pl-c1">==</span> <span class="pl-en">cal</span>(<span class="pl-s1">b_int</span>, <span class="pl-s1">i</span>):
+            <span class="pl-s1">ans</span> <span class="pl-c1">+=</span> <span class="pl-s1">aa</span>
+            <span class="pl-k">break</span>
+    
+<span class="pl-en">print</span>(<span class="pl-s1">ans</span>)</pre></div>
+<p></p>
+</details> 
+<blockquote>
+<p><code class="notranslate">ops</code> 多一个 合并运算符, <code class="notranslate">cal</code> 多一种计算方法, 本质与第一题相同</p>
+</blockquote>
+<h2>第八题</h2>
+<p><a href="https://adventofcode.com/2024/day/8" rel="nofollow">https://adventofcode.com/2024/day/8</a></p>
+<h2>1题</h2>
+<p>二维数组中, 字母/数字 连线, 向两边延长线延长 连线间的距离, 要求1. 在二维数组中2. 可以与其他字母数字重合 3. 与另一组 字母/数字 的延长处重合算一次</p>
+<details><summary>Details</summary>
+<p>
+</p><div class="highlight highlight-source-python"><pre class="notranslate"><span class="pl-s1">aaa</span> <span class="pl-c1">=</span> []
+<span class="pl-k">for</span> <span class="pl-s1">i</span> <span class="pl-c1">in</span> <span class="pl-s1">a</span>.<span class="pl-c1">splitlines</span>():
+    <span class="pl-s1">aaa</span>.<span class="pl-c1">append</span>(<span class="pl-en">list</span>(<span class="pl-s1">i</span>))
+
+<span class="pl-en">print</span>(<span class="pl-s1">aaa</span>)
+
+<span class="pl-s1">all_char</span> <span class="pl-c1">=</span> <span class="pl-en">list</span>(<span class="pl-en">set</span>(<span class="pl-s1">a</span>))
+<span class="pl-s1">all_char</span>.<span class="pl-c1">remove</span>(<span class="pl-s">'<span class="pl-cce">\n</span>'</span>)
+<span class="pl-s1">all_char</span>.<span class="pl-c1">remove</span>(<span class="pl-s">'.'</span>)
+
+<span class="pl-en">print</span>(<span class="pl-s1">all_char</span>)
+
+<span class="pl-k">def</span> <span class="pl-en">get_all_char_pos</span>(<span class="pl-s1">char</span>):
+    <span class="pl-s1">char_pos</span> <span class="pl-c1">=</span> []
+    <span class="pl-k">for</span> <span class="pl-s1">i</span> <span class="pl-c1">in</span> <span class="pl-en">range</span>(<span class="pl-en">len</span>(<span class="pl-s1">aaa</span>)):
+        <span class="pl-k">for</span> <span class="pl-s1">j</span> <span class="pl-c1">in</span> <span class="pl-en">range</span>(<span class="pl-en">len</span>(<span class="pl-s1">aaa</span>[<span class="pl-s1">i</span>])):
+            <span class="pl-k">if</span> <span class="pl-s1">aaa</span>[<span class="pl-s1">i</span>][<span class="pl-s1">j</span>] <span class="pl-c1">==</span> <span class="pl-s1">char</span>:
+                <span class="pl-s1">char_pos</span>.<span class="pl-c1">append</span>((<span class="pl-s1">i</span>, <span class="pl-s1">j</span>))
+    <span class="pl-k">return</span> <span class="pl-s1">char_pos</span>
+
+<span class="pl-k">def</span> <span class="pl-en">is_valid</span>(<span class="pl-s1">pos</span>):
+    <span class="pl-k">if</span> <span class="pl-c1">0</span> <span class="pl-c1">&lt;=</span> <span class="pl-s1">pos</span>[<span class="pl-c1">0</span>] <span class="pl-c1">&lt;</span> <span class="pl-en">len</span>(<span class="pl-s1">aaa</span>) <span class="pl-c1">and</span> <span class="pl-c1">0</span> <span class="pl-c1">&lt;=</span> <span class="pl-s1">pos</span>[<span class="pl-c1">1</span>] <span class="pl-c1">&lt;</span> <span class="pl-en">len</span>(<span class="pl-s1">aaa</span>[<span class="pl-c1">0</span>]):
+        <span class="pl-k">return</span> <span class="pl-c1">True</span>
+    <span class="pl-k">return</span> <span class="pl-c1">False</span>
+
+
+<span class="pl-s1">empty_aaa</span> <span class="pl-c1">=</span> <span class="pl-s1">np</span>.<span class="pl-c1">zeros</span>((<span class="pl-en">len</span>(<span class="pl-s1">aaa</span>), <span class="pl-en">len</span>(<span class="pl-s1">aaa</span>[<span class="pl-c1">0</span>])))
+
+<span class="pl-k">for</span> <span class="pl-s1">i</span> <span class="pl-c1">in</span> <span class="pl-s1">all_char</span>:
+    <span class="pl-s1">char_pos</span> <span class="pl-c1">=</span> <span class="pl-en">get_all_char_pos</span>(<span class="pl-s1">i</span>)
+    <span class="pl-k">for</span> <span class="pl-s1">j</span> <span class="pl-c1">in</span> <span class="pl-en">range</span>(<span class="pl-en">len</span>(<span class="pl-s1">char_pos</span>)):
+        <span class="pl-k">for</span> <span class="pl-s1">k</span> <span class="pl-c1">in</span> <span class="pl-en">range</span>(<span class="pl-s1">j</span> <span class="pl-c1">+</span> <span class="pl-c1">1</span>, <span class="pl-en">len</span>(<span class="pl-s1">char_pos</span>)):
+            <span class="pl-s1">pos</span> <span class="pl-c1">=</span> (<span class="pl-s1">char_pos</span>[<span class="pl-s1">j</span>][<span class="pl-c1">0</span>] <span class="pl-c1">-</span> <span class="pl-s1">char_pos</span>[<span class="pl-s1">k</span>][<span class="pl-c1">0</span>], <span class="pl-s1">char_pos</span>[<span class="pl-s1">j</span>][<span class="pl-c1">1</span>] <span class="pl-c1">-</span> <span class="pl-s1">char_pos</span>[<span class="pl-s1">k</span>][<span class="pl-c1">1</span>])
+            <span class="pl-s1">negative_pos</span> <span class="pl-c1">=</span> (<span class="pl-c1">-</span><span class="pl-s1">pos</span>[<span class="pl-c1">0</span>], <span class="pl-c1">-</span><span class="pl-s1">pos</span>[<span class="pl-c1">1</span>])
+            <span class="pl-k">if</span> <span class="pl-en">is_valid</span>((<span class="pl-s1">char_pos</span>[<span class="pl-s1">j</span>][<span class="pl-c1">0</span>] <span class="pl-c1">+</span> <span class="pl-s1">pos</span>[<span class="pl-c1">0</span>], <span class="pl-s1">char_pos</span>[<span class="pl-s1">j</span>][<span class="pl-c1">1</span>] <span class="pl-c1">+</span> <span class="pl-s1">pos</span>[<span class="pl-c1">1</span>])):
+                <span class="pl-s1">empty_aaa</span>[<span class="pl-s1">char_pos</span>[<span class="pl-s1">j</span>][<span class="pl-c1">0</span>] <span class="pl-c1">+</span> <span class="pl-s1">pos</span>[<span class="pl-c1">0</span>]][<span class="pl-s1">char_pos</span>[<span class="pl-s1">j</span>][<span class="pl-c1">1</span>] <span class="pl-c1">+</span> <span class="pl-s1">pos</span>[<span class="pl-c1">1</span>]] <span class="pl-c1">=</span> <span class="pl-c1">1</span>
+            <span class="pl-k">if</span> <span class="pl-en">is_valid</span>((<span class="pl-s1">char_pos</span>[<span class="pl-s1">k</span>][<span class="pl-c1">0</span>] <span class="pl-c1">+</span> <span class="pl-s1">negative_pos</span>[<span class="pl-c1">0</span>], <span class="pl-s1">char_pos</span>[<span class="pl-s1">k</span>][<span class="pl-c1">1</span>] <span class="pl-c1">+</span> <span class="pl-s1">negative_pos</span>[<span class="pl-c1">1</span>])):
+                <span class="pl-s1">empty_aaa</span>[<span class="pl-s1">char_pos</span>[<span class="pl-s1">k</span>][<span class="pl-c1">0</span>] <span class="pl-c1">+</span> <span class="pl-s1">negative_pos</span>[<span class="pl-c1">0</span>]][<span class="pl-s1">char_pos</span>[<span class="pl-s1">k</span>][<span class="pl-c1">1</span>] <span class="pl-c1">+</span> <span class="pl-s1">negative_pos</span>[<span class="pl-c1">1</span>]] <span class="pl-c1">=</span> <span class="pl-c1">1</span>
+
+<span class="pl-s1">ans</span> <span class="pl-c1">=</span> <span class="pl-c1">0</span>
+<span class="pl-k">for</span> <span class="pl-s1">i</span> <span class="pl-c1">in</span> <span class="pl-en">range</span>(<span class="pl-en">len</span>(<span class="pl-s1">empty_aaa</span>)):
+    <span class="pl-k">for</span> <span class="pl-s1">j</span> <span class="pl-c1">in</span> <span class="pl-en">range</span>(<span class="pl-en">len</span>(<span class="pl-s1">empty_aaa</span>[<span class="pl-s1">i</span>])):
+        <span class="pl-k">if</span> <span class="pl-s1">empty_aaa</span>[<span class="pl-s1">i</span>][<span class="pl-s1">j</span>] <span class="pl-c1">==</span> <span class="pl-c1">1</span>:
+            <span class="pl-s1">ans</span> <span class="pl-c1">+=</span> <span class="pl-c1">1</span>
+                
+<span class="pl-en">print</span>(<span class="pl-s1">ans</span>)</pre></div>
+<p></p>
+</details>
+<h3>2题</h3>
+<p>在一题的基础上, 延长连线间的距离的k倍</p>
+<details><summary>Details</summary>
+<p>
+</p><div class="highlight highlight-source-python"><pre class="notranslate"><span class="pl-s1">aaa</span> <span class="pl-c1">=</span> []
+<span class="pl-k">for</span> <span class="pl-s1">i</span> <span class="pl-c1">in</span> <span class="pl-s1">a</span>.<span class="pl-c1">splitlines</span>():
+    <span class="pl-s1">aaa</span>.<span class="pl-c1">append</span>(<span class="pl-en">list</span>(<span class="pl-s1">i</span>))
+
+<span class="pl-en">print</span>(<span class="pl-s1">aaa</span>)
+
+<span class="pl-s1">all_char</span> <span class="pl-c1">=</span> <span class="pl-en">list</span>(<span class="pl-en">set</span>(<span class="pl-s1">a</span>))
+<span class="pl-s1">all_char</span>.<span class="pl-c1">remove</span>(<span class="pl-s">'<span class="pl-cce">\n</span>'</span>)
+<span class="pl-s1">all_char</span>.<span class="pl-c1">remove</span>(<span class="pl-s">'.'</span>)
+
+<span class="pl-en">print</span>(<span class="pl-s1">all_char</span>)
+
+<span class="pl-k">def</span> <span class="pl-en">get_all_char_pos</span>(<span class="pl-s1">char</span>):
+    <span class="pl-s1">char_pos</span> <span class="pl-c1">=</span> []
+    <span class="pl-k">for</span> <span class="pl-s1">i</span> <span class="pl-c1">in</span> <span class="pl-en">range</span>(<span class="pl-en">len</span>(<span class="pl-s1">aaa</span>)):
+        <span class="pl-k">for</span> <span class="pl-s1">j</span> <span class="pl-c1">in</span> <span class="pl-en">range</span>(<span class="pl-en">len</span>(<span class="pl-s1">aaa</span>[<span class="pl-s1">i</span>])):
+            <span class="pl-k">if</span> <span class="pl-s1">aaa</span>[<span class="pl-s1">i</span>][<span class="pl-s1">j</span>] <span class="pl-c1">==</span> <span class="pl-s1">char</span>:
+                <span class="pl-s1">char_pos</span>.<span class="pl-c1">append</span>((<span class="pl-s1">i</span>, <span class="pl-s1">j</span>))
+    <span class="pl-k">return</span> <span class="pl-s1">char_pos</span>
+
+<span class="pl-k">def</span> <span class="pl-en">is_valid</span>(<span class="pl-s1">pos</span>):
+    <span class="pl-k">if</span> <span class="pl-c1">0</span> <span class="pl-c1">&lt;=</span> <span class="pl-s1">pos</span>[<span class="pl-c1">0</span>] <span class="pl-c1">&lt;</span> <span class="pl-en">len</span>(<span class="pl-s1">aaa</span>) <span class="pl-c1">and</span> <span class="pl-c1">0</span> <span class="pl-c1">&lt;=</span> <span class="pl-s1">pos</span>[<span class="pl-c1">1</span>] <span class="pl-c1">&lt;</span> <span class="pl-en">len</span>(<span class="pl-s1">aaa</span>[<span class="pl-c1">0</span>]):
+        <span class="pl-k">return</span> <span class="pl-c1">True</span>
+    <span class="pl-k">return</span> <span class="pl-c1">False</span>
+
+<span class="pl-k">def</span> <span class="pl-en">get_k</span>(<span class="pl-s1">pos</span>):
+    <span class="pl-k">return</span> <span class="pl-en">min</span>(<span class="pl-en">len</span>(<span class="pl-s1">aaa</span>) <span class="pl-c1">//</span> <span class="pl-en">abs</span>(<span class="pl-s1">pos</span>[<span class="pl-c1">0</span>]), <span class="pl-en">len</span>(<span class="pl-s1">aaa</span>[<span class="pl-c1">0</span>]) <span class="pl-c1">//</span> <span class="pl-en">abs</span>(<span class="pl-s1">pos</span>[<span class="pl-c1">1</span>])) <span class="pl-c1">+</span> <span class="pl-c1">1</span>
+
+
+<span class="pl-s1">empty_aaa</span> <span class="pl-c1">=</span> <span class="pl-s1">np</span>.<span class="pl-c1">zeros</span>((<span class="pl-en">len</span>(<span class="pl-s1">aaa</span>), <span class="pl-en">len</span>(<span class="pl-s1">aaa</span>[<span class="pl-c1">0</span>])))
+
+<span class="pl-k">for</span> <span class="pl-s1">i</span> <span class="pl-c1">in</span> <span class="pl-s1">all_char</span>:
+    <span class="pl-s1">char_pos</span> <span class="pl-c1">=</span> <span class="pl-en">get_all_char_pos</span>(<span class="pl-s1">i</span>)
+    <span class="pl-k">if</span> <span class="pl-en">len</span>(<span class="pl-s1">char_pos</span>) <span class="pl-c1">&gt;</span> <span class="pl-c1">1</span>:
+        <span class="pl-k">for</span> <span class="pl-s1">j</span> <span class="pl-c1">in</span> <span class="pl-s1">char_pos</span>:
+            <span class="pl-s1">empty_aaa</span>[<span class="pl-s1">j</span>[<span class="pl-c1">0</span>]][<span class="pl-s1">j</span>[<span class="pl-c1">1</span>]] <span class="pl-c1">=</span> <span class="pl-c1">1</span>
+    <span class="pl-k">for</span> <span class="pl-s1">j</span> <span class="pl-c1">in</span> <span class="pl-en">range</span>(<span class="pl-en">len</span>(<span class="pl-s1">char_pos</span>)):
+        <span class="pl-k">for</span> <span class="pl-s1">k</span> <span class="pl-c1">in</span> <span class="pl-en">range</span>(<span class="pl-s1">j</span> <span class="pl-c1">+</span> <span class="pl-c1">1</span>, <span class="pl-en">len</span>(<span class="pl-s1">char_pos</span>)):
+            <span class="pl-s1">pos</span> <span class="pl-c1">=</span> (<span class="pl-s1">char_pos</span>[<span class="pl-s1">j</span>][<span class="pl-c1">0</span>] <span class="pl-c1">-</span> <span class="pl-s1">char_pos</span>[<span class="pl-s1">k</span>][<span class="pl-c1">0</span>], <span class="pl-s1">char_pos</span>[<span class="pl-s1">j</span>][<span class="pl-c1">1</span>] <span class="pl-c1">-</span> <span class="pl-s1">char_pos</span>[<span class="pl-s1">k</span>][<span class="pl-c1">1</span>])
+            <span class="pl-s1">k</span> <span class="pl-c1">=</span> <span class="pl-en">get_k</span>(<span class="pl-s1">pos</span>)
+            <span class="pl-s1">negative_pos</span> <span class="pl-c1">=</span> (<span class="pl-c1">-</span><span class="pl-s1">pos</span>[<span class="pl-c1">0</span>], <span class="pl-c1">-</span><span class="pl-s1">pos</span>[<span class="pl-c1">1</span>])
+            <span class="pl-k">for</span> <span class="pl-s1">m</span> <span class="pl-c1">in</span> <span class="pl-en">range</span>(<span class="pl-c1">1</span>, <span class="pl-s1">k</span> <span class="pl-c1">+</span> <span class="pl-c1">1</span>):
+                <span class="pl-s1">new_pos</span> <span class="pl-c1">=</span> (<span class="pl-s1">char_pos</span>[<span class="pl-s1">j</span>][<span class="pl-c1">0</span>] <span class="pl-c1">+</span> <span class="pl-s1">pos</span>[<span class="pl-c1">0</span>] <span class="pl-c1">*</span> <span class="pl-s1">m</span>, <span class="pl-s1">char_pos</span>[<span class="pl-s1">j</span>][<span class="pl-c1">1</span>] <span class="pl-c1">+</span> <span class="pl-s1">pos</span>[<span class="pl-c1">1</span>] <span class="pl-c1">*</span> <span class="pl-s1">m</span>)
+                <span class="pl-k">if</span> <span class="pl-en">is_valid</span>(<span class="pl-s1">new_pos</span>):
+                    <span class="pl-s1">empty_aaa</span>[<span class="pl-s1">new_pos</span>[<span class="pl-c1">0</span>]][<span class="pl-s1">new_pos</span>[<span class="pl-c1">1</span>]] <span class="pl-c1">=</span> <span class="pl-c1">1</span>
+                <span class="pl-s1">new_negative_pos</span> <span class="pl-c1">=</span> (<span class="pl-s1">char_pos</span>[<span class="pl-s1">j</span>][<span class="pl-c1">0</span>] <span class="pl-c1">+</span> <span class="pl-s1">negative_pos</span>[<span class="pl-c1">0</span>] <span class="pl-c1">*</span> <span class="pl-s1">m</span>, <span class="pl-s1">char_pos</span>[<span class="pl-s1">j</span>][<span class="pl-c1">1</span>] <span class="pl-c1">+</span> <span class="pl-s1">negative_pos</span>[<span class="pl-c1">1</span>] <span class="pl-c1">*</span> <span class="pl-s1">m</span>)
+                <span class="pl-k">if</span> <span class="pl-en">is_valid</span>(<span class="pl-s1">new_negative_pos</span>):
+                    <span class="pl-s1">empty_aaa</span>[<span class="pl-s1">new_negative_pos</span>[<span class="pl-c1">0</span>]][<span class="pl-s1">new_negative_pos</span>[<span class="pl-c1">1</span>]] <span class="pl-c1">=</span> <span class="pl-c1">1</span>
+
+
+<span class="pl-s1">ans</span> <span class="pl-c1">=</span> <span class="pl-c1">0</span>
+<span class="pl-k">for</span> <span class="pl-s1">i</span> <span class="pl-c1">in</span> <span class="pl-en">range</span>(<span class="pl-en">len</span>(<span class="pl-s1">empty_aaa</span>)):
+    <span class="pl-k">for</span> <span class="pl-s1">j</span> <span class="pl-c1">in</span> <span class="pl-en">range</span>(<span class="pl-en">len</span>(<span class="pl-s1">empty_aaa</span>[<span class="pl-s1">i</span>])):
+        <span class="pl-k">if</span> <span class="pl-s1">empty_aaa</span>[<span class="pl-s1">i</span>][<span class="pl-s1">j</span>] <span class="pl-c1">!=</span> <span class="pl-c1">0</span>:
+            <span class="pl-s1">ans</span> <span class="pl-c1">+=</span> <span class="pl-c1">1</span>
+                
+<span class="pl-en">print</span>(<span class="pl-s1">ans</span>)</pre></div>
+<p></p>
+</details> </div>
 <div style="font-size:small;margin-top:8px;float:right;">转载无需注明出处</div>
 
 <button class="btn btn-block" type="button" onclick="openComments()" id="cmButton">评论</button>
