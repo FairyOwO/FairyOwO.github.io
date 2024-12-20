@@ -355,3 +355,613 @@ print(sum(t.values()))
 
 > `tqdm` 是为了监控速度, 非必要引入
 > 与第一题不同, 这题指数爆炸, 75次会超时, 因为答案不要求顺序, 所以可以用缓存
+
+## 第十二题
+
+[https://adventofcode.com/2024/day/12](https://adventofcode.com/2024/day/12)
+
+### 1题
+
+划分区域
+
+```text
+AAAA
+BBCD
+BBCC
+EEEC
+```
+
+划分成
+
+```text
++-+-+-+-+
+|A A A A|
++-+-+-+-+     +-+
+              |D|
++-+-+   +-+   +-+
+|B B|   |C|
++   +   + +-+
+|B B|   |C C|
++-+-+   +-+ +
+          |C|
++-+-+-+   +-+
+|E E E|
++-+-+-+
+```
+
+分为五个区域, 
+计算每个区域的周长*面积之和
+
+<details><summary>Details</summary>
+<p>
+
+```python
+
+aa = []
+for i in a.splitlines():
+    aa.append(list(i))
+
+def get_perimeter(arr):
+    perimeter = 0
+    for i in range(len(arr)):
+        for j in range(len(arr[0])):
+            if arr[i][j] == 1:
+                perimeter += 4
+                if i > 0 and arr[i - 1][j] == 1:
+                    perimeter -= 1
+                if j > 0 and arr[i][j - 1] == 1:
+                    perimeter -= 1
+                if i < len(arr) - 1 and arr[i + 1][j] == 1:
+                    perimeter -= 1
+                if j < len(arr[0]) - 1 and arr[i][j + 1] == 1:
+                    perimeter -= 1
+    
+    return perimeter
+
+def get_area(arr):
+    area = 0
+    for i in range(len(arr)):
+        for j in range(len(arr[0])):
+            if arr[i][j] == 1:
+                area += 1
+    return area
+
+def get_allow_pos(pos):
+    allow_pos = [(1, 0), (0, 1), (-1, 0), (0, -1)]
+    char = aa[pos[0]][pos[1]]
+    for i in allow_pos:
+        next_pos = (pos[0] + i[0], pos[1] + i[1])
+        if len(aa) > next_pos[0] >= 0 and len(aa[0]) > next_pos[1] >= 0:
+            if aa[next_pos[0]][next_pos[1]] == char:
+                yield next_pos
+
+
+ans = 0
+
+already_visited = np.zeros((len(aa), len(aa[0])))
+for i in range(len(aa)):
+    for j in range(len(aa[i])):
+        if already_visited[i][j] == 0:
+            # print(aa[i][j])
+            array_ = np.zeros((len(aa), len(aa[0])))
+            already_visited[i][j] = 1
+            array_[i][j] = 1
+            def dfs(pos):
+                for next_pos in get_allow_pos(pos):
+                    if already_visited[next_pos[0]][next_pos[1]] == 0:
+                        already_visited[next_pos[0]][next_pos[1]] = 1
+                        array_[next_pos[0]][next_pos[1]] = 1
+                        dfs(next_pos)
+            
+            dfs((i, j))
+            area = get_area(array_)
+            perimeter = get_perimeter(array_)
+            ans += area * perimeter
+        
+print(ans)
+
+```
+
+</p>
+</details> 
+
+> 加一个正方形边长+4, 如果旁边每有一个正方形就-1的边长
+
+### 2题
+
+1题的边长变成边的数量
+
+<details><summary>Details</summary>
+<p>
+
+```python
+
+aa = []
+for i in a.splitlines():
+    aa.append(list(i))
+
+
+
+def get_area(arr):
+    area = 0
+    for i in range(len(arr)):
+        for j in range(len(arr[0])):
+            if arr[i][j] == 1:
+                area += 1
+    return area
+
+def get_perimeter(region):
+        
+    max_x = len(region) - 1
+    max_y = len(region[0]) - 1
+    min_x = min_y = 0
+    
+    def state(x, y):
+        if x < 0 or x > max_x or y < 0 or y > max_y:
+            return False
+        return region[x][y]
+    
+    perimeter = 0
+    
+    # 垂直方向扫描
+    for i in range(max_x + 1):
+        st = state(i, -1)
+        for j in range(max_y + 2):
+            if st != state(i, j):
+                if st != state(i-1, j-1) or st == state(i-1, j):
+                    perimeter += 1
+                if st != state(i+1, j-1) or st == state(i+1, j):
+                    perimeter += 1
+                st = not st
+    
+    # 水平方向扫描
+    for j in range(max_y + 1):
+        st = state(-1, j)
+        for i in range(max_x + 2):
+            if st != state(i, j):
+                if st != state(i-1, j-1) or st == state(i, j-1):
+                    perimeter += 1
+                if st != state(i-1, j+1) or st == state(i, j+1):
+                    perimeter += 1
+                st = not st
+    
+    return perimeter // 2
+
+def get_allow_pos(pos):
+    allow_pos = [(1, 0), (0, 1), (-1, 0), (0, -1)]
+    char = aa[pos[0]][pos[1]]
+    for i in allow_pos:
+        next_pos = (pos[0] + i[0], pos[1] + i[1])
+        if len(aa) > next_pos[0] >= 0 and len(aa[0]) > next_pos[1] >= 0:
+            if aa[next_pos[0]][next_pos[1]] == char:
+                yield next_pos
+
+ans = 0
+
+already_visited = np.zeros((len(aa), len(aa[0])))
+for i in range(len(aa)):
+    for j in range(len(aa[i])):
+        if already_visited[i][j] == 0:
+            # print(aa[i][j])
+            array_ = np.zeros((len(aa), len(aa[0])))
+            already_visited[i][j] = 1
+            array_[i][j] = 1
+            def dfs(pos):
+                for next_pos in get_allow_pos(pos):
+                    if already_visited[next_pos[0]][next_pos[1]] == 0:
+                        already_visited[next_pos[0]][next_pos[1]] = 1
+                        array_[next_pos[0]][next_pos[1]] = 1
+                        
+                        dfs(next_pos)
+            
+            dfs((i, j))
+            area = get_area(array_)
+            perimeter = get_perimeter(array_)
+            # print(perimeter)
+            ans += area * perimeter
+        
+print(ans)
+
+```
+
+</p>
+</details> 
+
+> 一条边有两个角, 找到所有角之后整除2即可
+
+## 第十三题
+
+[https://adventofcode.com/2024/day/13](https://adventofcode.com/2024/day/13)
+
+### 1题
+
+按下按钮A或B, 移动老虎爪, 让老虎爪移动到指定的位置, 按下A需要三块钱, B需要一块钱
+有可能无解(无法移动到指定位置)
+
+<details><summary>Details</summary>
+<p>
+
+```python
+
+aa = a.split('\n\n')
+from sympy import *
+
+ans = 0
+for i in aa:
+    inputs = i.split('\n')
+    # 提取输入
+    ax, ay = inputs[0].split(': ')[1].split(', ')
+    bx, by = inputs[1].split(': ')[1].split(', ')
+    t1, t2 = inputs[2].split(': ')[1].split(', ')
+    ax, ay = int(ax[2:]), int(ay[2:])
+    bx, by = int(bx[2:]), int(by[2:])
+    t1, t2 = int(t1[2:]), int(t2[2:])
+    m = Symbol('m')
+    n = Symbol('n')
+    temp = solve([m * ax + n * bx - t1, m * ay + n * by - t2], [m, n])
+    # print(temp)
+    if temp[m].is_Integer and temp[n].is_Integer:
+        ans += int(temp[m]) * 3 + int(temp[n])
+
+print(ans)
+
+```
+
+</p>
+</details> 
+> 二元一次方程组的整数解
+
+### 2题
+
+在一题的基础上, X轴和Y轴上都高出10000000000000(大数)
+
+<details><summary>Details</summary>
+<p>
+
+```python
+
+aa = a.split('\n\n')
+from sympy import *
+
+ans = 0
+for i in aa:
+    inputs = i.split('\n')
+    # 提取输入
+    ax, ay = inputs[0].split(': ')[1].split(', ')
+    bx, by = inputs[1].split(': ')[1].split(', ')
+    t1, t2 = inputs[2].split(': ')[1].split(', ')
+    ax, ay = int(ax[2:]), int(ay[2:])
+    bx, by = int(bx[2:]), int(by[2:])
+    t1, t2 = int(t1[2:]) + 10000000000000, int(t2[2:]) + 10000000000000
+    m = Symbol('m')
+    n = Symbol('n')
+    temp = solve([m * ax + n * bx - t1, m * ay + n * by - t2], [m, n])
+    # print(temp)
+    if temp[m].is_Integer and temp[n].is_Integer:
+        ans += int(temp[m]) * 3 + int(temp[n])
+
+print(ans)
+```
+
+</p>
+</details> 
+
+> python无限精度整数, 不需要额外处理
+
+## 第十四题
+
+[https://adventofcode.com/2024/day/14](https://adventofcode.com/2024/day/14)
+
+## 1题
+
+给定点坐标, 点的移动速度, 大小固定的图
+
+求 四个象限内点的数量 之积
+象限是去掉最中间一列与一行使得图分成四个区域
+点到边界会传送到另一侧 (mod)
+
+<details><summary>Details</summary>
+<p>
+
+```python
+
+def main():
+    lines = a.splitlines()
+
+    robots = []
+    for line in lines:
+        p_part, v_part = line.strip().split()
+        p_x, p_y = map(int, p_part[2:].split(','))
+        v_x, v_y = map(int, v_part[2:].split(','))
+        robots.append({'p': (p_x, p_y), 'v': (v_x, v_y)})
+
+    positions = {}
+    for robot in robots:
+        x = (robot['p'][0] + robot['v'][0] * 100) % 101
+        y = (robot['p'][1] + robot['v'][1] * 100) % 103
+        positions[(x, y)] = positions.get((x, y), 0) + 1
+
+    q1 = q2 = q3 = q4 = 0
+    for (x, y), count in positions.items():
+        if x < 50 and y < 51:
+            q1 += count
+        elif x > 50 and y < 51:
+            q2 += count
+        elif x > 50 and y > 51:
+            q3 += count
+        elif x < 50 and y > 51:
+            q4 += count
+
+    safety_factor = q1 * q2 * q3 * q4
+    print(safety_factor)
+
+if __name__ == "__main__":
+    main()
+
+```
+
+</p>
+</details> 
+
+### 2题
+
+直接贴原题, 因为原题是阅读理解
+
+During the bathroom break, someone notices that these robots seem awfully similar to ones built and used at the North Pole. If they're the same type of robots, they should have a hard-coded Easter egg: very rarely, most of the robots should arrange themselves into a picture of a Christmas tree.
+> 在上厕所的时候，有人注意到这些机器人看起来与在北极建造和使用的机器人非常相似。如果它们是同一类型的机器人，它们应该有一个硬编码的复活节彩蛋：极少数情况下，大多数机器人应该将自己排列成圣诞树的图片。
+
+What is the fewest number of seconds that must elapse for the robots to display the Easter egg?
+> 机器人展示复活节彩蛋所需的最少秒数是多少？
+
+<details><summary>Details</summary>
+<p>
+
+```python
+def find_min_unique_t(input_lines):
+    robots = []
+    for line in input_lines:
+        p_part, v_part = line.split(' v=')
+        x, y = map(int, p_part[2:].split(','))
+        dx, dy = map(int, v_part.split(','))
+        robots.append({'x': x, 'y': y, 'dx': dx, 'dy': dy})
+    
+    for t in range(10403):
+        position_map = {}
+        for robot in robots:
+            x = (robot['x'] + robot['dx'] * t) % 101
+            y = (robot['y'] + robot['dy'] * t) % 103
+            position = (x, y)
+            if position in position_map:
+                break
+            else:
+                position_map[position] = True
+        else:
+            return t
+    return -1
+
+input_lines = a.splitlines()
+
+min_t = find_min_unique_t(input_lines)
+print("最小的秒数是:", min_t)
+```
+
+</p>
+</details> 
+
+> 这题等价于, 每个机器人不互相重合的时间(题目特意设计过)
+> 如果有其他解法(理解)可以在评论区交流
+
+## 第十五题
+
+[https://adventofcode.com/2024/day/15](https://adventofcode.com/2024/day/15)
+
+### 1题
+
+推箱子
+
+<details><summary>Details</summary>
+<p>
+
+aa, bb = a.split('\n\n')
+
+all_map = [list(i) for i in aa.splitlines()]
+
+step = ''.join(bb.splitlines())
+
+def is_edge(x, y):
+    return x < 0 or y < 0 or x >= len(all_map) or y >= len(all_map[0]) or all_map[x][y] == '#'
+
+def get_robot_pos():
+    for i in range(len(all_map)):
+        for j in range(len(all_map[0])):
+            if all_map[i][j] == '@':
+                return i, j
+
+directions = {'>': (0,1), 'v': (1,0), '<': (0,-1), '^': (-1,0)}
+
+def move(pos, move_to):
+    temp = []
+    x, y = pos
+    dx, dy = move_to
+    for i in range(1, max(len(all_map), len(all_map[0]))):
+
+        temp.append(all_map[x][y])
+
+        x += dx
+        y += dy
+        if not is_edge(x, y):
+            if all_map[x][y] == '.':
+                # 当前位置开始向前一步
+                for _ in range(i):
+                    all_map[x][y] = temp.pop()
+                    x -= dx
+                    y -= dy
+                all_map[pos[0]][pos[1]] = '.'
+                return (pos[0] + dx, pos[1] + dy)
+        else:
+            return pos
+    return pos
+
+def putty_print(all_map):
+    for i in all_map:
+        for j in i:
+            print(j, end='')
+        print()
+
+
+
+now_pos = get_robot_pos()
+for i in step:
+    now_pos = move(now_pos, directions[i])
+putty_print(all_map)
+
+
+
+ans = 0
+for i in range(len(all_map)):
+    for j in range(len(all_map[i])):
+        if all_map[i][j] == 'O':
+            ans += i * 100 + j 
+
+print(ans)
+
+</p>
+</details> 
+
+## 2题
+
+推更宽(宽一倍), 但是高度不变的箱子
+
+<details><summary>Details</summary>
+<p>
+
+
+aa, bb = a.split('\n\n')
+
+all_map = [list(i) for i in aa.splitlines()]
+
+new_map = []
+for i in all_map:
+    temp_map = []
+    for j in i:
+        if j == '#':
+            temp_map.append('#')
+            temp_map.append('#')
+        if j == 'O':
+            temp_map.append('[')
+            temp_map.append(']')
+        if j == '.':
+            temp_map.append('.')
+            temp_map.append('.')
+        if j == '@':
+            temp_map.append('@')
+            temp_map.append('.')
+    new_map.append(temp_map)
+
+all_map = new_map
+moves = ''.join(bb.splitlines())
+def is_edge(x, y):
+    return x < 0 or y < 0 or x >= len(all_map) or y >= len(all_map[0]) or all_map[x][y] == '#'
+
+def get_robot_pos():
+    for i in range(len(all_map)):
+        for j in range(len(all_map[0])):
+            if all_map[i][j] == '@':
+                return i, j
+
+directions = {'>': (0,1), 'v': (1,0), '<': (0,-1), '^': (-1,0)}
+
+all_boxes = []
+
+def move(pos, move_to):
+    temp = []
+    x, y = pos
+    dx, dy = move_to
+    if dx == 0:
+        for i in range(1, max(len(all_map), len(all_map[0]))):
+
+            temp.append(all_map[x][y])
+
+            x += dx
+            y += dy
+            if not is_edge(x, y):
+                if all_map[x][y] == '.':
+                    # 当前位置开始向前一步
+                    for _ in range(i):
+                        all_map[x][y] = temp.pop()
+                        x -= dx
+                        y -= dy
+                    all_map[pos[0]][pos[1]] = '.'
+                    return (pos[0] + dx, pos[1] + dy)
+            else:
+                return pos
+        return pos
+    else:
+        box_pos = []
+        next_pos = [(x, y)]
+        can_move = True
+
+        while next_pos:
+            x, y = next_pos.pop(0)
+            x, y = x + dx, y + dy
+            if all_map[x][y] == '[':
+                box_pos.append(((x, y), (x, y+1)))
+                next_pos.append((x, y+1))
+                next_pos.append((x, y))
+            elif all_map[x][y] == ']':
+                box_pos.append(((x, y), (x, y-1)))
+                next_pos.append((x, y-1))
+                next_pos.append((x, y))
+            elif all_map[x][y] == '#':
+                can_move = False
+                break
+            # 去重
+            tt = []
+            [tt.append(i) for i in next_pos if i not in tt]
+            next_pos = tt
+        tt = []
+        [tt.append(i) for i in box_pos if (i not in tt) and ((i[1], i[0]) not in tt)]
+        box_pos = tt
+        if not can_move:
+            return pos
+        else:
+            for box in box_pos[::-1]:
+                for box_pos in box:
+                    all_map[box_pos[0] + dx][box_pos[1] + dy] = all_map[box_pos[0]][box_pos[1]]
+                    all_map[box_pos[0]][box_pos[1]] = '.'
+
+            # 更改@的位置
+            all_map[pos[0] + dx][pos[1] + dy] = '@'
+            all_map[pos[0]][pos[1]] = '.'
+            return (pos[0] + dx, pos[1] + dy)
+
+
+
+
+def putty_print(all_map):
+    for i in all_map:
+        for j in i:
+            print(j, end='')
+        print()
+
+
+
+now_pos = get_robot_pos()
+for i in moves:
+    now_pos = move(now_pos, directions[i])
+putty_print(all_map)
+
+
+
+ans = 0
+for i in range(len(all_map)):
+    for j in range(len(all_map[i])):
+        if all_map[i][j] == '[':
+            ans += i * 100 + j 
+
+print(ans)
+
+</p>
+</details> 
+
+> 横着推可以复用一题代码, 竖着推需要检测所有能推的箱子(bfs)

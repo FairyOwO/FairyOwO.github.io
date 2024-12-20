@@ -366,7 +366,361 @@ print(sum(t.values()))
 </details> 
 
 > `tqdm` 是为了监控速度, 非必要引入
-> 与第一题不同, 这题指数爆炸, 75次会超时, 因为答案不要求顺序, 所以可以用缓存。">
+> 与第一题不同, 这题指数爆炸, 75次会超时, 因为答案不要求顺序, 所以可以用缓存
+
+## 第十二题
+
+[https://adventofcode.com/2024/day/12](https://adventofcode.com/2024/day/12)
+
+### 1题
+
+划分区域
+
+```text
+AAAA
+BBCD
+BBCC
+EEEC
+```
+
+划分成
+
+```text
++-+-+-+-+
+|A A A A|
++-+-+-+-+     +-+
+              |D|
++-+-+   +-+   +-+
+|B B|   |C|
++   +   + +-+
+|B B|   |C C|
++-+-+   +-+ +
+          |C|
++-+-+-+   +-+
+|E E E|
++-+-+-+
+```
+
+分为五个区域, 
+计算每个区域的周长*面积之和
+
+<details><summary>Details</summary>
+<p>
+
+```python
+
+aa = []
+for i in a.splitlines():
+    aa.append(list(i))
+
+def get_perimeter(arr):
+    perimeter = 0
+    for i in range(len(arr)):
+        for j in range(len(arr[0])):
+            if arr[i][j] == 1:
+                perimeter += 4
+                if i > 0 and arr[i - 1][j] == 1:
+                    perimeter -= 1
+                if j > 0 and arr[i][j - 1] == 1:
+                    perimeter -= 1
+                if i < len(arr) - 1 and arr[i + 1][j] == 1:
+                    perimeter -= 1
+                if j < len(arr[0]) - 1 and arr[i][j + 1] == 1:
+                    perimeter -= 1
+    
+    return perimeter
+
+def get_area(arr):
+    area = 0
+    for i in range(len(arr)):
+        for j in range(len(arr[0])):
+            if arr[i][j] == 1:
+                area += 1
+    return area
+
+def get_allow_pos(pos):
+    allow_pos = [(1, 0), (0, 1), (-1, 0), (0, -1)]
+    char = aa[pos[0]][pos[1]]
+    for i in allow_pos:
+        next_pos = (pos[0] + i[0], pos[1] + i[1])
+        if len(aa) > next_pos[0] >= 0 and len(aa[0]) > next_pos[1] >= 0:
+            if aa[next_pos[0]][next_pos[1]] == char:
+                yield next_pos
+
+
+ans = 0
+
+already_visited = np.zeros((len(aa), len(aa[0])))
+for i in range(len(aa)):
+    for j in range(len(aa[i])):
+        if already_visited[i][j] == 0:
+            # print(aa[i][j])
+            array_ = np.zeros((len(aa), len(aa[0])))
+            already_visited[i][j] = 1
+            array_[i][j] = 1
+            def dfs(pos):
+                for next_pos in get_allow_pos(pos):
+                    if already_visited[next_pos[0]][next_pos[1]] == 0:
+                        already_visited[next_pos[0]][next_pos[1]] = 1
+                        array_[next_pos[0]][next_pos[1]] = 1
+                        dfs(next_pos)
+            
+            dfs((i, j))
+            area = get_area(array_)
+            perimeter = get_perimeter(array_)
+            ans += area * perimeter
+        
+print(ans)
+
+```
+
+</p>
+</details> 
+
+> 加一个正方形边长+4, 如果旁边每有一个正方形就-1的边长
+
+### 2题
+
+1题的边长变成边的数量
+
+<details><summary>Details</summary>
+<p>
+
+```python
+
+aa = []
+for i in a.splitlines():
+    aa.append(list(i))
+
+
+
+def get_area(arr):
+    area = 0
+    for i in range(len(arr)):
+        for j in range(len(arr[0])):
+            if arr[i][j] == 1:
+                area += 1
+    return area
+
+def get_perimeter(region):
+        
+    max_x = len(region) - 1
+    max_y = len(region[0]) - 1
+    min_x = min_y = 0
+    
+    def state(x, y):
+        if x < 0 or x > max_x or y < 0 or y > max_y:
+            return False
+        return region[x][y]
+    
+    perimeter = 0
+    
+    # 垂直方向扫描
+    for i in range(max_x + 1):
+        st = state(i, -1)
+        for j in range(max_y + 2):
+            if st != state(i, j):
+                if st != state(i-1, j-1) or st == state(i-1, j):
+                    perimeter += 1
+                if st != state(i+1, j-1) or st == state(i+1, j):
+                    perimeter += 1
+                st = not st
+    
+    # 水平方向扫描
+    for j in range(max_y + 1):
+        st = state(-1, j)
+        for i in range(max_x + 2):
+            if st != state(i, j):
+                if st != state(i-1, j-1) or st == state(i, j-1):
+                    perimeter += 1
+                if st != state(i-1, j+1) or st == state(i, j+1):
+                    perimeter += 1
+                st = not st
+    
+    return perimeter // 2
+
+def get_allow_pos(pos):
+    allow_pos = [(1, 0), (0, 1), (-1, 0), (0, -1)]
+    char = aa[pos[0]][pos[1]]
+    for i in allow_pos:
+        next_pos = (pos[0] + i[0], pos[1] + i[1])
+        if len(aa) > next_pos[0] >= 0 and len(aa[0]) > next_pos[1] >= 0:
+            if aa[next_pos[0]][next_pos[1]] == char:
+                yield next_pos
+
+ans = 0
+
+already_visited = np.zeros((len(aa), len(aa[0])))
+for i in range(len(aa)):
+    for j in range(len(aa[i])):
+        if already_visited[i][j] == 0:
+            # print(aa[i][j])
+            array_ = np.zeros((len(aa), len(aa[0])))
+            already_visited[i][j] = 1
+            array_[i][j] = 1
+            def dfs(pos):
+                for next_pos in get_allow_pos(pos):
+                    if already_visited[next_pos[0]][next_pos[1]] == 0:
+                        already_visited[next_pos[0]][next_pos[1]] = 1
+                        array_[next_pos[0]][next_pos[1]] = 1
+                        
+                        dfs(next_pos)
+            
+            dfs((i, j))
+            area = get_area(array_)
+            perimeter = get_perimeter(array_)
+            # print(perimeter)
+            ans += area * perimeter
+        
+print(ans)
+
+```
+
+</p>
+</details> 
+
+> 一条边有两个角, 找到所有角之后整除2即可
+
+## 第十三题
+
+[https://adventofcode.com/2024/day/13](https://adventofcode.com/2024/day/13)
+
+### 1题
+
+按下按钮A或B, 移动老虎爪, 让老虎爪移动到指定的位置, 按下A需要三块钱, B需要一块钱
+有可能无解(无法移动到指定位置)
+
+<details><summary>Details</summary>
+<p>
+
+```python
+
+aa = a.split('\n\n')
+from sympy import *
+
+ans = 0
+for i in aa:
+    inputs = i.split('\n')
+    # 提取输入
+    ax, ay = inputs[0].split(': ')[1].split(', ')
+    bx, by = inputs[1].split(': ')[1].split(', ')
+    t1, t2 = inputs[2].split(': ')[1].split(', ')
+    ax, ay = int(ax[2:]), int(ay[2:])
+    bx, by = int(bx[2:]), int(by[2:])
+    t1, t2 = int(t1[2:]), int(t2[2:])
+    m = Symbol('m')
+    n = Symbol('n')
+    temp = solve([m * ax + n * bx - t1, m * ay + n * by - t2], [m, n])
+    # print(temp)
+    if temp[m].is_Integer and temp[n].is_Integer:
+        ans += int(temp[m]) * 3 + int(temp[n])
+
+print(ans)
+
+```
+
+</p>
+</details> 
+> 二元一次方程组的整数解
+
+### 2题
+
+在一题的基础上, X轴和Y轴上都高出10000000000000(大数)
+
+<details><summary>Details</summary>
+<p>
+
+```python
+
+aa = a.split('\n\n')
+from sympy import *
+
+ans = 0
+for i in aa:
+    inputs = i.split('\n')
+    # 提取输入
+    ax, ay = inputs[0].split(': ')[1].split(', ')
+    bx, by = inputs[1].split(': ')[1].split(', ')
+    t1, t2 = inputs[2].split(': ')[1].split(', ')
+    ax, ay = int(ax[2:]), int(ay[2:])
+    bx, by = int(bx[2:]), int(by[2:])
+    t1, t2 = int(t1[2:]) + 10000000000000, int(t2[2:]) + 10000000000000
+    m = Symbol('m')
+    n = Symbol('n')
+    temp = solve([m * ax + n * bx - t1, m * ay + n * by - t2], [m, n])
+    # print(temp)
+    if temp[m].is_Integer and temp[n].is_Integer:
+        ans += int(temp[m]) * 3 + int(temp[n])
+
+print(ans)
+```
+
+</p>
+</details> 
+
+> python无限精度整数, 不需要额外处理
+
+## 第十四题
+
+[https://adventofcode.com/2024/day/14](https://adventofcode.com/2024/day/14)
+
+## 1题
+
+给定点坐标, 点的移动速度, 大小固定的图
+
+求 四个象限内点的数量 之积
+象限是去掉最中间一列与一行使得图分成四个区域
+点到边界会传送到另一侧 (mod)
+
+<details><summary>Details</summary>
+<p>
+
+```python
+
+def main():
+    lines = a.splitlines()
+
+    robots = []
+    for line in lines:
+        p_part, v_part = line.strip().split()
+        p_x, p_y = map(int, p_part[2:].split(','))
+        v_x, v_y = map(int, v_part[2:].split(','))
+        robots.append({'p': (p_x, p_y), 'v': (v_x, v_y)})
+
+    positions = {}
+    for robot in robots:
+        x = (robot['p'][0] + robot['v'][0] * 100) % 101
+        y = (robot['p'][1] + robot['v'][1] * 100) % 103
+        positions[(x, y)] = positions.get((x, y), 0) + 1
+
+    q1 = q2 = q3 = q4 = 0
+    for (x, y), count in positions.items():
+        if x < 50 and y < 51:
+            q1 += count
+        elif x > 50 and y < 51:
+            q2 += count
+        elif x > 50 and y > 51:
+            q3 += count
+        elif x < 50 and y > 51:
+            q4 += count
+
+    safety_factor = q1 * q2 * q3 * q4
+    print(safety_factor)
+
+if __name__ == '__main__':
+    main()
+
+```
+
+</p>
+</details> 
+
+### 2题
+
+直接贴原题, 因为原题是阅读理解
+
+During the bathroom break, someone notices that these robots seem awfully similar to ones built and used at the North Pole. If they're the same type of robots, they should have a hard-coded Easter egg: very rarely, most of the robots should arrange themselves into a picture of a Christmas tree.
+> 在上厕所的时候，有人注意到这些机器人看起来与在北极建造和使用的机器人非常相似。">
 <meta property="og:title" content="2024 Advent of Code 复盘与答案 (二)">
 <meta property="og:description" content="[Advent of Code](https://adventofcode.com/)
 
@@ -724,7 +1078,361 @@ print(sum(t.values()))
 </details> 
 
 > `tqdm` 是为了监控速度, 非必要引入
-> 与第一题不同, 这题指数爆炸, 75次会超时, 因为答案不要求顺序, 所以可以用缓存。">
+> 与第一题不同, 这题指数爆炸, 75次会超时, 因为答案不要求顺序, 所以可以用缓存
+
+## 第十二题
+
+[https://adventofcode.com/2024/day/12](https://adventofcode.com/2024/day/12)
+
+### 1题
+
+划分区域
+
+```text
+AAAA
+BBCD
+BBCC
+EEEC
+```
+
+划分成
+
+```text
++-+-+-+-+
+|A A A A|
++-+-+-+-+     +-+
+              |D|
++-+-+   +-+   +-+
+|B B|   |C|
++   +   + +-+
+|B B|   |C C|
++-+-+   +-+ +
+          |C|
++-+-+-+   +-+
+|E E E|
++-+-+-+
+```
+
+分为五个区域, 
+计算每个区域的周长*面积之和
+
+<details><summary>Details</summary>
+<p>
+
+```python
+
+aa = []
+for i in a.splitlines():
+    aa.append(list(i))
+
+def get_perimeter(arr):
+    perimeter = 0
+    for i in range(len(arr)):
+        for j in range(len(arr[0])):
+            if arr[i][j] == 1:
+                perimeter += 4
+                if i > 0 and arr[i - 1][j] == 1:
+                    perimeter -= 1
+                if j > 0 and arr[i][j - 1] == 1:
+                    perimeter -= 1
+                if i < len(arr) - 1 and arr[i + 1][j] == 1:
+                    perimeter -= 1
+                if j < len(arr[0]) - 1 and arr[i][j + 1] == 1:
+                    perimeter -= 1
+    
+    return perimeter
+
+def get_area(arr):
+    area = 0
+    for i in range(len(arr)):
+        for j in range(len(arr[0])):
+            if arr[i][j] == 1:
+                area += 1
+    return area
+
+def get_allow_pos(pos):
+    allow_pos = [(1, 0), (0, 1), (-1, 0), (0, -1)]
+    char = aa[pos[0]][pos[1]]
+    for i in allow_pos:
+        next_pos = (pos[0] + i[0], pos[1] + i[1])
+        if len(aa) > next_pos[0] >= 0 and len(aa[0]) > next_pos[1] >= 0:
+            if aa[next_pos[0]][next_pos[1]] == char:
+                yield next_pos
+
+
+ans = 0
+
+already_visited = np.zeros((len(aa), len(aa[0])))
+for i in range(len(aa)):
+    for j in range(len(aa[i])):
+        if already_visited[i][j] == 0:
+            # print(aa[i][j])
+            array_ = np.zeros((len(aa), len(aa[0])))
+            already_visited[i][j] = 1
+            array_[i][j] = 1
+            def dfs(pos):
+                for next_pos in get_allow_pos(pos):
+                    if already_visited[next_pos[0]][next_pos[1]] == 0:
+                        already_visited[next_pos[0]][next_pos[1]] = 1
+                        array_[next_pos[0]][next_pos[1]] = 1
+                        dfs(next_pos)
+            
+            dfs((i, j))
+            area = get_area(array_)
+            perimeter = get_perimeter(array_)
+            ans += area * perimeter
+        
+print(ans)
+
+```
+
+</p>
+</details> 
+
+> 加一个正方形边长+4, 如果旁边每有一个正方形就-1的边长
+
+### 2题
+
+1题的边长变成边的数量
+
+<details><summary>Details</summary>
+<p>
+
+```python
+
+aa = []
+for i in a.splitlines():
+    aa.append(list(i))
+
+
+
+def get_area(arr):
+    area = 0
+    for i in range(len(arr)):
+        for j in range(len(arr[0])):
+            if arr[i][j] == 1:
+                area += 1
+    return area
+
+def get_perimeter(region):
+        
+    max_x = len(region) - 1
+    max_y = len(region[0]) - 1
+    min_x = min_y = 0
+    
+    def state(x, y):
+        if x < 0 or x > max_x or y < 0 or y > max_y:
+            return False
+        return region[x][y]
+    
+    perimeter = 0
+    
+    # 垂直方向扫描
+    for i in range(max_x + 1):
+        st = state(i, -1)
+        for j in range(max_y + 2):
+            if st != state(i, j):
+                if st != state(i-1, j-1) or st == state(i-1, j):
+                    perimeter += 1
+                if st != state(i+1, j-1) or st == state(i+1, j):
+                    perimeter += 1
+                st = not st
+    
+    # 水平方向扫描
+    for j in range(max_y + 1):
+        st = state(-1, j)
+        for i in range(max_x + 2):
+            if st != state(i, j):
+                if st != state(i-1, j-1) or st == state(i, j-1):
+                    perimeter += 1
+                if st != state(i-1, j+1) or st == state(i, j+1):
+                    perimeter += 1
+                st = not st
+    
+    return perimeter // 2
+
+def get_allow_pos(pos):
+    allow_pos = [(1, 0), (0, 1), (-1, 0), (0, -1)]
+    char = aa[pos[0]][pos[1]]
+    for i in allow_pos:
+        next_pos = (pos[0] + i[0], pos[1] + i[1])
+        if len(aa) > next_pos[0] >= 0 and len(aa[0]) > next_pos[1] >= 0:
+            if aa[next_pos[0]][next_pos[1]] == char:
+                yield next_pos
+
+ans = 0
+
+already_visited = np.zeros((len(aa), len(aa[0])))
+for i in range(len(aa)):
+    for j in range(len(aa[i])):
+        if already_visited[i][j] == 0:
+            # print(aa[i][j])
+            array_ = np.zeros((len(aa), len(aa[0])))
+            already_visited[i][j] = 1
+            array_[i][j] = 1
+            def dfs(pos):
+                for next_pos in get_allow_pos(pos):
+                    if already_visited[next_pos[0]][next_pos[1]] == 0:
+                        already_visited[next_pos[0]][next_pos[1]] = 1
+                        array_[next_pos[0]][next_pos[1]] = 1
+                        
+                        dfs(next_pos)
+            
+            dfs((i, j))
+            area = get_area(array_)
+            perimeter = get_perimeter(array_)
+            # print(perimeter)
+            ans += area * perimeter
+        
+print(ans)
+
+```
+
+</p>
+</details> 
+
+> 一条边有两个角, 找到所有角之后整除2即可
+
+## 第十三题
+
+[https://adventofcode.com/2024/day/13](https://adventofcode.com/2024/day/13)
+
+### 1题
+
+按下按钮A或B, 移动老虎爪, 让老虎爪移动到指定的位置, 按下A需要三块钱, B需要一块钱
+有可能无解(无法移动到指定位置)
+
+<details><summary>Details</summary>
+<p>
+
+```python
+
+aa = a.split('\n\n')
+from sympy import *
+
+ans = 0
+for i in aa:
+    inputs = i.split('\n')
+    # 提取输入
+    ax, ay = inputs[0].split(': ')[1].split(', ')
+    bx, by = inputs[1].split(': ')[1].split(', ')
+    t1, t2 = inputs[2].split(': ')[1].split(', ')
+    ax, ay = int(ax[2:]), int(ay[2:])
+    bx, by = int(bx[2:]), int(by[2:])
+    t1, t2 = int(t1[2:]), int(t2[2:])
+    m = Symbol('m')
+    n = Symbol('n')
+    temp = solve([m * ax + n * bx - t1, m * ay + n * by - t2], [m, n])
+    # print(temp)
+    if temp[m].is_Integer and temp[n].is_Integer:
+        ans += int(temp[m]) * 3 + int(temp[n])
+
+print(ans)
+
+```
+
+</p>
+</details> 
+> 二元一次方程组的整数解
+
+### 2题
+
+在一题的基础上, X轴和Y轴上都高出10000000000000(大数)
+
+<details><summary>Details</summary>
+<p>
+
+```python
+
+aa = a.split('\n\n')
+from sympy import *
+
+ans = 0
+for i in aa:
+    inputs = i.split('\n')
+    # 提取输入
+    ax, ay = inputs[0].split(': ')[1].split(', ')
+    bx, by = inputs[1].split(': ')[1].split(', ')
+    t1, t2 = inputs[2].split(': ')[1].split(', ')
+    ax, ay = int(ax[2:]), int(ay[2:])
+    bx, by = int(bx[2:]), int(by[2:])
+    t1, t2 = int(t1[2:]) + 10000000000000, int(t2[2:]) + 10000000000000
+    m = Symbol('m')
+    n = Symbol('n')
+    temp = solve([m * ax + n * bx - t1, m * ay + n * by - t2], [m, n])
+    # print(temp)
+    if temp[m].is_Integer and temp[n].is_Integer:
+        ans += int(temp[m]) * 3 + int(temp[n])
+
+print(ans)
+```
+
+</p>
+</details> 
+
+> python无限精度整数, 不需要额外处理
+
+## 第十四题
+
+[https://adventofcode.com/2024/day/14](https://adventofcode.com/2024/day/14)
+
+## 1题
+
+给定点坐标, 点的移动速度, 大小固定的图
+
+求 四个象限内点的数量 之积
+象限是去掉最中间一列与一行使得图分成四个区域
+点到边界会传送到另一侧 (mod)
+
+<details><summary>Details</summary>
+<p>
+
+```python
+
+def main():
+    lines = a.splitlines()
+
+    robots = []
+    for line in lines:
+        p_part, v_part = line.strip().split()
+        p_x, p_y = map(int, p_part[2:].split(','))
+        v_x, v_y = map(int, v_part[2:].split(','))
+        robots.append({'p': (p_x, p_y), 'v': (v_x, v_y)})
+
+    positions = {}
+    for robot in robots:
+        x = (robot['p'][0] + robot['v'][0] * 100) % 101
+        y = (robot['p'][1] + robot['v'][1] * 100) % 103
+        positions[(x, y)] = positions.get((x, y), 0) + 1
+
+    q1 = q2 = q3 = q4 = 0
+    for (x, y), count in positions.items():
+        if x < 50 and y < 51:
+            q1 += count
+        elif x > 50 and y < 51:
+            q2 += count
+        elif x > 50 and y > 51:
+            q3 += count
+        elif x < 50 and y > 51:
+            q4 += count
+
+    safety_factor = q1 * q2 * q3 * q4
+    print(safety_factor)
+
+if __name__ == '__main__':
+    main()
+
+```
+
+</p>
+</details> 
+
+### 2题
+
+直接贴原题, 因为原题是阅读理解
+
+During the bathroom break, someone notices that these robots seem awfully similar to ones built and used at the North Pole. If they're the same type of robots, they should have a hard-coded Easter egg: very rarely, most of the robots should arrange themselves into a picture of a Christmas tree.
+> 在上厕所的时候，有人注意到这些机器人看起来与在北极建造和使用的机器人非常相似。">
 <meta property="og:type" content="article">
 <meta property="og:url" content="https://FairyOwO.github.io/post/2024%20Advent%20of%20Code%20-fu-pan-yu-da-an-%20%28-er-%29.html">
 <meta property="og:image" content="https://github.githubassets.com/favicons/favicon.svg">
@@ -1095,6 +1803,514 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
 <blockquote>
 <p><code class="notranslate">tqdm</code> 是为了监控速度, 非必要引入<br>
 与第一题不同, 这题指数爆炸, 75次会超时, 因为答案不要求顺序, 所以可以用缓存</p>
+</blockquote>
+<h2>第十二题</h2>
+<p><a href="https://adventofcode.com/2024/day/12" rel="nofollow">https://adventofcode.com/2024/day/12</a></p>
+<h3>1题</h3>
+<p>划分区域</p>
+<pre lang="text" class="notranslate"><code class="notranslate">AAAA
+BBCD
+BBCC
+EEEC
+</code></pre>
+<p>划分成</p>
+<pre lang="text" class="notranslate"><code class="notranslate">+-+-+-+-+
+|A A A A|
++-+-+-+-+     +-+
+              |D|
++-+-+   +-+   +-+
+|B B|   |C|
++   +   + +-+
+|B B|   |C C|
++-+-+   +-+ +
+          |C|
++-+-+-+   +-+
+|E E E|
++-+-+-+
+</code></pre>
+<p>分为五个区域,<br>
+计算每个区域的周长*面积之和</p>
+<details><summary>Details</summary>
+<p>
+</p><div class="highlight highlight-source-python"><pre class="notranslate"><span class="pl-s1">aa</span> <span class="pl-c1">=</span> []
+<span class="pl-k">for</span> <span class="pl-s1">i</span> <span class="pl-c1">in</span> <span class="pl-s1">a</span>.<span class="pl-c1">splitlines</span>():
+    <span class="pl-s1">aa</span>.<span class="pl-c1">append</span>(<span class="pl-en">list</span>(<span class="pl-s1">i</span>))
+
+<span class="pl-k">def</span> <span class="pl-en">get_perimeter</span>(<span class="pl-s1">arr</span>):
+    <span class="pl-s1">perimeter</span> <span class="pl-c1">=</span> <span class="pl-c1">0</span>
+    <span class="pl-k">for</span> <span class="pl-s1">i</span> <span class="pl-c1">in</span> <span class="pl-en">range</span>(<span class="pl-en">len</span>(<span class="pl-s1">arr</span>)):
+        <span class="pl-k">for</span> <span class="pl-s1">j</span> <span class="pl-c1">in</span> <span class="pl-en">range</span>(<span class="pl-en">len</span>(<span class="pl-s1">arr</span>[<span class="pl-c1">0</span>])):
+            <span class="pl-k">if</span> <span class="pl-s1">arr</span>[<span class="pl-s1">i</span>][<span class="pl-s1">j</span>] <span class="pl-c1">==</span> <span class="pl-c1">1</span>:
+                <span class="pl-s1">perimeter</span> <span class="pl-c1">+=</span> <span class="pl-c1">4</span>
+                <span class="pl-k">if</span> <span class="pl-s1">i</span> <span class="pl-c1">&gt;</span> <span class="pl-c1">0</span> <span class="pl-c1">and</span> <span class="pl-s1">arr</span>[<span class="pl-s1">i</span> <span class="pl-c1">-</span> <span class="pl-c1">1</span>][<span class="pl-s1">j</span>] <span class="pl-c1">==</span> <span class="pl-c1">1</span>:
+                    <span class="pl-s1">perimeter</span> <span class="pl-c1">-=</span> <span class="pl-c1">1</span>
+                <span class="pl-k">if</span> <span class="pl-s1">j</span> <span class="pl-c1">&gt;</span> <span class="pl-c1">0</span> <span class="pl-c1">and</span> <span class="pl-s1">arr</span>[<span class="pl-s1">i</span>][<span class="pl-s1">j</span> <span class="pl-c1">-</span> <span class="pl-c1">1</span>] <span class="pl-c1">==</span> <span class="pl-c1">1</span>:
+                    <span class="pl-s1">perimeter</span> <span class="pl-c1">-=</span> <span class="pl-c1">1</span>
+                <span class="pl-k">if</span> <span class="pl-s1">i</span> <span class="pl-c1">&lt;</span> <span class="pl-en">len</span>(<span class="pl-s1">arr</span>) <span class="pl-c1">-</span> <span class="pl-c1">1</span> <span class="pl-c1">and</span> <span class="pl-s1">arr</span>[<span class="pl-s1">i</span> <span class="pl-c1">+</span> <span class="pl-c1">1</span>][<span class="pl-s1">j</span>] <span class="pl-c1">==</span> <span class="pl-c1">1</span>:
+                    <span class="pl-s1">perimeter</span> <span class="pl-c1">-=</span> <span class="pl-c1">1</span>
+                <span class="pl-k">if</span> <span class="pl-s1">j</span> <span class="pl-c1">&lt;</span> <span class="pl-en">len</span>(<span class="pl-s1">arr</span>[<span class="pl-c1">0</span>]) <span class="pl-c1">-</span> <span class="pl-c1">1</span> <span class="pl-c1">and</span> <span class="pl-s1">arr</span>[<span class="pl-s1">i</span>][<span class="pl-s1">j</span> <span class="pl-c1">+</span> <span class="pl-c1">1</span>] <span class="pl-c1">==</span> <span class="pl-c1">1</span>:
+                    <span class="pl-s1">perimeter</span> <span class="pl-c1">-=</span> <span class="pl-c1">1</span>
+    
+    <span class="pl-k">return</span> <span class="pl-s1">perimeter</span>
+
+<span class="pl-k">def</span> <span class="pl-en">get_area</span>(<span class="pl-s1">arr</span>):
+    <span class="pl-s1">area</span> <span class="pl-c1">=</span> <span class="pl-c1">0</span>
+    <span class="pl-k">for</span> <span class="pl-s1">i</span> <span class="pl-c1">in</span> <span class="pl-en">range</span>(<span class="pl-en">len</span>(<span class="pl-s1">arr</span>)):
+        <span class="pl-k">for</span> <span class="pl-s1">j</span> <span class="pl-c1">in</span> <span class="pl-en">range</span>(<span class="pl-en">len</span>(<span class="pl-s1">arr</span>[<span class="pl-c1">0</span>])):
+            <span class="pl-k">if</span> <span class="pl-s1">arr</span>[<span class="pl-s1">i</span>][<span class="pl-s1">j</span>] <span class="pl-c1">==</span> <span class="pl-c1">1</span>:
+                <span class="pl-s1">area</span> <span class="pl-c1">+=</span> <span class="pl-c1">1</span>
+    <span class="pl-k">return</span> <span class="pl-s1">area</span>
+
+<span class="pl-k">def</span> <span class="pl-en">get_allow_pos</span>(<span class="pl-s1">pos</span>):
+    <span class="pl-s1">allow_pos</span> <span class="pl-c1">=</span> [(<span class="pl-c1">1</span>, <span class="pl-c1">0</span>), (<span class="pl-c1">0</span>, <span class="pl-c1">1</span>), (<span class="pl-c1">-</span><span class="pl-c1">1</span>, <span class="pl-c1">0</span>), (<span class="pl-c1">0</span>, <span class="pl-c1">-</span><span class="pl-c1">1</span>)]
+    <span class="pl-s1">char</span> <span class="pl-c1">=</span> <span class="pl-s1">aa</span>[<span class="pl-s1">pos</span>[<span class="pl-c1">0</span>]][<span class="pl-s1">pos</span>[<span class="pl-c1">1</span>]]
+    <span class="pl-k">for</span> <span class="pl-s1">i</span> <span class="pl-c1">in</span> <span class="pl-s1">allow_pos</span>:
+        <span class="pl-s1">next_pos</span> <span class="pl-c1">=</span> (<span class="pl-s1">pos</span>[<span class="pl-c1">0</span>] <span class="pl-c1">+</span> <span class="pl-s1">i</span>[<span class="pl-c1">0</span>], <span class="pl-s1">pos</span>[<span class="pl-c1">1</span>] <span class="pl-c1">+</span> <span class="pl-s1">i</span>[<span class="pl-c1">1</span>])
+        <span class="pl-k">if</span> <span class="pl-en">len</span>(<span class="pl-s1">aa</span>) <span class="pl-c1">&gt;</span> <span class="pl-s1">next_pos</span>[<span class="pl-c1">0</span>] <span class="pl-c1">&gt;=</span> <span class="pl-c1">0</span> <span class="pl-c1">and</span> <span class="pl-en">len</span>(<span class="pl-s1">aa</span>[<span class="pl-c1">0</span>]) <span class="pl-c1">&gt;</span> <span class="pl-s1">next_pos</span>[<span class="pl-c1">1</span>] <span class="pl-c1">&gt;=</span> <span class="pl-c1">0</span>:
+            <span class="pl-k">if</span> <span class="pl-s1">aa</span>[<span class="pl-s1">next_pos</span>[<span class="pl-c1">0</span>]][<span class="pl-s1">next_pos</span>[<span class="pl-c1">1</span>]] <span class="pl-c1">==</span> <span class="pl-s1">char</span>:
+                <span class="pl-k">yield</span> <span class="pl-s1">next_pos</span>
+
+
+<span class="pl-s1">ans</span> <span class="pl-c1">=</span> <span class="pl-c1">0</span>
+
+<span class="pl-s1">already_visited</span> <span class="pl-c1">=</span> <span class="pl-s1">np</span>.<span class="pl-c1">zeros</span>((<span class="pl-en">len</span>(<span class="pl-s1">aa</span>), <span class="pl-en">len</span>(<span class="pl-s1">aa</span>[<span class="pl-c1">0</span>])))
+<span class="pl-k">for</span> <span class="pl-s1">i</span> <span class="pl-c1">in</span> <span class="pl-en">range</span>(<span class="pl-en">len</span>(<span class="pl-s1">aa</span>)):
+    <span class="pl-k">for</span> <span class="pl-s1">j</span> <span class="pl-c1">in</span> <span class="pl-en">range</span>(<span class="pl-en">len</span>(<span class="pl-s1">aa</span>[<span class="pl-s1">i</span>])):
+        <span class="pl-k">if</span> <span class="pl-s1">already_visited</span>[<span class="pl-s1">i</span>][<span class="pl-s1">j</span>] <span class="pl-c1">==</span> <span class="pl-c1">0</span>:
+            <span class="pl-c"># print(aa[i][j])</span>
+            <span class="pl-s1">array_</span> <span class="pl-c1">=</span> <span class="pl-s1">np</span>.<span class="pl-c1">zeros</span>((<span class="pl-en">len</span>(<span class="pl-s1">aa</span>), <span class="pl-en">len</span>(<span class="pl-s1">aa</span>[<span class="pl-c1">0</span>])))
+            <span class="pl-s1">already_visited</span>[<span class="pl-s1">i</span>][<span class="pl-s1">j</span>] <span class="pl-c1">=</span> <span class="pl-c1">1</span>
+            <span class="pl-s1">array_</span>[<span class="pl-s1">i</span>][<span class="pl-s1">j</span>] <span class="pl-c1">=</span> <span class="pl-c1">1</span>
+            <span class="pl-k">def</span> <span class="pl-en">dfs</span>(<span class="pl-s1">pos</span>):
+                <span class="pl-k">for</span> <span class="pl-s1">next_pos</span> <span class="pl-c1">in</span> <span class="pl-en">get_allow_pos</span>(<span class="pl-s1">pos</span>):
+                    <span class="pl-k">if</span> <span class="pl-s1">already_visited</span>[<span class="pl-s1">next_pos</span>[<span class="pl-c1">0</span>]][<span class="pl-s1">next_pos</span>[<span class="pl-c1">1</span>]] <span class="pl-c1">==</span> <span class="pl-c1">0</span>:
+                        <span class="pl-s1">already_visited</span>[<span class="pl-s1">next_pos</span>[<span class="pl-c1">0</span>]][<span class="pl-s1">next_pos</span>[<span class="pl-c1">1</span>]] <span class="pl-c1">=</span> <span class="pl-c1">1</span>
+                        <span class="pl-s1">array_</span>[<span class="pl-s1">next_pos</span>[<span class="pl-c1">0</span>]][<span class="pl-s1">next_pos</span>[<span class="pl-c1">1</span>]] <span class="pl-c1">=</span> <span class="pl-c1">1</span>
+                        <span class="pl-en">dfs</span>(<span class="pl-s1">next_pos</span>)
+            
+            <span class="pl-en">dfs</span>((<span class="pl-s1">i</span>, <span class="pl-s1">j</span>))
+            <span class="pl-s1">area</span> <span class="pl-c1">=</span> <span class="pl-en">get_area</span>(<span class="pl-s1">array_</span>)
+            <span class="pl-s1">perimeter</span> <span class="pl-c1">=</span> <span class="pl-en">get_perimeter</span>(<span class="pl-s1">array_</span>)
+            <span class="pl-s1">ans</span> <span class="pl-c1">+=</span> <span class="pl-s1">area</span> <span class="pl-c1">*</span> <span class="pl-s1">perimeter</span>
+        
+<span class="pl-en">print</span>(<span class="pl-s1">ans</span>)</pre></div>
+<p></p>
+</details> 
+<blockquote>
+<p>加一个正方形边长+4, 如果旁边每有一个正方形就-1的边长</p>
+</blockquote>
+<h3>2题</h3>
+<p>1题的边长变成边的数量</p>
+<details><summary>Details</summary>
+<p>
+</p><div class="highlight highlight-source-python"><pre class="notranslate"><span class="pl-s1">aa</span> <span class="pl-c1">=</span> []
+<span class="pl-k">for</span> <span class="pl-s1">i</span> <span class="pl-c1">in</span> <span class="pl-s1">a</span>.<span class="pl-c1">splitlines</span>():
+    <span class="pl-s1">aa</span>.<span class="pl-c1">append</span>(<span class="pl-en">list</span>(<span class="pl-s1">i</span>))
+
+
+
+<span class="pl-k">def</span> <span class="pl-en">get_area</span>(<span class="pl-s1">arr</span>):
+    <span class="pl-s1">area</span> <span class="pl-c1">=</span> <span class="pl-c1">0</span>
+    <span class="pl-k">for</span> <span class="pl-s1">i</span> <span class="pl-c1">in</span> <span class="pl-en">range</span>(<span class="pl-en">len</span>(<span class="pl-s1">arr</span>)):
+        <span class="pl-k">for</span> <span class="pl-s1">j</span> <span class="pl-c1">in</span> <span class="pl-en">range</span>(<span class="pl-en">len</span>(<span class="pl-s1">arr</span>[<span class="pl-c1">0</span>])):
+            <span class="pl-k">if</span> <span class="pl-s1">arr</span>[<span class="pl-s1">i</span>][<span class="pl-s1">j</span>] <span class="pl-c1">==</span> <span class="pl-c1">1</span>:
+                <span class="pl-s1">area</span> <span class="pl-c1">+=</span> <span class="pl-c1">1</span>
+    <span class="pl-k">return</span> <span class="pl-s1">area</span>
+
+<span class="pl-k">def</span> <span class="pl-en">get_perimeter</span>(<span class="pl-s1">region</span>):
+        
+    <span class="pl-s1">max_x</span> <span class="pl-c1">=</span> <span class="pl-en">len</span>(<span class="pl-s1">region</span>) <span class="pl-c1">-</span> <span class="pl-c1">1</span>
+    <span class="pl-s1">max_y</span> <span class="pl-c1">=</span> <span class="pl-en">len</span>(<span class="pl-s1">region</span>[<span class="pl-c1">0</span>]) <span class="pl-c1">-</span> <span class="pl-c1">1</span>
+    <span class="pl-s1">min_x</span> <span class="pl-c1">=</span> <span class="pl-s1">min_y</span> <span class="pl-c1">=</span> <span class="pl-c1">0</span>
+    
+    <span class="pl-k">def</span> <span class="pl-en">state</span>(<span class="pl-s1">x</span>, <span class="pl-s1">y</span>):
+        <span class="pl-k">if</span> <span class="pl-s1">x</span> <span class="pl-c1">&lt;</span> <span class="pl-c1">0</span> <span class="pl-c1">or</span> <span class="pl-s1">x</span> <span class="pl-c1">&gt;</span> <span class="pl-s1">max_x</span> <span class="pl-c1">or</span> <span class="pl-s1">y</span> <span class="pl-c1">&lt;</span> <span class="pl-c1">0</span> <span class="pl-c1">or</span> <span class="pl-s1">y</span> <span class="pl-c1">&gt;</span> <span class="pl-s1">max_y</span>:
+            <span class="pl-k">return</span> <span class="pl-c1">False</span>
+        <span class="pl-k">return</span> <span class="pl-s1">region</span>[<span class="pl-s1">x</span>][<span class="pl-s1">y</span>]
+    
+    <span class="pl-s1">perimeter</span> <span class="pl-c1">=</span> <span class="pl-c1">0</span>
+    
+    <span class="pl-c"># 垂直方向扫描</span>
+    <span class="pl-k">for</span> <span class="pl-s1">i</span> <span class="pl-c1">in</span> <span class="pl-en">range</span>(<span class="pl-s1">max_x</span> <span class="pl-c1">+</span> <span class="pl-c1">1</span>):
+        <span class="pl-s1">st</span> <span class="pl-c1">=</span> <span class="pl-en">state</span>(<span class="pl-s1">i</span>, <span class="pl-c1">-</span><span class="pl-c1">1</span>)
+        <span class="pl-k">for</span> <span class="pl-s1">j</span> <span class="pl-c1">in</span> <span class="pl-en">range</span>(<span class="pl-s1">max_y</span> <span class="pl-c1">+</span> <span class="pl-c1">2</span>):
+            <span class="pl-k">if</span> <span class="pl-s1">st</span> <span class="pl-c1">!=</span> <span class="pl-en">state</span>(<span class="pl-s1">i</span>, <span class="pl-s1">j</span>):
+                <span class="pl-k">if</span> <span class="pl-s1">st</span> <span class="pl-c1">!=</span> <span class="pl-en">state</span>(<span class="pl-s1">i</span><span class="pl-c1">-</span><span class="pl-c1">1</span>, <span class="pl-s1">j</span><span class="pl-c1">-</span><span class="pl-c1">1</span>) <span class="pl-c1">or</span> <span class="pl-s1">st</span> <span class="pl-c1">==</span> <span class="pl-en">state</span>(<span class="pl-s1">i</span><span class="pl-c1">-</span><span class="pl-c1">1</span>, <span class="pl-s1">j</span>):
+                    <span class="pl-s1">perimeter</span> <span class="pl-c1">+=</span> <span class="pl-c1">1</span>
+                <span class="pl-k">if</span> <span class="pl-s1">st</span> <span class="pl-c1">!=</span> <span class="pl-en">state</span>(<span class="pl-s1">i</span><span class="pl-c1">+</span><span class="pl-c1">1</span>, <span class="pl-s1">j</span><span class="pl-c1">-</span><span class="pl-c1">1</span>) <span class="pl-c1">or</span> <span class="pl-s1">st</span> <span class="pl-c1">==</span> <span class="pl-en">state</span>(<span class="pl-s1">i</span><span class="pl-c1">+</span><span class="pl-c1">1</span>, <span class="pl-s1">j</span>):
+                    <span class="pl-s1">perimeter</span> <span class="pl-c1">+=</span> <span class="pl-c1">1</span>
+                <span class="pl-s1">st</span> <span class="pl-c1">=</span> <span class="pl-c1">not</span> <span class="pl-s1">st</span>
+    
+    <span class="pl-c"># 水平方向扫描</span>
+    <span class="pl-k">for</span> <span class="pl-s1">j</span> <span class="pl-c1">in</span> <span class="pl-en">range</span>(<span class="pl-s1">max_y</span> <span class="pl-c1">+</span> <span class="pl-c1">1</span>):
+        <span class="pl-s1">st</span> <span class="pl-c1">=</span> <span class="pl-en">state</span>(<span class="pl-c1">-</span><span class="pl-c1">1</span>, <span class="pl-s1">j</span>)
+        <span class="pl-k">for</span> <span class="pl-s1">i</span> <span class="pl-c1">in</span> <span class="pl-en">range</span>(<span class="pl-s1">max_x</span> <span class="pl-c1">+</span> <span class="pl-c1">2</span>):
+            <span class="pl-k">if</span> <span class="pl-s1">st</span> <span class="pl-c1">!=</span> <span class="pl-en">state</span>(<span class="pl-s1">i</span>, <span class="pl-s1">j</span>):
+                <span class="pl-k">if</span> <span class="pl-s1">st</span> <span class="pl-c1">!=</span> <span class="pl-en">state</span>(<span class="pl-s1">i</span><span class="pl-c1">-</span><span class="pl-c1">1</span>, <span class="pl-s1">j</span><span class="pl-c1">-</span><span class="pl-c1">1</span>) <span class="pl-c1">or</span> <span class="pl-s1">st</span> <span class="pl-c1">==</span> <span class="pl-en">state</span>(<span class="pl-s1">i</span>, <span class="pl-s1">j</span><span class="pl-c1">-</span><span class="pl-c1">1</span>):
+                    <span class="pl-s1">perimeter</span> <span class="pl-c1">+=</span> <span class="pl-c1">1</span>
+                <span class="pl-k">if</span> <span class="pl-s1">st</span> <span class="pl-c1">!=</span> <span class="pl-en">state</span>(<span class="pl-s1">i</span><span class="pl-c1">-</span><span class="pl-c1">1</span>, <span class="pl-s1">j</span><span class="pl-c1">+</span><span class="pl-c1">1</span>) <span class="pl-c1">or</span> <span class="pl-s1">st</span> <span class="pl-c1">==</span> <span class="pl-en">state</span>(<span class="pl-s1">i</span>, <span class="pl-s1">j</span><span class="pl-c1">+</span><span class="pl-c1">1</span>):
+                    <span class="pl-s1">perimeter</span> <span class="pl-c1">+=</span> <span class="pl-c1">1</span>
+                <span class="pl-s1">st</span> <span class="pl-c1">=</span> <span class="pl-c1">not</span> <span class="pl-s1">st</span>
+    
+    <span class="pl-k">return</span> <span class="pl-s1">perimeter</span> <span class="pl-c1">//</span> <span class="pl-c1">2</span>
+
+<span class="pl-k">def</span> <span class="pl-en">get_allow_pos</span>(<span class="pl-s1">pos</span>):
+    <span class="pl-s1">allow_pos</span> <span class="pl-c1">=</span> [(<span class="pl-c1">1</span>, <span class="pl-c1">0</span>), (<span class="pl-c1">0</span>, <span class="pl-c1">1</span>), (<span class="pl-c1">-</span><span class="pl-c1">1</span>, <span class="pl-c1">0</span>), (<span class="pl-c1">0</span>, <span class="pl-c1">-</span><span class="pl-c1">1</span>)]
+    <span class="pl-s1">char</span> <span class="pl-c1">=</span> <span class="pl-s1">aa</span>[<span class="pl-s1">pos</span>[<span class="pl-c1">0</span>]][<span class="pl-s1">pos</span>[<span class="pl-c1">1</span>]]
+    <span class="pl-k">for</span> <span class="pl-s1">i</span> <span class="pl-c1">in</span> <span class="pl-s1">allow_pos</span>:
+        <span class="pl-s1">next_pos</span> <span class="pl-c1">=</span> (<span class="pl-s1">pos</span>[<span class="pl-c1">0</span>] <span class="pl-c1">+</span> <span class="pl-s1">i</span>[<span class="pl-c1">0</span>], <span class="pl-s1">pos</span>[<span class="pl-c1">1</span>] <span class="pl-c1">+</span> <span class="pl-s1">i</span>[<span class="pl-c1">1</span>])
+        <span class="pl-k">if</span> <span class="pl-en">len</span>(<span class="pl-s1">aa</span>) <span class="pl-c1">&gt;</span> <span class="pl-s1">next_pos</span>[<span class="pl-c1">0</span>] <span class="pl-c1">&gt;=</span> <span class="pl-c1">0</span> <span class="pl-c1">and</span> <span class="pl-en">len</span>(<span class="pl-s1">aa</span>[<span class="pl-c1">0</span>]) <span class="pl-c1">&gt;</span> <span class="pl-s1">next_pos</span>[<span class="pl-c1">1</span>] <span class="pl-c1">&gt;=</span> <span class="pl-c1">0</span>:
+            <span class="pl-k">if</span> <span class="pl-s1">aa</span>[<span class="pl-s1">next_pos</span>[<span class="pl-c1">0</span>]][<span class="pl-s1">next_pos</span>[<span class="pl-c1">1</span>]] <span class="pl-c1">==</span> <span class="pl-s1">char</span>:
+                <span class="pl-k">yield</span> <span class="pl-s1">next_pos</span>
+
+<span class="pl-s1">ans</span> <span class="pl-c1">=</span> <span class="pl-c1">0</span>
+
+<span class="pl-s1">already_visited</span> <span class="pl-c1">=</span> <span class="pl-s1">np</span>.<span class="pl-c1">zeros</span>((<span class="pl-en">len</span>(<span class="pl-s1">aa</span>), <span class="pl-en">len</span>(<span class="pl-s1">aa</span>[<span class="pl-c1">0</span>])))
+<span class="pl-k">for</span> <span class="pl-s1">i</span> <span class="pl-c1">in</span> <span class="pl-en">range</span>(<span class="pl-en">len</span>(<span class="pl-s1">aa</span>)):
+    <span class="pl-k">for</span> <span class="pl-s1">j</span> <span class="pl-c1">in</span> <span class="pl-en">range</span>(<span class="pl-en">len</span>(<span class="pl-s1">aa</span>[<span class="pl-s1">i</span>])):
+        <span class="pl-k">if</span> <span class="pl-s1">already_visited</span>[<span class="pl-s1">i</span>][<span class="pl-s1">j</span>] <span class="pl-c1">==</span> <span class="pl-c1">0</span>:
+            <span class="pl-c"># print(aa[i][j])</span>
+            <span class="pl-s1">array_</span> <span class="pl-c1">=</span> <span class="pl-s1">np</span>.<span class="pl-c1">zeros</span>((<span class="pl-en">len</span>(<span class="pl-s1">aa</span>), <span class="pl-en">len</span>(<span class="pl-s1">aa</span>[<span class="pl-c1">0</span>])))
+            <span class="pl-s1">already_visited</span>[<span class="pl-s1">i</span>][<span class="pl-s1">j</span>] <span class="pl-c1">=</span> <span class="pl-c1">1</span>
+            <span class="pl-s1">array_</span>[<span class="pl-s1">i</span>][<span class="pl-s1">j</span>] <span class="pl-c1">=</span> <span class="pl-c1">1</span>
+            <span class="pl-k">def</span> <span class="pl-en">dfs</span>(<span class="pl-s1">pos</span>):
+                <span class="pl-k">for</span> <span class="pl-s1">next_pos</span> <span class="pl-c1">in</span> <span class="pl-en">get_allow_pos</span>(<span class="pl-s1">pos</span>):
+                    <span class="pl-k">if</span> <span class="pl-s1">already_visited</span>[<span class="pl-s1">next_pos</span>[<span class="pl-c1">0</span>]][<span class="pl-s1">next_pos</span>[<span class="pl-c1">1</span>]] <span class="pl-c1">==</span> <span class="pl-c1">0</span>:
+                        <span class="pl-s1">already_visited</span>[<span class="pl-s1">next_pos</span>[<span class="pl-c1">0</span>]][<span class="pl-s1">next_pos</span>[<span class="pl-c1">1</span>]] <span class="pl-c1">=</span> <span class="pl-c1">1</span>
+                        <span class="pl-s1">array_</span>[<span class="pl-s1">next_pos</span>[<span class="pl-c1">0</span>]][<span class="pl-s1">next_pos</span>[<span class="pl-c1">1</span>]] <span class="pl-c1">=</span> <span class="pl-c1">1</span>
+                        
+                        <span class="pl-en">dfs</span>(<span class="pl-s1">next_pos</span>)
+            
+            <span class="pl-en">dfs</span>((<span class="pl-s1">i</span>, <span class="pl-s1">j</span>))
+            <span class="pl-s1">area</span> <span class="pl-c1">=</span> <span class="pl-en">get_area</span>(<span class="pl-s1">array_</span>)
+            <span class="pl-s1">perimeter</span> <span class="pl-c1">=</span> <span class="pl-en">get_perimeter</span>(<span class="pl-s1">array_</span>)
+            <span class="pl-c"># print(perimeter)</span>
+            <span class="pl-s1">ans</span> <span class="pl-c1">+=</span> <span class="pl-s1">area</span> <span class="pl-c1">*</span> <span class="pl-s1">perimeter</span>
+        
+<span class="pl-en">print</span>(<span class="pl-s1">ans</span>)</pre></div>
+<p></p>
+</details> 
+<blockquote>
+<p>一条边有两个角, 找到所有角之后整除2即可</p>
+</blockquote>
+<h2>第十三题</h2>
+<p><a href="https://adventofcode.com/2024/day/13" rel="nofollow">https://adventofcode.com/2024/day/13</a></p>
+<h3>1题</h3>
+<p>按下按钮A或B, 移动老虎爪, 让老虎爪移动到指定的位置, 按下A需要三块钱, B需要一块钱<br>
+有可能无解(无法移动到指定位置)</p>
+<details><summary>Details</summary>
+<p>
+</p><div class="highlight highlight-source-python"><pre class="notranslate"><span class="pl-s1">aa</span> <span class="pl-c1">=</span> <span class="pl-s1">a</span>.<span class="pl-c1">split</span>(<span class="pl-s">'<span class="pl-cce">\n</span><span class="pl-cce">\n</span>'</span>)
+<span class="pl-k">from</span> <span class="pl-s1">sympy</span> <span class="pl-k">import</span> <span class="pl-c1">*</span>
+
+<span class="pl-s1">ans</span> <span class="pl-c1">=</span> <span class="pl-c1">0</span>
+<span class="pl-k">for</span> <span class="pl-s1">i</span> <span class="pl-c1">in</span> <span class="pl-s1">aa</span>:
+    <span class="pl-s1">inputs</span> <span class="pl-c1">=</span> <span class="pl-s1">i</span>.<span class="pl-c1">split</span>(<span class="pl-s">'<span class="pl-cce">\n</span>'</span>)
+    <span class="pl-c"># 提取输入</span>
+    <span class="pl-s1">ax</span>, <span class="pl-s1">ay</span> <span class="pl-c1">=</span> <span class="pl-s1">inputs</span>[<span class="pl-c1">0</span>].<span class="pl-c1">split</span>(<span class="pl-s">': '</span>)[<span class="pl-c1">1</span>].<span class="pl-c1">split</span>(<span class="pl-s">', '</span>)
+    <span class="pl-s1">bx</span>, <span class="pl-s1">by</span> <span class="pl-c1">=</span> <span class="pl-s1">inputs</span>[<span class="pl-c1">1</span>].<span class="pl-c1">split</span>(<span class="pl-s">': '</span>)[<span class="pl-c1">1</span>].<span class="pl-c1">split</span>(<span class="pl-s">', '</span>)
+    <span class="pl-s1">t1</span>, <span class="pl-s1">t2</span> <span class="pl-c1">=</span> <span class="pl-s1">inputs</span>[<span class="pl-c1">2</span>].<span class="pl-c1">split</span>(<span class="pl-s">': '</span>)[<span class="pl-c1">1</span>].<span class="pl-c1">split</span>(<span class="pl-s">', '</span>)
+    <span class="pl-s1">ax</span>, <span class="pl-s1">ay</span> <span class="pl-c1">=</span> <span class="pl-en">int</span>(<span class="pl-s1">ax</span>[<span class="pl-c1">2</span>:]), <span class="pl-en">int</span>(<span class="pl-s1">ay</span>[<span class="pl-c1">2</span>:])
+    <span class="pl-s1">bx</span>, <span class="pl-s1">by</span> <span class="pl-c1">=</span> <span class="pl-en">int</span>(<span class="pl-s1">bx</span>[<span class="pl-c1">2</span>:]), <span class="pl-en">int</span>(<span class="pl-s1">by</span>[<span class="pl-c1">2</span>:])
+    <span class="pl-s1">t1</span>, <span class="pl-s1">t2</span> <span class="pl-c1">=</span> <span class="pl-en">int</span>(<span class="pl-s1">t1</span>[<span class="pl-c1">2</span>:]), <span class="pl-en">int</span>(<span class="pl-s1">t2</span>[<span class="pl-c1">2</span>:])
+    <span class="pl-s1">m</span> <span class="pl-c1">=</span> <span class="pl-en">Symbol</span>(<span class="pl-s">'m'</span>)
+    <span class="pl-s1">n</span> <span class="pl-c1">=</span> <span class="pl-en">Symbol</span>(<span class="pl-s">'n'</span>)
+    <span class="pl-s1">temp</span> <span class="pl-c1">=</span> <span class="pl-en">solve</span>([<span class="pl-s1">m</span> <span class="pl-c1">*</span> <span class="pl-s1">ax</span> <span class="pl-c1">+</span> <span class="pl-s1">n</span> <span class="pl-c1">*</span> <span class="pl-s1">bx</span> <span class="pl-c1">-</span> <span class="pl-s1">t1</span>, <span class="pl-s1">m</span> <span class="pl-c1">*</span> <span class="pl-s1">ay</span> <span class="pl-c1">+</span> <span class="pl-s1">n</span> <span class="pl-c1">*</span> <span class="pl-s1">by</span> <span class="pl-c1">-</span> <span class="pl-s1">t2</span>], [<span class="pl-s1">m</span>, <span class="pl-s1">n</span>])
+    <span class="pl-c"># print(temp)</span>
+    <span class="pl-k">if</span> <span class="pl-s1">temp</span>[<span class="pl-s1">m</span>].<span class="pl-c1">is_Integer</span> <span class="pl-c1">and</span> <span class="pl-s1">temp</span>[<span class="pl-s1">n</span>].<span class="pl-c1">is_Integer</span>:
+        <span class="pl-s1">ans</span> <span class="pl-c1">+=</span> <span class="pl-en">int</span>(<span class="pl-s1">temp</span>[<span class="pl-s1">m</span>]) <span class="pl-c1">*</span> <span class="pl-c1">3</span> <span class="pl-c1">+</span> <span class="pl-en">int</span>(<span class="pl-s1">temp</span>[<span class="pl-s1">n</span>])
+
+<span class="pl-en">print</span>(<span class="pl-s1">ans</span>)</pre></div>
+<p></p>
+</details> 
+&gt; 二元一次方程组的整数解
+<h3>2题</h3>
+<p>在一题的基础上, X轴和Y轴上都高出10000000000000(大数)</p>
+<details><summary>Details</summary>
+<p>
+</p><div class="highlight highlight-source-python"><pre class="notranslate"><span class="pl-s1">aa</span> <span class="pl-c1">=</span> <span class="pl-s1">a</span>.<span class="pl-c1">split</span>(<span class="pl-s">'<span class="pl-cce">\n</span><span class="pl-cce">\n</span>'</span>)
+<span class="pl-k">from</span> <span class="pl-s1">sympy</span> <span class="pl-k">import</span> <span class="pl-c1">*</span>
+
+<span class="pl-s1">ans</span> <span class="pl-c1">=</span> <span class="pl-c1">0</span>
+<span class="pl-k">for</span> <span class="pl-s1">i</span> <span class="pl-c1">in</span> <span class="pl-s1">aa</span>:
+    <span class="pl-s1">inputs</span> <span class="pl-c1">=</span> <span class="pl-s1">i</span>.<span class="pl-c1">split</span>(<span class="pl-s">'<span class="pl-cce">\n</span>'</span>)
+    <span class="pl-c"># 提取输入</span>
+    <span class="pl-s1">ax</span>, <span class="pl-s1">ay</span> <span class="pl-c1">=</span> <span class="pl-s1">inputs</span>[<span class="pl-c1">0</span>].<span class="pl-c1">split</span>(<span class="pl-s">': '</span>)[<span class="pl-c1">1</span>].<span class="pl-c1">split</span>(<span class="pl-s">', '</span>)
+    <span class="pl-s1">bx</span>, <span class="pl-s1">by</span> <span class="pl-c1">=</span> <span class="pl-s1">inputs</span>[<span class="pl-c1">1</span>].<span class="pl-c1">split</span>(<span class="pl-s">': '</span>)[<span class="pl-c1">1</span>].<span class="pl-c1">split</span>(<span class="pl-s">', '</span>)
+    <span class="pl-s1">t1</span>, <span class="pl-s1">t2</span> <span class="pl-c1">=</span> <span class="pl-s1">inputs</span>[<span class="pl-c1">2</span>].<span class="pl-c1">split</span>(<span class="pl-s">': '</span>)[<span class="pl-c1">1</span>].<span class="pl-c1">split</span>(<span class="pl-s">', '</span>)
+    <span class="pl-s1">ax</span>, <span class="pl-s1">ay</span> <span class="pl-c1">=</span> <span class="pl-en">int</span>(<span class="pl-s1">ax</span>[<span class="pl-c1">2</span>:]), <span class="pl-en">int</span>(<span class="pl-s1">ay</span>[<span class="pl-c1">2</span>:])
+    <span class="pl-s1">bx</span>, <span class="pl-s1">by</span> <span class="pl-c1">=</span> <span class="pl-en">int</span>(<span class="pl-s1">bx</span>[<span class="pl-c1">2</span>:]), <span class="pl-en">int</span>(<span class="pl-s1">by</span>[<span class="pl-c1">2</span>:])
+    <span class="pl-s1">t1</span>, <span class="pl-s1">t2</span> <span class="pl-c1">=</span> <span class="pl-en">int</span>(<span class="pl-s1">t1</span>[<span class="pl-c1">2</span>:]) <span class="pl-c1">+</span> <span class="pl-c1">10000000000000</span>, <span class="pl-en">int</span>(<span class="pl-s1">t2</span>[<span class="pl-c1">2</span>:]) <span class="pl-c1">+</span> <span class="pl-c1">10000000000000</span>
+    <span class="pl-s1">m</span> <span class="pl-c1">=</span> <span class="pl-en">Symbol</span>(<span class="pl-s">'m'</span>)
+    <span class="pl-s1">n</span> <span class="pl-c1">=</span> <span class="pl-en">Symbol</span>(<span class="pl-s">'n'</span>)
+    <span class="pl-s1">temp</span> <span class="pl-c1">=</span> <span class="pl-en">solve</span>([<span class="pl-s1">m</span> <span class="pl-c1">*</span> <span class="pl-s1">ax</span> <span class="pl-c1">+</span> <span class="pl-s1">n</span> <span class="pl-c1">*</span> <span class="pl-s1">bx</span> <span class="pl-c1">-</span> <span class="pl-s1">t1</span>, <span class="pl-s1">m</span> <span class="pl-c1">*</span> <span class="pl-s1">ay</span> <span class="pl-c1">+</span> <span class="pl-s1">n</span> <span class="pl-c1">*</span> <span class="pl-s1">by</span> <span class="pl-c1">-</span> <span class="pl-s1">t2</span>], [<span class="pl-s1">m</span>, <span class="pl-s1">n</span>])
+    <span class="pl-c"># print(temp)</span>
+    <span class="pl-k">if</span> <span class="pl-s1">temp</span>[<span class="pl-s1">m</span>].<span class="pl-c1">is_Integer</span> <span class="pl-c1">and</span> <span class="pl-s1">temp</span>[<span class="pl-s1">n</span>].<span class="pl-c1">is_Integer</span>:
+        <span class="pl-s1">ans</span> <span class="pl-c1">+=</span> <span class="pl-en">int</span>(<span class="pl-s1">temp</span>[<span class="pl-s1">m</span>]) <span class="pl-c1">*</span> <span class="pl-c1">3</span> <span class="pl-c1">+</span> <span class="pl-en">int</span>(<span class="pl-s1">temp</span>[<span class="pl-s1">n</span>])
+
+<span class="pl-en">print</span>(<span class="pl-s1">ans</span>)</pre></div>
+<p></p>
+</details> 
+<blockquote>
+<p>python无限精度整数, 不需要额外处理</p>
+</blockquote>
+<h2>第十四题</h2>
+<p><a href="https://adventofcode.com/2024/day/14" rel="nofollow">https://adventofcode.com/2024/day/14</a></p>
+<h2>1题</h2>
+<p>给定点坐标, 点的移动速度, 大小固定的图</p>
+<p>求 四个象限内点的数量 之积<br>
+象限是去掉最中间一列与一行使得图分成四个区域<br>
+点到边界会传送到另一侧 (mod)</p>
+<details><summary>Details</summary>
+<p>
+</p><div class="highlight highlight-source-python"><pre class="notranslate"><span class="pl-k">def</span> <span class="pl-en">main</span>():
+    <span class="pl-s1">lines</span> <span class="pl-c1">=</span> <span class="pl-s1">a</span>.<span class="pl-c1">splitlines</span>()
+
+    <span class="pl-s1">robots</span> <span class="pl-c1">=</span> []
+    <span class="pl-k">for</span> <span class="pl-s1">line</span> <span class="pl-c1">in</span> <span class="pl-s1">lines</span>:
+        <span class="pl-s1">p_part</span>, <span class="pl-s1">v_part</span> <span class="pl-c1">=</span> <span class="pl-s1">line</span>.<span class="pl-c1">strip</span>().<span class="pl-c1">split</span>()
+        <span class="pl-s1">p_x</span>, <span class="pl-s1">p_y</span> <span class="pl-c1">=</span> <span class="pl-en">map</span>(<span class="pl-s1">int</span>, <span class="pl-s1">p_part</span>[<span class="pl-c1">2</span>:].<span class="pl-c1">split</span>(<span class="pl-s">','</span>))
+        <span class="pl-s1">v_x</span>, <span class="pl-s1">v_y</span> <span class="pl-c1">=</span> <span class="pl-en">map</span>(<span class="pl-s1">int</span>, <span class="pl-s1">v_part</span>[<span class="pl-c1">2</span>:].<span class="pl-c1">split</span>(<span class="pl-s">','</span>))
+        <span class="pl-s1">robots</span>.<span class="pl-c1">append</span>({<span class="pl-s">'p'</span>: (<span class="pl-s1">p_x</span>, <span class="pl-s1">p_y</span>), <span class="pl-s">'v'</span>: (<span class="pl-s1">v_x</span>, <span class="pl-s1">v_y</span>)})
+
+    <span class="pl-s1">positions</span> <span class="pl-c1">=</span> {}
+    <span class="pl-k">for</span> <span class="pl-s1">robot</span> <span class="pl-c1">in</span> <span class="pl-s1">robots</span>:
+        <span class="pl-s1">x</span> <span class="pl-c1">=</span> (<span class="pl-s1">robot</span>[<span class="pl-s">'p'</span>][<span class="pl-c1">0</span>] <span class="pl-c1">+</span> <span class="pl-s1">robot</span>[<span class="pl-s">'v'</span>][<span class="pl-c1">0</span>] <span class="pl-c1">*</span> <span class="pl-c1">100</span>) <span class="pl-c1">%</span> <span class="pl-c1">101</span>
+        <span class="pl-s1">y</span> <span class="pl-c1">=</span> (<span class="pl-s1">robot</span>[<span class="pl-s">'p'</span>][<span class="pl-c1">1</span>] <span class="pl-c1">+</span> <span class="pl-s1">robot</span>[<span class="pl-s">'v'</span>][<span class="pl-c1">1</span>] <span class="pl-c1">*</span> <span class="pl-c1">100</span>) <span class="pl-c1">%</span> <span class="pl-c1">103</span>
+        <span class="pl-s1">positions</span>[(<span class="pl-s1">x</span>, <span class="pl-s1">y</span>)] <span class="pl-c1">=</span> <span class="pl-s1">positions</span>.<span class="pl-c1">get</span>((<span class="pl-s1">x</span>, <span class="pl-s1">y</span>), <span class="pl-c1">0</span>) <span class="pl-c1">+</span> <span class="pl-c1">1</span>
+
+    <span class="pl-s1">q1</span> <span class="pl-c1">=</span> <span class="pl-s1">q2</span> <span class="pl-c1">=</span> <span class="pl-s1">q3</span> <span class="pl-c1">=</span> <span class="pl-s1">q4</span> <span class="pl-c1">=</span> <span class="pl-c1">0</span>
+    <span class="pl-k">for</span> (<span class="pl-s1">x</span>, <span class="pl-s1">y</span>), <span class="pl-s1">count</span> <span class="pl-c1">in</span> <span class="pl-s1">positions</span>.<span class="pl-c1">items</span>():
+        <span class="pl-k">if</span> <span class="pl-s1">x</span> <span class="pl-c1">&lt;</span> <span class="pl-c1">50</span> <span class="pl-c1">and</span> <span class="pl-s1">y</span> <span class="pl-c1">&lt;</span> <span class="pl-c1">51</span>:
+            <span class="pl-s1">q1</span> <span class="pl-c1">+=</span> <span class="pl-s1">count</span>
+        <span class="pl-k">elif</span> <span class="pl-s1">x</span> <span class="pl-c1">&gt;</span> <span class="pl-c1">50</span> <span class="pl-c1">and</span> <span class="pl-s1">y</span> <span class="pl-c1">&lt;</span> <span class="pl-c1">51</span>:
+            <span class="pl-s1">q2</span> <span class="pl-c1">+=</span> <span class="pl-s1">count</span>
+        <span class="pl-k">elif</span> <span class="pl-s1">x</span> <span class="pl-c1">&gt;</span> <span class="pl-c1">50</span> <span class="pl-c1">and</span> <span class="pl-s1">y</span> <span class="pl-c1">&gt;</span> <span class="pl-c1">51</span>:
+            <span class="pl-s1">q3</span> <span class="pl-c1">+=</span> <span class="pl-s1">count</span>
+        <span class="pl-k">elif</span> <span class="pl-s1">x</span> <span class="pl-c1">&lt;</span> <span class="pl-c1">50</span> <span class="pl-c1">and</span> <span class="pl-s1">y</span> <span class="pl-c1">&gt;</span> <span class="pl-c1">51</span>:
+            <span class="pl-s1">q4</span> <span class="pl-c1">+=</span> <span class="pl-s1">count</span>
+
+    <span class="pl-s1">safety_factor</span> <span class="pl-c1">=</span> <span class="pl-s1">q1</span> <span class="pl-c1">*</span> <span class="pl-s1">q2</span> <span class="pl-c1">*</span> <span class="pl-s1">q3</span> <span class="pl-c1">*</span> <span class="pl-s1">q4</span>
+    <span class="pl-en">print</span>(<span class="pl-s1">safety_factor</span>)
+
+<span class="pl-k">if</span> <span class="pl-s1">__name__</span> <span class="pl-c1">==</span> <span class="pl-s">"__main__"</span>:
+    <span class="pl-en">main</span>()</pre></div>
+<p></p>
+</details> 
+<h3>2题</h3>
+<p>直接贴原题, 因为原题是阅读理解</p>
+<p>During the bathroom break, someone notices that these robots seem awfully similar to ones built and used at the North Pole. If they're the same type of robots, they should have a hard-coded Easter egg: very rarely, most of the robots should arrange themselves into a picture of a Christmas tree.</p>
+<blockquote>
+<p>在上厕所的时候，有人注意到这些机器人看起来与在北极建造和使用的机器人非常相似。如果它们是同一类型的机器人，它们应该有一个硬编码的复活节彩蛋：极少数情况下，大多数机器人应该将自己排列成圣诞树的图片。</p>
+</blockquote>
+<p>What is the fewest number of seconds that must elapse for the robots to display the Easter egg?</p>
+<blockquote>
+<p>机器人展示复活节彩蛋所需的最少秒数是多少？</p>
+</blockquote>
+<details><summary>Details</summary>
+<p>
+</p><div class="highlight highlight-source-python"><pre class="notranslate"><span class="pl-k">def</span> <span class="pl-en">find_min_unique_t</span>(<span class="pl-s1">input_lines</span>):
+    <span class="pl-s1">robots</span> <span class="pl-c1">=</span> []
+    <span class="pl-k">for</span> <span class="pl-s1">line</span> <span class="pl-c1">in</span> <span class="pl-s1">input_lines</span>:
+        <span class="pl-s1">p_part</span>, <span class="pl-s1">v_part</span> <span class="pl-c1">=</span> <span class="pl-s1">line</span>.<span class="pl-c1">split</span>(<span class="pl-s">' v='</span>)
+        <span class="pl-s1">x</span>, <span class="pl-s1">y</span> <span class="pl-c1">=</span> <span class="pl-en">map</span>(<span class="pl-s1">int</span>, <span class="pl-s1">p_part</span>[<span class="pl-c1">2</span>:].<span class="pl-c1">split</span>(<span class="pl-s">','</span>))
+        <span class="pl-s1">dx</span>, <span class="pl-s1">dy</span> <span class="pl-c1">=</span> <span class="pl-en">map</span>(<span class="pl-s1">int</span>, <span class="pl-s1">v_part</span>.<span class="pl-c1">split</span>(<span class="pl-s">','</span>))
+        <span class="pl-s1">robots</span>.<span class="pl-c1">append</span>({<span class="pl-s">'x'</span>: <span class="pl-s1">x</span>, <span class="pl-s">'y'</span>: <span class="pl-s1">y</span>, <span class="pl-s">'dx'</span>: <span class="pl-s1">dx</span>, <span class="pl-s">'dy'</span>: <span class="pl-s1">dy</span>})
+    
+    <span class="pl-k">for</span> <span class="pl-s1">t</span> <span class="pl-c1">in</span> <span class="pl-en">range</span>(<span class="pl-c1">10403</span>):
+        <span class="pl-s1">position_map</span> <span class="pl-c1">=</span> {}
+        <span class="pl-k">for</span> <span class="pl-s1">robot</span> <span class="pl-c1">in</span> <span class="pl-s1">robots</span>:
+            <span class="pl-s1">x</span> <span class="pl-c1">=</span> (<span class="pl-s1">robot</span>[<span class="pl-s">'x'</span>] <span class="pl-c1">+</span> <span class="pl-s1">robot</span>[<span class="pl-s">'dx'</span>] <span class="pl-c1">*</span> <span class="pl-s1">t</span>) <span class="pl-c1">%</span> <span class="pl-c1">101</span>
+            <span class="pl-s1">y</span> <span class="pl-c1">=</span> (<span class="pl-s1">robot</span>[<span class="pl-s">'y'</span>] <span class="pl-c1">+</span> <span class="pl-s1">robot</span>[<span class="pl-s">'dy'</span>] <span class="pl-c1">*</span> <span class="pl-s1">t</span>) <span class="pl-c1">%</span> <span class="pl-c1">103</span>
+            <span class="pl-s1">position</span> <span class="pl-c1">=</span> (<span class="pl-s1">x</span>, <span class="pl-s1">y</span>)
+            <span class="pl-k">if</span> <span class="pl-s1">position</span> <span class="pl-c1">in</span> <span class="pl-s1">position_map</span>:
+                <span class="pl-k">break</span>
+            <span class="pl-k">else</span>:
+                <span class="pl-s1">position_map</span>[<span class="pl-s1">position</span>] <span class="pl-c1">=</span> <span class="pl-c1">True</span>
+        <span class="pl-k">else</span>:
+            <span class="pl-k">return</span> <span class="pl-s1">t</span>
+    <span class="pl-k">return</span> <span class="pl-c1">-</span><span class="pl-c1">1</span>
+
+<span class="pl-s1">input_lines</span> <span class="pl-c1">=</span> <span class="pl-s1">a</span>.<span class="pl-c1">splitlines</span>()
+
+<span class="pl-s1">min_t</span> <span class="pl-c1">=</span> <span class="pl-en">find_min_unique_t</span>(<span class="pl-s1">input_lines</span>)
+<span class="pl-en">print</span>(<span class="pl-s">"最小的秒数是:"</span>, <span class="pl-s1">min_t</span>)</pre></div>
+<p></p>
+</details> 
+<blockquote>
+<p>这题等价于, 每个机器人不互相重合的时间(题目特意设计过)<br>
+如果有其他解法(理解)可以在评论区交流</p>
+</blockquote>
+<h2>第十五题</h2>
+<p><a href="https://adventofcode.com/2024/day/15" rel="nofollow">https://adventofcode.com/2024/day/15</a></p>
+<h3>1题</h3>
+<p>推箱子</p>
+<details><summary>Details</summary>
+<p>
+</p><p>aa, bb = a.split('\n\n')</p>
+<p>all_map = [list(i) for i in aa.splitlines()]</p>
+<p>step = ''.join(bb.splitlines())</p>
+<p>def is_edge(x, y):<br>
+return x &lt; 0 or y &lt; 0 or x &gt;= len(all_map) or y &gt;= len(all_map[0]) or all_map[x][y] == '#'</p>
+<p>def get_robot_pos():<br>
+for i in range(len(all_map)):<br>
+for j in range(len(all_map[0])):<br>
+if all_map[i][j] == '@':<br>
+return i, j</p>
+<p>directions = {'&gt;': (0,1), 'v': (1,0), '&lt;': (0,-1), '^': (-1,0)}</p>
+<p>def move(pos, move_to):<br>
+temp = []<br>
+x, y = pos<br>
+dx, dy = move_to<br>
+for i in range(1, max(len(all_map), len(all_map[0]))):</p>
+<pre class="notranslate"><code class="notranslate">    temp.append(all_map[x][y])
+
+    x += dx
+    y += dy
+    if not is_edge(x, y):
+        if all_map[x][y] == '.':
+            # 当前位置开始向前一步
+            for _ in range(i):
+                all_map[x][y] = temp.pop()
+                x -= dx
+                y -= dy
+            all_map[pos[0]][pos[1]] = '.'
+            return (pos[0] + dx, pos[1] + dy)
+    else:
+        return pos
+return pos
+</code></pre>
+<p>def putty_print(all_map):<br>
+for i in all_map:<br>
+for j in i:<br>
+print(j, end='')<br>
+print()</p>
+<p>now_pos = get_robot_pos()<br>
+for i in step:<br>
+now_pos = move(now_pos, directions[i])<br>
+putty_print(all_map)</p>
+<p>ans = 0<br>
+for i in range(len(all_map)):<br>
+for j in range(len(all_map[i])):<br>
+if all_map[i][j] == 'O':<br>
+ans += i * 100 + j</p>
+<p>print(ans)</p>
+<p></p>
+</details> 
+<h2>2题</h2>
+<p>推更宽(宽一倍), 但是高度不变的箱子</p>
+<details><summary>Details</summary>
+<p>
+</p><p>aa, bb = a.split('\n\n')</p>
+<p>all_map = [list(i) for i in aa.splitlines()]</p>
+<p>new_map = []<br>
+for i in all_map:<br>
+temp_map = []<br>
+for j in i:<br>
+if j == '#':<br>
+temp_map.append('#')<br>
+temp_map.append('#')<br>
+if j == 'O':<br>
+temp_map.append('[')<br>
+temp_map.append(']')<br>
+if j == '.':<br>
+temp_map.append('.')<br>
+temp_map.append('.')<br>
+if j == '@':<br>
+temp_map.append('@')<br>
+temp_map.append('.')<br>
+new_map.append(temp_map)</p>
+<p>all_map = new_map<br>
+moves = ''.join(bb.splitlines())<br>
+def is_edge(x, y):<br>
+return x &lt; 0 or y &lt; 0 or x &gt;= len(all_map) or y &gt;= len(all_map[0]) or all_map[x][y] == '#'</p>
+<p>def get_robot_pos():<br>
+for i in range(len(all_map)):<br>
+for j in range(len(all_map[0])):<br>
+if all_map[i][j] == '@':<br>
+return i, j</p>
+<p>directions = {'&gt;': (0,1), 'v': (1,0), '&lt;': (0,-1), '^': (-1,0)}</p>
+<p>all_boxes = []</p>
+<p>def move(pos, move_to):<br>
+temp = []<br>
+x, y = pos<br>
+dx, dy = move_to<br>
+if dx == 0:<br>
+for i in range(1, max(len(all_map), len(all_map[0]))):</p>
+<pre class="notranslate"><code class="notranslate">        temp.append(all_map[x][y])
+
+        x += dx
+        y += dy
+        if not is_edge(x, y):
+            if all_map[x][y] == '.':
+                # 当前位置开始向前一步
+                for _ in range(i):
+                    all_map[x][y] = temp.pop()
+                    x -= dx
+                    y -= dy
+                all_map[pos[0]][pos[1]] = '.'
+                return (pos[0] + dx, pos[1] + dy)
+        else:
+            return pos
+    return pos
+else:
+    box_pos = []
+    next_pos = [(x, y)]
+    can_move = True
+
+    while next_pos:
+        x, y = next_pos.pop(0)
+        x, y = x + dx, y + dy
+        if all_map[x][y] == '[':
+            box_pos.append(((x, y), (x, y+1)))
+            next_pos.append((x, y+1))
+            next_pos.append((x, y))
+        elif all_map[x][y] == ']':
+            box_pos.append(((x, y), (x, y-1)))
+            next_pos.append((x, y-1))
+            next_pos.append((x, y))
+        elif all_map[x][y] == '#':
+            can_move = False
+            break
+        # 去重
+        tt = []
+        [tt.append(i) for i in next_pos if i not in tt]
+        next_pos = tt
+    tt = []
+    [tt.append(i) for i in box_pos if (i not in tt) and ((i[1], i[0]) not in tt)]
+    box_pos = tt
+    if not can_move:
+        return pos
+    else:
+        for box in box_pos[::-1]:
+            for box_pos in box:
+                all_map[box_pos[0] + dx][box_pos[1] + dy] = all_map[box_pos[0]][box_pos[1]]
+                all_map[box_pos[0]][box_pos[1]] = '.'
+
+        # 更改@的位置
+        all_map[pos[0] + dx][pos[1] + dy] = '@'
+        all_map[pos[0]][pos[1]] = '.'
+        return (pos[0] + dx, pos[1] + dy)
+</code></pre>
+<p>def putty_print(all_map):<br>
+for i in all_map:<br>
+for j in i:<br>
+print(j, end='')<br>
+print()</p>
+<p>now_pos = get_robot_pos()<br>
+for i in moves:<br>
+now_pos = move(now_pos, directions[i])<br>
+putty_print(all_map)</p>
+<p>ans = 0<br>
+for i in range(len(all_map)):<br>
+for j in range(len(all_map[i])):<br>
+if all_map[i][j] == '[':<br>
+ans += i * 100 + j</p>
+<p>print(ans)</p>
+<p></p>
+</details> 
+<blockquote>
+<p>横着推可以复用一题代码, 竖着推需要检测所有能推的箱子(bfs)</p>
 </blockquote></div>
 <div style="font-size:small;margin-top:8px;float:right;">转载无需注明出处</div>
 
