@@ -1,9 +1,11 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0"><channel><title>FairyOwO 的 Blog</title><link>https://FairyOwO.github.io</link><description>记录一些琐事</description><copyright>FairyOwO 的 Blog</copyright><docs>http://www.rssboard.org/rss-specification</docs><generator>python-feedgen</generator><image><url>https://github.githubassets.com/favicons/favicon.svg</url><title>avatar</title><link>https://FairyOwO.github.io</link></image><lastBuildDate>Wed, 05 Feb 2025 16:15:54 +0000</lastBuildDate><managingEditor>FairyOwO 的 Blog</managingEditor><ttl>60</ttl><webMaster>FairyOwO 的 Blog</webMaster><item><title>幻兽帕鲁繁殖树搜索, 用于搜索从A帕鲁到B帕鲁的所有最短路径</title><link>https://FairyOwO.github.io/post/huan-shou-pa-lu-fan-zhi-shu-sou-suo-%2C%20-yong-yu-sou-suo-cong-A-pa-lu-dao-B-pa-lu-de-suo-you-zui-duan-lu-jing.html</link><description>## 相关原理
+<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0"><channel><title>FairyOwO 的 Blog</title><link>https://FairyOwO.github.io</link><description>记录一些琐事</description><copyright>FairyOwO 的 Blog</copyright><docs>http://www.rssboard.org/rss-specification</docs><generator>python-feedgen</generator><image><url>https://github.githubassets.com/favicons/favicon.svg</url><title>avatar</title><link>https://FairyOwO.github.io</link></image><lastBuildDate>Fri, 07 Feb 2025 03:00:31 +0000</lastBuildDate><managingEditor>FairyOwO 的 Blog</managingEditor><ttl>60</ttl><webMaster>FairyOwO 的 Blog</webMaster><item><title>幻兽帕鲁繁殖树搜索, 用于搜索从A帕鲁到B帕鲁的所有最短路径</title><link>https://FairyOwO.github.io/post/huan-shou-pa-lu-fan-zhi-shu-sou-suo-%2C%20-yong-yu-sou-suo-cong-A-pa-lu-dao-B-pa-lu-de-suo-you-zui-duan-lu-jing.html</link><description>## 相关原理
 
 详见[这里](https://paldb.cc/cn/Breeding_Farm#BreedingFarm)
 
 简单来说, 子帕鲁是两个父帕鲁繁殖力与1的和整除2, 特殊配方需要按照专有配方才可以繁殖
+
+剪枝的 bfs 即可完成
 
 ## 准备数据
 
