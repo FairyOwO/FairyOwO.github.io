@@ -1,5 +1,28 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0"><channel><title>FairyOwO 的 Blog</title><link>https://FairyOwO.github.io</link><description>记录一些琐事</description><copyright>FairyOwO 的 Blog</copyright><docs>http://www.rssboard.org/rss-specification</docs><generator>python-feedgen</generator><image><url>https://github.githubassets.com/favicons/favicon.svg</url><title>avatar</title><link>https://FairyOwO.github.io</link></image><lastBuildDate>Fri, 07 Feb 2025 03:00:31 +0000</lastBuildDate><managingEditor>FairyOwO 的 Blog</managingEditor><ttl>60</ttl><webMaster>FairyOwO 的 Blog</webMaster><item><title>幻兽帕鲁繁殖树搜索, 用于搜索从A帕鲁到B帕鲁的所有最短路径</title><link>https://FairyOwO.github.io/post/huan-shou-pa-lu-fan-zhi-shu-sou-suo-%2C%20-yong-yu-sou-suo-cong-A-pa-lu-dao-B-pa-lu-de-suo-you-zui-duan-lu-jing.html</link><description>## 相关原理
+<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0"><channel><title>FairyOwO 的 Blog</title><link>https://FairyOwO.github.io</link><description>记录一些琐事</description><copyright>FairyOwO 的 Blog</copyright><docs>http://www.rssboard.org/rss-specification</docs><generator>python-feedgen</generator><image><url>https://github.githubassets.com/favicons/favicon.svg</url><title>avatar</title><link>https://FairyOwO.github.io</link></image><lastBuildDate>Tue, 11 Feb 2025 07:47:52 +0000</lastBuildDate><managingEditor>FairyOwO 的 Blog</managingEditor><ttl>60</ttl><webMaster>FairyOwO 的 Blog</webMaster><item><title>基于 deepseek 的 r1 复现, 对传统强化学习的思考 (挖坑)</title><link>https://FairyOwO.github.io/post/ji-yu-%20deepseek%20-de-%20r1%20-fu-xian-%2C%20-dui-chuan-tong-qiang-hua-xue-xi-de-si-kao-%20%28-wa-keng-%29.html</link><description>&gt; 本文存在大量口齿不清
+
+deepseek-r1持续火热, 已有大量的复现训练过程
+
+1. [open-r1](https://github.com/huggingface/open-r1)
+2. [mini-deepseek-r1](https://github.com/philschmid/deep-learning-pytorch-huggingface/blob/main/training/mini-deepseek-r1-aha-grpo.ipynb)
+3. [open-r1-multimodal](https://github.com/EvolvingLMMs-Lab/open-r1-multimodal)
+4. [open-thoughts](https://github.com/EvolvingLMMs-Lab/open-r1-multimodal)
+5. [TinyZero](https://github.com/Jiayi-Pan/TinyZero)
+6. [simpleRL-reason](https://github.com/hkust-nlp/simpleRL-reason)
+7. [RAGEN](https://github.com/ZihanWang314/RAGEN)
+8. [unsloth r1-reasoning](https://unsloth.ai/blog/r1-reasoning)
+9. [oat-zero](https://github.com/sail-sg/oat-zero)
+10. [Logic-RL](https://github.com/Unakar/Logic-RL)
+
+具体效果可以看具体的仓库与其中的论文或者博客, 这里主要想法是, 是否可以使用这一训练范式, 来为传统强化学习任务, 带来可对人带来参考的思维过程
+
+例如, 希望给围棋使用此范式, 一个可能的 pipeline 是:
+1. sft, 为模型带入围棋知识
+    &gt; 我认为是必要的, 因为通用型大模型此类知识较少, 如果没有的话, 搜索解空间太大, 不容易搜索到正确的 token, 可以使用其他强力模型或者程序进行辅助构建
+2. 设定一个通用格式, 继续sft, 让模型输出正确格式(非必要, 在上述复现中, 无需特意sft也可以让模型输出正确格式)
+3. 跟从一个围棋模型进行 rule based RL
+    &gt; 让大模型进行一定的思考, 之后与围棋模型进行比对, 前几选 reward +1, 其他 reward -1
+。</description><guid isPermaLink="true">https://FairyOwO.github.io/post/ji-yu-%20deepseek%20-de-%20r1%20-fu-xian-%2C%20-dui-chuan-tong-qiang-hua-xue-xi-de-si-kao-%20%28-wa-keng-%29.html</guid><pubDate>Tue, 11 Feb 2025 07:47:26 +0000</pubDate></item><item><title>幻兽帕鲁繁殖树搜索, 用于搜索从A帕鲁到B帕鲁的所有最短路径</title><link>https://FairyOwO.github.io/post/huan-shou-pa-lu-fan-zhi-shu-sou-suo-%2C%20-yong-yu-sou-suo-cong-A-pa-lu-dao-B-pa-lu-de-suo-you-zui-duan-lu-jing.html</link><description>## 相关原理
 
 详见[这里](https://paldb.cc/cn/Breeding_Farm#BreedingFarm)
 
