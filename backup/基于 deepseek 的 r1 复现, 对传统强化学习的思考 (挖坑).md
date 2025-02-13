@@ -12,6 +12,7 @@ deepseek-r1持续火热, 已有大量的复现训练过程
 8. [unsloth r1-reasoning](https://unsloth.ai/blog/r1-reasoning)
 9. [oat-zero](https://github.com/sail-sg/oat-zero)
 10. [Logic-RL](https://github.com/Unakar/Logic-RL)
+11. [deepseek-r1-gsm8k](https://github.com/Mryangkaitong/deepseek-r1-gsm8k)
 
 具体效果可以看具体的仓库与其中的论文或者博客, 这里主要想法是, 是否可以使用这一训练范式, 来为传统强化学习任务, 带来可对人带来参考的思维过程
 
