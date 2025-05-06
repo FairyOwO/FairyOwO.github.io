@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0"><channel><title>FairyOwO 的 Blog</title><link>https://FairyOwO.github.io</link><description>记录一些琐事</description><copyright>FairyOwO 的 Blog</copyright><docs>http://www.rssboard.org/rss-specification</docs><generator>python-feedgen</generator><image><url>https://github.githubassets.com/favicons/favicon.svg</url><title>avatar</title><link>https://FairyOwO.github.io</link></image><lastBuildDate>Thu, 13 Feb 2025 01:41:11 +0000</lastBuildDate><managingEditor>FairyOwO 的 Blog</managingEditor><ttl>60</ttl><webMaster>FairyOwO 的 Blog</webMaster><item><title>基于 deepseek 的 r1 复现, 对传统强化学习的思考 (挖坑)</title><link>https://FairyOwO.github.io/post/ji-yu-%20deepseek%20-de-%20r1%20-fu-xian-%2C%20-dui-chuan-tong-qiang-hua-xue-xi-de-si-kao-%20%28-wa-keng-%29.html</link><description>&gt; 本文存在大量口齿不清
+<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0"><channel><title>FairyOwO 的 Blog</title><link>https://FairyOwO.github.io</link><description>记录一些琐事</description><copyright>FairyOwO 的 Blog</copyright><docs>http://www.rssboard.org/rss-specification</docs><generator>python-feedgen</generator><image><url>https://github.githubassets.com/favicons/favicon.svg</url><title>avatar</title><link>https://FairyOwO.github.io</link></image><lastBuildDate>Tue, 06 May 2025 06:07:46 +0000</lastBuildDate><managingEditor>FairyOwO 的 Blog</managingEditor><ttl>60</ttl><webMaster>FairyOwO 的 Blog</webMaster><item><title>基于 deepseek 的 r1 复现, 对传统强化学习的思考 (挖坑)</title><link>https://FairyOwO.github.io/post/ji-yu-%20deepseek%20-de-%20r1%20-fu-xian-%2C%20-dui-chuan-tong-qiang-hua-xue-xi-de-si-kao-%20%28-wa-keng-%29.html</link><description>&gt; 本文存在大量口齿不清
 
 deepseek-r1持续火热, 已有大量的复现训练过程
 
@@ -228,716 +228,716 @@ else:
 &lt;/p&gt;
 &lt;/details&gt; 
 
-&gt; 不知道为什么, 相对于帕鲁编年史的实现, 我的实现慢一点, 估计是他预计算好了。</description><guid isPermaLink="true">https://FairyOwO.github.io/post/huan-shou-pa-lu-fan-zhi-shu-sou-suo-%2C%20-yong-yu-sou-suo-cong-A-pa-lu-dao-B-pa-lu-de-suo-you-zui-duan-lu-jing.html</guid><pubDate>Wed, 05 Feb 2025 03:03:11 +0000</pubDate></item><item><title>2024 Advent of Code 复盘与答案 (二)</title><link>https://FairyOwO.github.io/post/2024%20Advent%20of%20Code%20-fu-pan-yu-da-an-%20%28-er-%29.html</link><description>[Advent of Code](https://adventofcode.com/)&#13;
-&#13;
-TODO, 每天更新一题一周前的题目&#13;
-&#13;
-使用 python 编写, 没有整理代码, 所以非常乱(变量乱取名, 没有注释, 逻辑奇怪, 并非最佳实现)&#13;
-可以使用 gpt 相关工具辅助查看&#13;
-&#13;
-&gt; 如果没有特意说明, 变量 a 统一存放所有原始字符串&#13;
-&#13;
-## 第九题&#13;
-&#13;
-[https://adventofcode.com/2024/day/9](https://adventofcode.com/2024/day/9)&#13;
-&#13;
-### 1题&#13;
-&#13;
-一个磁盘中的文件表示方法, 每两位数字各表示, x块文件, x块空的区域&#13;
-例如&#13;
-`12345`&#13;
-表示 一块文件 两块空文件 三块文件 四块空文件 五块文件&#13;
-每个文件从前往后的id为他们在磁盘中的顺序, 例如上述可以表示为&#13;
-`0..111....22222`&#13;
-&#13;
-希望从后往前的将文件塞入从前往后中空的地方&#13;
-&#13;
-例如&#13;
-```text&#13;
-0..111....22222&#13;
-02.111....2222.&#13;
-022111....222..&#13;
-0221112...22...&#13;
-02211122..2....&#13;
-022111222......&#13;
-```&#13;
-&#13;
-最后输出每个块位置*id号之和&#13;
-&#13;
-&lt;details&gt;&lt;summary&gt;Details&lt;/summary&gt;&#13;
-&lt;p&gt;&#13;
-&#13;
-```python&#13;
-# 构建&#13;
-t = []&#13;
-flag = True&#13;
-file_id = 0&#13;
-for i in list(a):&#13;
-    if flag:&#13;
-        for _ in range(int(i)):&#13;
-            t.append(file_id)&#13;
-        flag = False&#13;
-        file_id += 1&#13;
-    else:&#13;
-        for _ in range(int(i)):&#13;
-            t.append('.')&#13;
-        flag = True&#13;
-&#13;
-i = 0&#13;
-j = len(t) - 1&#13;
-&#13;
-while i &lt; j:&#13;
-    if t[i] == '.':&#13;
-        if t[j] != '.':&#13;
-            t[i], t[j] = t[j], t[i]&#13;
-        else:&#13;
-            i -= 1&#13;
-        j -= 1&#13;
-    i += 1&#13;
-&#13;
-ans = 0&#13;
-for i, j in enumerate(t):&#13;
-    if j != '.':&#13;
-        ans += i * j&#13;
-print(ans)&#13;
-&#13;
-```&#13;
-&#13;
-&lt;/p&gt;&#13;
-&lt;/details&gt; &#13;
-&#13;
-### 2题&#13;
-&#13;
-在一题的基础上, 修改从后往前放入从前往后空区域的方法, 从单个块移动转换为整个文件移动, 例如&#13;
-```text&#13;
-00...111...2...333.44.5555.6666.777.888899&#13;
-0099.111...2...333.44.5555.6666.777.8888..&#13;
-0099.1117772...333.44.5555.6666.....8888..&#13;
-0099.111777244.333....5555.6666.....8888..&#13;
-00992111777.44.333....5555.6666.....8888..&#13;
-```&#13;
-&#13;
-最后输出每个块位置*id号之和&#13;
-&#13;
-&lt;details&gt;&lt;summary&gt;Details&lt;/summary&gt;&#13;
-&lt;p&gt;&#13;
-&#13;
-```python&#13;
-# 构建&#13;
-t = []&#13;
-flag = True&#13;
-file_id = 0&#13;
-for i in list(a):&#13;
-    if flag:&#13;
-        for _ in range(int(i)):&#13;
-            t.append(file_id)&#13;
-        flag = False&#13;
-        file_id += 1&#13;
-    else:&#13;
-        for _ in range(int(i)):&#13;
-            t.append('.')&#13;
-        flag = True&#13;
-&#13;
-&#13;
-def get_file_size(file_id):&#13;
-    return t.count(file_id)&#13;
-&#13;
-for i in range(file_id - 1, -1, -1):&#13;
-    file_size = get_file_size(i)&#13;
-    file_index = t.index(i)&#13;
-    flag = False&#13;
-    size = 0&#13;
-    for id, j in enumerate(t):&#13;
-        if j == '.':&#13;
-            flag = True&#13;
-        else:&#13;
-            flag = False&#13;
-            size = 0&#13;
-        &#13;
-        if flag:&#13;
-            size += 1&#13;
-            if size == file_size:&#13;
-                # change位置&#13;
-                for k in range(id, id - file_size, -1):&#13;
-                    t[k], t[file_index] = t[file_index], t[k]&#13;
-                    file_index += 1&#13;
-&#13;
-                break&#13;
-        if id &gt;= file_index:&#13;
-            break&#13;
-&#13;
-ans = 0&#13;
-for i, j in enumerate(t):&#13;
-    if j != '.':&#13;
-        ans += i * j&#13;
-print(ans)&#13;
-&#13;
-```&#13;
-&#13;
-&lt;/p&gt;&#13;
-&lt;/details&gt; &#13;
-&#13;
-## 第十题&#13;
-&#13;
-[https://adventofcode.com/2024/day/10](https://adventofcode.com/2024/day/10)&#13;
-&#13;
-### 1题&#13;
-&#13;
-给定一幅由数字组成的地图, 从 0 开始, 一步一步上下左右移动到 9&#13;
-求一副图中, 每一个 0 能到达的 9 有多少个, 输出他们的和&#13;
-&#13;
-&lt;details&gt;&lt;summary&gt;Details&lt;/summary&gt;&#13;
-&lt;p&gt;&#13;
-&#13;
-```python&#13;
-aaa = []&#13;
-for i in a.splitlines():&#13;
-    aaa.append(list(map(int, list(i))))&#13;
-&#13;
-# print(aaa)&#13;
-&#13;
-# 获取所有 0 跟 9 的位置&#13;
-pos_0 = []&#13;
-pos_9 = []&#13;
-for i in range(len(aaa)):&#13;
-    for j in range(len(aaa[i])):&#13;
-        if aaa[i][j] == 0:&#13;
-            pos_0.append((i, j))&#13;
-        elif aaa[i][j] == 9:&#13;
-            pos_9.append((i, j))&#13;
-&#13;
-def get_allow_pos(pos):&#13;
-    for i in [(0, 1), (1, 0), (-1, 0), (0, -1)]:&#13;
-        next_step = (pos[0] + i[0], pos[1] + i[1])&#13;
-        if len(aaa) &gt; next_step[0] &gt;= 0 and len(aaa[0]) &gt; next_step[1] &gt;= 0:&#13;
-            if aaa[next_step[0]][next_step[1]] == aaa[pos[0]][pos[1]] + 1:&#13;
-                yield (pos[0] + i[0], pos[1] + i[1])&#13;
-&#13;
-&#13;
-def dfs(pos, pos_9):&#13;
-    if pos == pos_9:&#13;
-        return 1&#13;
-    aa = 0&#13;
-    for p in get_allow_pos(pos):&#13;
-        aa = dfs(p, pos_9)&#13;
-        if aa &gt; 0:&#13;
-            return aa&#13;
-    return aa&#13;
-&#13;
-ans = 0&#13;
-for i in pos_0:&#13;
-    for j in pos_9:&#13;
-        ans += dfs(i, j)&#13;
-&#13;
-print(ans)&#13;
-&#13;
-``` &#13;
-&#13;
-&lt;/p&gt;&#13;
-&lt;/details&gt; &#13;
-&#13;
-### 2题&#13;
-&#13;
-求 0 到每一个 9 有多少种不同的走法 (注意与第一题的区别, 第一题只要求到达, 第二题需要找到所有路线)&#13;
-&#13;
-&lt;details&gt;&lt;summary&gt;Details&lt;/summary&gt;&#13;
-&lt;p&gt;&#13;
-&#13;
-```python&#13;
-aaa = []&#13;
-for i in a.splitlines():&#13;
-    aaa.append(list(map(int, list(i))))&#13;
-&#13;
-# print(aaa)&#13;
-&#13;
-# 获取所有 0 跟 9 的位置&#13;
-pos_0 = []&#13;
-pos_9 = []&#13;
-for i in range(len(aaa)):&#13;
-    for j in range(len(aaa[i])):&#13;
-        if aaa[i][j] == 0:&#13;
-            pos_0.append((i, j))&#13;
-        elif aaa[i][j] == 9:&#13;
-            pos_9.append((i, j))&#13;
-&#13;
-def get_allow_pos(pos):&#13;
-    for i in [(0, 1), (1, 0), (-1, 0), (0, -1)]:&#13;
-        next_step = (pos[0] + i[0], pos[1] + i[1])&#13;
-        if len(aaa) &gt; next_step[0] &gt;= 0 and len(aaa[0]) &gt; next_step[1] &gt;= 0:&#13;
-            if aaa[next_step[0]][next_step[1]] == aaa[pos[0]][pos[1]] + 1:&#13;
-                yield (pos[0] + i[0], pos[1] + i[1])&#13;
-&#13;
-&#13;
-def dfs(pos, pos_9):&#13;
-    if pos == pos_9:&#13;
-        return 1&#13;
-    aa = 0&#13;
-    for p in get_allow_pos(pos):&#13;
-        aa = dfs(p, pos_9)&#13;
-        if aa &gt; 0:&#13;
-            return aa&#13;
-    return aa&#13;
-&#13;
-ans = 0&#13;
-for i in pos_0:&#13;
-    for j in pos_9:&#13;
-        ans += dfs(i, j)&#13;
-&#13;
-print(ans)&#13;
-&#13;
-```&#13;
-&#13;
-&lt;/p&gt;&#13;
-&lt;/details&gt; &#13;
-&#13;
-&gt; 在一题的基础上, dfs固定返回1 变成 dfs 返回上一次dfs + 1&#13;
-&#13;
-## 第十一题&#13;
-&#13;
-[https://adventofcode.com/2024/day/11](https://adventofcode.com/2024/day/11)&#13;
-&#13;
-## 1题&#13;
-&#13;
-给定一串数字, 根据以下规则变换&#13;
-&#13;
-1. 如果数字是0, 则数字是1&#13;
-2. 如果数字是偶数位, 则数字变成两个数字, 左半跟右半, 例如 1000 变成 10 跟 00, 不保留前导0, 00变成0&#13;
-3. 如果没有碰到前两条规则, 则数字=数字*2024&#13;
-&#13;
-顺序都会被保留 (但是这题没有用到, 而且会误导第二题)&#13;
-模拟上述规则25次&#13;
-&#13;
-&lt;details&gt;&lt;summary&gt;Details&lt;/summary&gt;&#13;
-&lt;p&gt;&#13;
-&#13;
-```python&#13;
-aa = a.split(' ')&#13;
-&#13;
-for _ in range(25):&#13;
-    i = 0&#13;
-    while i &lt; len(aa):&#13;
-        if aa[i] == '0':&#13;
-            aa[i] = '1'&#13;
-        elif len(aa[i]) % 2 == 0:&#13;
-            left = aa[i][:len(aa[i]) // 2]&#13;
-            left = str(int(left))&#13;
-            right = aa[i][len(aa[i]) // 2:]&#13;
-            right = str(int(right))&#13;
-            aa.insert(i+1, right)&#13;
-            aa[i] = left&#13;
-            i += 1&#13;
-        else:&#13;
-            aa[i] = str(int(aa[i]) * 2024)&#13;
-        &#13;
-        i += 1&#13;
-&#13;
-print(len(aa))&#13;
-```&#13;
-&#13;
-&lt;/p&gt;&#13;
-&lt;/details&gt; &#13;
-&#13;
-&gt; 模拟即可, 25次蛮少的可以直接出来&#13;
-&#13;
-### 2题&#13;
-&#13;
-在1题的基础上, 模拟75次&#13;
-&#13;
-&lt;details&gt;&lt;summary&gt;Details&lt;/summary&gt;&#13;
-&lt;p&gt;&#13;
-&#13;
-```python&#13;
-from collections import defaultdict&#13;
-from tqdm import tqdm&#13;
-aa = list(map(int, a.split(' ')))&#13;
-&#13;
-def get_length(num):&#13;
-    i = 0&#13;
-    while num &gt; 0:&#13;
-        num //= 10&#13;
-        i += 1&#13;
-    return i&#13;
-&#13;
-t = defaultdict(int)&#13;
-&#13;
-for i in aa:&#13;
-    t[i] += 1&#13;
-&#13;
-for _ in tqdm(range(75)):&#13;
-    tt = defaultdict(int)&#13;
-    for i, j in t.items():&#13;
-        length = get_length(i)&#13;
-        if i == 0:&#13;
-            tt[1] += j&#13;
-        elif length % 2 == 0:&#13;
-            tt[i // 10 ** (length // 2)] += j&#13;
-            tt[i % 10 ** (length // 2)] += j&#13;
-        else:&#13;
-            tt[i * 2024] += j&#13;
-        &#13;
-        t = tt&#13;
-&#13;
-print(sum(t.values()))&#13;
-```&#13;
-&#13;
-&lt;/p&gt;&#13;
-&lt;/details&gt; &#13;
-&#13;
-&gt; `tqdm` 是为了监控速度, 非必要引入&#13;
-&gt; 与第一题不同, 这题指数爆炸, 75次会超时, 因为答案不要求顺序, 所以可以用缓存&#13;
-&#13;
-## 第十二题&#13;
-&#13;
-[https://adventofcode.com/2024/day/12](https://adventofcode.com/2024/day/12)&#13;
-&#13;
-### 1题&#13;
-&#13;
-划分区域&#13;
-&#13;
-```text&#13;
-AAAA&#13;
-BBCD&#13;
-BBCC&#13;
-EEEC&#13;
-```&#13;
-&#13;
-划分成&#13;
-&#13;
-```text&#13;
-+-+-+-+-+&#13;
-|A A A A|&#13;
-+-+-+-+-+     +-+&#13;
-              |D|&#13;
-+-+-+   +-+   +-+&#13;
-|B B|   |C|&#13;
-+   +   + +-+&#13;
-|B B|   |C C|&#13;
-+-+-+   +-+ +&#13;
-          |C|&#13;
-+-+-+-+   +-+&#13;
-|E E E|&#13;
-+-+-+-+&#13;
-```&#13;
-&#13;
-分为五个区域, &#13;
-计算每个区域的周长*面积之和&#13;
-&#13;
-&lt;details&gt;&lt;summary&gt;Details&lt;/summary&gt;&#13;
-&lt;p&gt;&#13;
-&#13;
-```python&#13;
-&#13;
-aa = []&#13;
-for i in a.splitlines():&#13;
-    aa.append(list(i))&#13;
-&#13;
-def get_perimeter(arr):&#13;
-    perimeter = 0&#13;
-    for i in range(len(arr)):&#13;
-        for j in range(len(arr[0])):&#13;
-            if arr[i][j] == 1:&#13;
-                perimeter += 4&#13;
-                if i &gt; 0 and arr[i - 1][j] == 1:&#13;
-                    perimeter -= 1&#13;
-                if j &gt; 0 and arr[i][j - 1] == 1:&#13;
-                    perimeter -= 1&#13;
-                if i &lt; len(arr) - 1 and arr[i + 1][j] == 1:&#13;
-                    perimeter -= 1&#13;
-                if j &lt; len(arr[0]) - 1 and arr[i][j + 1] == 1:&#13;
-                    perimeter -= 1&#13;
-    &#13;
-    return perimeter&#13;
-&#13;
-def get_area(arr):&#13;
-    area = 0&#13;
-    for i in range(len(arr)):&#13;
-        for j in range(len(arr[0])):&#13;
-            if arr[i][j] == 1:&#13;
-                area += 1&#13;
-    return area&#13;
-&#13;
-def get_allow_pos(pos):&#13;
-    allow_pos = [(1, 0), (0, 1), (-1, 0), (0, -1)]&#13;
-    char = aa[pos[0]][pos[1]]&#13;
-    for i in allow_pos:&#13;
-        next_pos = (pos[0] + i[0], pos[1] + i[1])&#13;
-        if len(aa) &gt; next_pos[0] &gt;= 0 and len(aa[0]) &gt; next_pos[1] &gt;= 0:&#13;
-            if aa[next_pos[0]][next_pos[1]] == char:&#13;
-                yield next_pos&#13;
-&#13;
-&#13;
-ans = 0&#13;
-&#13;
-already_visited = np.zeros((len(aa), len(aa[0])))&#13;
-for i in range(len(aa)):&#13;
-    for j in range(len(aa[i])):&#13;
-        if already_visited[i][j] == 0:&#13;
-            # print(aa[i][j])&#13;
-            array_ = np.zeros((len(aa), len(aa[0])))&#13;
-            already_visited[i][j] = 1&#13;
-            array_[i][j] = 1&#13;
-            def dfs(pos):&#13;
-                for next_pos in get_allow_pos(pos):&#13;
-                    if already_visited[next_pos[0]][next_pos[1]] == 0:&#13;
-                        already_visited[next_pos[0]][next_pos[1]] = 1&#13;
-                        array_[next_pos[0]][next_pos[1]] = 1&#13;
-                        dfs(next_pos)&#13;
-            &#13;
-            dfs((i, j))&#13;
-            area = get_area(array_)&#13;
-            perimeter = get_perimeter(array_)&#13;
-            ans += area * perimeter&#13;
-        &#13;
-print(ans)&#13;
-&#13;
-```&#13;
-&#13;
-&lt;/p&gt;&#13;
-&lt;/details&gt; &#13;
-&#13;
-&gt; 加一个正方形边长+4, 如果旁边每有一个正方形就-1的边长&#13;
-&#13;
-### 2题&#13;
-&#13;
-1题的边长变成边的数量&#13;
-&#13;
-&lt;details&gt;&lt;summary&gt;Details&lt;/summary&gt;&#13;
-&lt;p&gt;&#13;
-&#13;
-```python&#13;
-&#13;
-aa = []&#13;
-for i in a.splitlines():&#13;
-    aa.append(list(i))&#13;
-&#13;
-&#13;
-&#13;
-def get_area(arr):&#13;
-    area = 0&#13;
-    for i in range(len(arr)):&#13;
-        for j in range(len(arr[0])):&#13;
-            if arr[i][j] == 1:&#13;
-                area += 1&#13;
-    return area&#13;
-&#13;
-def get_perimeter(region):&#13;
-        &#13;
-    max_x = len(region) - 1&#13;
-    max_y = len(region[0]) - 1&#13;
-    min_x = min_y = 0&#13;
-    &#13;
-    def state(x, y):&#13;
-        if x &lt; 0 or x &gt; max_x or y &lt; 0 or y &gt; max_y:&#13;
-            return False&#13;
-        return region[x][y]&#13;
-    &#13;
-    perimeter = 0&#13;
-    &#13;
-    # 垂直方向扫描&#13;
-    for i in range(max_x + 1):&#13;
-        st = state(i, -1)&#13;
-        for j in range(max_y + 2):&#13;
-            if st != state(i, j):&#13;
-                if st != state(i-1, j-1) or st == state(i-1, j):&#13;
-                    perimeter += 1&#13;
-                if st != state(i+1, j-1) or st == state(i+1, j):&#13;
-                    perimeter += 1&#13;
-                st = not st&#13;
-    &#13;
-    # 水平方向扫描&#13;
-    for j in range(max_y + 1):&#13;
-        st = state(-1, j)&#13;
-        for i in range(max_x + 2):&#13;
-            if st != state(i, j):&#13;
-                if st != state(i-1, j-1) or st == state(i, j-1):&#13;
-                    perimeter += 1&#13;
-                if st != state(i-1, j+1) or st == state(i, j+1):&#13;
-                    perimeter += 1&#13;
-                st = not st&#13;
-    &#13;
-    return perimeter // 2&#13;
-&#13;
-def get_allow_pos(pos):&#13;
-    allow_pos = [(1, 0), (0, 1), (-1, 0), (0, -1)]&#13;
-    char = aa[pos[0]][pos[1]]&#13;
-    for i in allow_pos:&#13;
-        next_pos = (pos[0] + i[0], pos[1] + i[1])&#13;
-        if len(aa) &gt; next_pos[0] &gt;= 0 and len(aa[0]) &gt; next_pos[1] &gt;= 0:&#13;
-            if aa[next_pos[0]][next_pos[1]] == char:&#13;
-                yield next_pos&#13;
-&#13;
-ans = 0&#13;
-&#13;
-already_visited = np.zeros((len(aa), len(aa[0])))&#13;
-for i in range(len(aa)):&#13;
-    for j in range(len(aa[i])):&#13;
-        if already_visited[i][j] == 0:&#13;
-            # print(aa[i][j])&#13;
-            array_ = np.zeros((len(aa), len(aa[0])))&#13;
-            already_visited[i][j] = 1&#13;
-            array_[i][j] = 1&#13;
-            def dfs(pos):&#13;
-                for next_pos in get_allow_pos(pos):&#13;
-                    if already_visited[next_pos[0]][next_pos[1]] == 0:&#13;
-                        already_visited[next_pos[0]][next_pos[1]] = 1&#13;
-                        array_[next_pos[0]][next_pos[1]] = 1&#13;
-                        &#13;
-                        dfs(next_pos)&#13;
-            &#13;
-            dfs((i, j))&#13;
-            area = get_area(array_)&#13;
-            perimeter = get_perimeter(array_)&#13;
-            # print(perimeter)&#13;
-            ans += area * perimeter&#13;
-        &#13;
-print(ans)&#13;
-&#13;
-```&#13;
-&#13;
-&lt;/p&gt;&#13;
-&lt;/details&gt; &#13;
-&#13;
-&gt; 一条边有两个角, 找到所有角之后整除2即可&#13;
-&#13;
-## 第十三题&#13;
-&#13;
-[https://adventofcode.com/2024/day/13](https://adventofcode.com/2024/day/13)&#13;
-&#13;
-### 1题&#13;
-&#13;
-按下按钮A或B, 移动老虎爪, 让老虎爪移动到指定的位置, 按下A需要三块钱, B需要一块钱&#13;
-有可能无解(无法移动到指定位置)&#13;
-&#13;
-&lt;details&gt;&lt;summary&gt;Details&lt;/summary&gt;&#13;
-&lt;p&gt;&#13;
-&#13;
-```python&#13;
-&#13;
-aa = a.split('\n\n')&#13;
-from sympy import *&#13;
-&#13;
-ans = 0&#13;
-for i in aa:&#13;
-    inputs = i.split('\n')&#13;
-    # 提取输入&#13;
-    ax, ay = inputs[0].split(': ')[1].split(', ')&#13;
-    bx, by = inputs[1].split(': ')[1].split(', ')&#13;
-    t1, t2 = inputs[2].split(': ')[1].split(', ')&#13;
-    ax, ay = int(ax[2:]), int(ay[2:])&#13;
-    bx, by = int(bx[2:]), int(by[2:])&#13;
-    t1, t2 = int(t1[2:]), int(t2[2:])&#13;
-    m = Symbol('m')&#13;
-    n = Symbol('n')&#13;
-    temp = solve([m * ax + n * bx - t1, m * ay + n * by - t2], [m, n])&#13;
-    # print(temp)&#13;
-    if temp[m].is_Integer and temp[n].is_Integer:&#13;
-        ans += int(temp[m]) * 3 + int(temp[n])&#13;
-&#13;
-print(ans)&#13;
-&#13;
-```&#13;
-&#13;
-&lt;/p&gt;&#13;
-&lt;/details&gt; &#13;
-&gt; 二元一次方程组的整数解&#13;
-&#13;
-### 2题&#13;
-&#13;
-在一题的基础上, X轴和Y轴上都高出10000000000000(大数)&#13;
-&#13;
-&lt;details&gt;&lt;summary&gt;Details&lt;/summary&gt;&#13;
-&lt;p&gt;&#13;
-&#13;
-```python&#13;
-&#13;
-aa = a.split('\n\n')&#13;
-from sympy import *&#13;
-&#13;
-ans = 0&#13;
-for i in aa:&#13;
-    inputs = i.split('\n')&#13;
-    # 提取输入&#13;
-    ax, ay = inputs[0].split(': ')[1].split(', ')&#13;
-    bx, by = inputs[1].split(': ')[1].split(', ')&#13;
-    t1, t2 = inputs[2].split(': ')[1].split(', ')&#13;
-    ax, ay = int(ax[2:]), int(ay[2:])&#13;
-    bx, by = int(bx[2:]), int(by[2:])&#13;
-    t1, t2 = int(t1[2:]) + 10000000000000, int(t2[2:]) + 10000000000000&#13;
-    m = Symbol('m')&#13;
-    n = Symbol('n')&#13;
-    temp = solve([m * ax + n * bx - t1, m * ay + n * by - t2], [m, n])&#13;
-    # print(temp)&#13;
-    if temp[m].is_Integer and temp[n].is_Integer:&#13;
-        ans += int(temp[m]) * 3 + int(temp[n])&#13;
-&#13;
-print(ans)&#13;
-```&#13;
-&#13;
-&lt;/p&gt;&#13;
-&lt;/details&gt; &#13;
-&#13;
-&gt; python无限精度整数, 不需要额外处理&#13;
-&#13;
-## 第十四题&#13;
-&#13;
-[https://adventofcode.com/2024/day/14](https://adventofcode.com/2024/day/14)&#13;
-&#13;
-## 1题&#13;
-&#13;
-给定点坐标, 点的移动速度, 大小固定的图&#13;
-&#13;
-求 四个象限内点的数量 之积&#13;
-象限是去掉最中间一列与一行使得图分成四个区域&#13;
-点到边界会传送到另一侧 (mod)&#13;
-&#13;
-&lt;details&gt;&lt;summary&gt;Details&lt;/summary&gt;&#13;
-&lt;p&gt;&#13;
-&#13;
-```python&#13;
-&#13;
-def main():&#13;
-    lines = a.splitlines()&#13;
-&#13;
-    robots = []&#13;
-    for line in lines:&#13;
-        p_part, v_part = line.strip().split()&#13;
-        p_x, p_y = map(int, p_part[2:].split(','))&#13;
-        v_x, v_y = map(int, v_part[2:].split(','))&#13;
-        robots.append({'p': (p_x, p_y), 'v': (v_x, v_y)})&#13;
-&#13;
-    positions = {}&#13;
-    for robot in robots:&#13;
-        x = (robot['p'][0] + robot['v'][0] * 100) % 101&#13;
-        y = (robot['p'][1] + robot['v'][1] * 100) % 103&#13;
-        positions[(x, y)] = positions.get((x, y), 0) + 1&#13;
-&#13;
-    q1 = q2 = q3 = q4 = 0&#13;
-    for (x, y), count in positions.items():&#13;
-        if x &lt; 50 and y &lt; 51:&#13;
-            q1 += count&#13;
-        elif x &gt; 50 and y &lt; 51:&#13;
-            q2 += count&#13;
-        elif x &gt; 50 and y &gt; 51:&#13;
-            q3 += count&#13;
-        elif x &lt; 50 and y &gt; 51:&#13;
-            q4 += count&#13;
-&#13;
-    safety_factor = q1 * q2 * q3 * q4&#13;
-    print(safety_factor)&#13;
-&#13;
-if __name__ == '__main__':&#13;
-    main()&#13;
-&#13;
-```&#13;
-&#13;
-&lt;/p&gt;&#13;
-&lt;/details&gt; &#13;
-&#13;
-### 2题&#13;
-&#13;
-直接贴原题, 因为原题是阅读理解&#13;
-&#13;
-During the bathroom break, someone notices that these robots seem awfully similar to ones built and used at the North Pole. If they're the same type of robots, they should have a hard-coded Easter egg: very rarely, most of the robots should arrange themselves into a picture of a Christmas tree.&#13;
+&gt; 不知道为什么, 相对于帕鲁编年史的实现, 我的实现慢一点, 估计是他预计算好了。</description><guid isPermaLink="true">https://FairyOwO.github.io/post/huan-shou-pa-lu-fan-zhi-shu-sou-suo-%2C%20-yong-yu-sou-suo-cong-A-pa-lu-dao-B-pa-lu-de-suo-you-zui-duan-lu-jing.html</guid><pubDate>Wed, 05 Feb 2025 03:03:11 +0000</pubDate></item><item><title>2024 Advent of Code 复盘与答案 (二)</title><link>https://FairyOwO.github.io/post/2024%20Advent%20of%20Code%20-fu-pan-yu-da-an-%20%28-er-%29.html</link><description>[Advent of Code](https://adventofcode.com/)
+
+TODO, 每天更新一题一周前的题目
+
+使用 python 编写, 没有整理代码, 所以非常乱(变量乱取名, 没有注释, 逻辑奇怪, 并非最佳实现)
+可以使用 gpt 相关工具辅助查看
+
+&gt; 如果没有特意说明, 变量 a 统一存放所有原始字符串
+
+## 第九题
+
+[https://adventofcode.com/2024/day/9](https://adventofcode.com/2024/day/9)
+
+### 1题
+
+一个磁盘中的文件表示方法, 每两位数字各表示, x块文件, x块空的区域
+例如
+`12345`
+表示 一块文件 两块空文件 三块文件 四块空文件 五块文件
+每个文件从前往后的id为他们在磁盘中的顺序, 例如上述可以表示为
+`0..111....22222`
+
+希望从后往前的将文件塞入从前往后中空的地方
+
+例如
+```text
+0..111....22222
+02.111....2222.
+022111....222..
+0221112...22...
+02211122..2....
+022111222......
+```
+
+最后输出每个块位置*id号之和
+
+&lt;details&gt;&lt;summary&gt;Details&lt;/summary&gt;
+&lt;p&gt;
+
+```python
+# 构建
+t = []
+flag = True
+file_id = 0
+for i in list(a):
+    if flag:
+        for _ in range(int(i)):
+            t.append(file_id)
+        flag = False
+        file_id += 1
+    else:
+        for _ in range(int(i)):
+            t.append('.')
+        flag = True
+
+i = 0
+j = len(t) - 1
+
+while i &lt; j:
+    if t[i] == '.':
+        if t[j] != '.':
+            t[i], t[j] = t[j], t[i]
+        else:
+            i -= 1
+        j -= 1
+    i += 1
+
+ans = 0
+for i, j in enumerate(t):
+    if j != '.':
+        ans += i * j
+print(ans)
+
+```
+
+&lt;/p&gt;
+&lt;/details&gt; 
+
+### 2题
+
+在一题的基础上, 修改从后往前放入从前往后空区域的方法, 从单个块移动转换为整个文件移动, 例如
+```text
+00...111...2...333.44.5555.6666.777.888899
+0099.111...2...333.44.5555.6666.777.8888..
+0099.1117772...333.44.5555.6666.....8888..
+0099.111777244.333....5555.6666.....8888..
+00992111777.44.333....5555.6666.....8888..
+```
+
+最后输出每个块位置*id号之和
+
+&lt;details&gt;&lt;summary&gt;Details&lt;/summary&gt;
+&lt;p&gt;
+
+```python
+# 构建
+t = []
+flag = True
+file_id = 0
+for i in list(a):
+    if flag:
+        for _ in range(int(i)):
+            t.append(file_id)
+        flag = False
+        file_id += 1
+    else:
+        for _ in range(int(i)):
+            t.append('.')
+        flag = True
+
+
+def get_file_size(file_id):
+    return t.count(file_id)
+
+for i in range(file_id - 1, -1, -1):
+    file_size = get_file_size(i)
+    file_index = t.index(i)
+    flag = False
+    size = 0
+    for id, j in enumerate(t):
+        if j == '.':
+            flag = True
+        else:
+            flag = False
+            size = 0
+        
+        if flag:
+            size += 1
+            if size == file_size:
+                # change位置
+                for k in range(id, id - file_size, -1):
+                    t[k], t[file_index] = t[file_index], t[k]
+                    file_index += 1
+
+                break
+        if id &gt;= file_index:
+            break
+
+ans = 0
+for i, j in enumerate(t):
+    if j != '.':
+        ans += i * j
+print(ans)
+
+```
+
+&lt;/p&gt;
+&lt;/details&gt; 
+
+## 第十题
+
+[https://adventofcode.com/2024/day/10](https://adventofcode.com/2024/day/10)
+
+### 1题
+
+给定一幅由数字组成的地图, 从 0 开始, 一步一步上下左右移动到 9
+求一副图中, 每一个 0 能到达的 9 有多少个, 输出他们的和
+
+&lt;details&gt;&lt;summary&gt;Details&lt;/summary&gt;
+&lt;p&gt;
+
+```python
+aaa = []
+for i in a.splitlines():
+    aaa.append(list(map(int, list(i))))
+
+# print(aaa)
+
+# 获取所有 0 跟 9 的位置
+pos_0 = []
+pos_9 = []
+for i in range(len(aaa)):
+    for j in range(len(aaa[i])):
+        if aaa[i][j] == 0:
+            pos_0.append((i, j))
+        elif aaa[i][j] == 9:
+            pos_9.append((i, j))
+
+def get_allow_pos(pos):
+    for i in [(0, 1), (1, 0), (-1, 0), (0, -1)]:
+        next_step = (pos[0] + i[0], pos[1] + i[1])
+        if len(aaa) &gt; next_step[0] &gt;= 0 and len(aaa[0]) &gt; next_step[1] &gt;= 0:
+            if aaa[next_step[0]][next_step[1]] == aaa[pos[0]][pos[1]] + 1:
+                yield (pos[0] + i[0], pos[1] + i[1])
+
+
+def dfs(pos, pos_9):
+    if pos == pos_9:
+        return 1
+    aa = 0
+    for p in get_allow_pos(pos):
+        aa = dfs(p, pos_9)
+        if aa &gt; 0:
+            return aa
+    return aa
+
+ans = 0
+for i in pos_0:
+    for j in pos_9:
+        ans += dfs(i, j)
+
+print(ans)
+
+``` 
+
+&lt;/p&gt;
+&lt;/details&gt; 
+
+### 2题
+
+求 0 到每一个 9 有多少种不同的走法 (注意与第一题的区别, 第一题只要求到达, 第二题需要找到所有路线)
+
+&lt;details&gt;&lt;summary&gt;Details&lt;/summary&gt;
+&lt;p&gt;
+
+```python
+aaa = []
+for i in a.splitlines():
+    aaa.append(list(map(int, list(i))))
+
+# print(aaa)
+
+# 获取所有 0 跟 9 的位置
+pos_0 = []
+pos_9 = []
+for i in range(len(aaa)):
+    for j in range(len(aaa[i])):
+        if aaa[i][j] == 0:
+            pos_0.append((i, j))
+        elif aaa[i][j] == 9:
+            pos_9.append((i, j))
+
+def get_allow_pos(pos):
+    for i in [(0, 1), (1, 0), (-1, 0), (0, -1)]:
+        next_step = (pos[0] + i[0], pos[1] + i[1])
+        if len(aaa) &gt; next_step[0] &gt;= 0 and len(aaa[0]) &gt; next_step[1] &gt;= 0:
+            if aaa[next_step[0]][next_step[1]] == aaa[pos[0]][pos[1]] + 1:
+                yield (pos[0] + i[0], pos[1] + i[1])
+
+
+def dfs(pos, pos_9):
+    if pos == pos_9:
+        return 1
+    aa = 0
+    for p in get_allow_pos(pos):
+        aa = dfs(p, pos_9)
+        if aa &gt; 0:
+            return aa
+    return aa
+
+ans = 0
+for i in pos_0:
+    for j in pos_9:
+        ans += dfs(i, j)
+
+print(ans)
+
+```
+
+&lt;/p&gt;
+&lt;/details&gt; 
+
+&gt; 在一题的基础上, dfs固定返回1 变成 dfs 返回上一次dfs + 1
+
+## 第十一题
+
+[https://adventofcode.com/2024/day/11](https://adventofcode.com/2024/day/11)
+
+### 1题
+
+给定一串数字, 根据以下规则变换
+
+1. 如果数字是0, 则数字是1
+2. 如果数字是偶数位, 则数字变成两个数字, 左半跟右半, 例如 1000 变成 10 跟 00, 不保留前导0, 00变成0
+3. 如果没有碰到前两条规则, 则数字=数字*2024
+
+顺序都会被保留 (但是这题没有用到, 而且会误导第二题)
+模拟上述规则25次
+
+&lt;details&gt;&lt;summary&gt;Details&lt;/summary&gt;
+&lt;p&gt;
+
+```python
+aa = a.split(' ')
+
+for _ in range(25):
+    i = 0
+    while i &lt; len(aa):
+        if aa[i] == '0':
+            aa[i] = '1'
+        elif len(aa[i]) % 2 == 0:
+            left = aa[i][:len(aa[i]) // 2]
+            left = str(int(left))
+            right = aa[i][len(aa[i]) // 2:]
+            right = str(int(right))
+            aa.insert(i+1, right)
+            aa[i] = left
+            i += 1
+        else:
+            aa[i] = str(int(aa[i]) * 2024)
+        
+        i += 1
+
+print(len(aa))
+```
+
+&lt;/p&gt;
+&lt;/details&gt; 
+
+&gt; 模拟即可, 25次蛮少的可以直接出来
+
+### 2题
+
+在1题的基础上, 模拟75次
+
+&lt;details&gt;&lt;summary&gt;Details&lt;/summary&gt;
+&lt;p&gt;
+
+```python
+from collections import defaultdict
+from tqdm import tqdm
+aa = list(map(int, a.split(' ')))
+
+def get_length(num):
+    i = 0
+    while num &gt; 0:
+        num //= 10
+        i += 1
+    return i
+
+t = defaultdict(int)
+
+for i in aa:
+    t[i] += 1
+
+for _ in tqdm(range(75)):
+    tt = defaultdict(int)
+    for i, j in t.items():
+        length = get_length(i)
+        if i == 0:
+            tt[1] += j
+        elif length % 2 == 0:
+            tt[i // 10 ** (length // 2)] += j
+            tt[i % 10 ** (length // 2)] += j
+        else:
+            tt[i * 2024] += j
+        
+        t = tt
+
+print(sum(t.values()))
+```
+
+&lt;/p&gt;
+&lt;/details&gt; 
+
+&gt; `tqdm` 是为了监控速度, 非必要引入
+&gt; 与第一题不同, 这题指数爆炸, 75次会超时, 因为答案不要求顺序, 所以可以用缓存
+
+## 第十二题
+
+[https://adventofcode.com/2024/day/12](https://adventofcode.com/2024/day/12)
+
+### 1题
+
+划分区域
+
+```text
+AAAA
+BBCD
+BBCC
+EEEC
+```
+
+划分成
+
+```text
++-+-+-+-+
+|A A A A|
++-+-+-+-+     +-+
+              |D|
++-+-+   +-+   +-+
+|B B|   |C|
++   +   + +-+
+|B B|   |C C|
++-+-+   +-+ +
+          |C|
++-+-+-+   +-+
+|E E E|
++-+-+-+
+```
+
+分为五个区域, 
+计算每个区域的周长*面积之和
+
+&lt;details&gt;&lt;summary&gt;Details&lt;/summary&gt;
+&lt;p&gt;
+
+```python
+
+aa = []
+for i in a.splitlines():
+    aa.append(list(i))
+
+def get_perimeter(arr):
+    perimeter = 0
+    for i in range(len(arr)):
+        for j in range(len(arr[0])):
+            if arr[i][j] == 1:
+                perimeter += 4
+                if i &gt; 0 and arr[i - 1][j] == 1:
+                    perimeter -= 1
+                if j &gt; 0 and arr[i][j - 1] == 1:
+                    perimeter -= 1
+                if i &lt; len(arr) - 1 and arr[i + 1][j] == 1:
+                    perimeter -= 1
+                if j &lt; len(arr[0]) - 1 and arr[i][j + 1] == 1:
+                    perimeter -= 1
+    
+    return perimeter
+
+def get_area(arr):
+    area = 0
+    for i in range(len(arr)):
+        for j in range(len(arr[0])):
+            if arr[i][j] == 1:
+                area += 1
+    return area
+
+def get_allow_pos(pos):
+    allow_pos = [(1, 0), (0, 1), (-1, 0), (0, -1)]
+    char = aa[pos[0]][pos[1]]
+    for i in allow_pos:
+        next_pos = (pos[0] + i[0], pos[1] + i[1])
+        if len(aa) &gt; next_pos[0] &gt;= 0 and len(aa[0]) &gt; next_pos[1] &gt;= 0:
+            if aa[next_pos[0]][next_pos[1]] == char:
+                yield next_pos
+
+
+ans = 0
+
+already_visited = np.zeros((len(aa), len(aa[0])))
+for i in range(len(aa)):
+    for j in range(len(aa[i])):
+        if already_visited[i][j] == 0:
+            # print(aa[i][j])
+            array_ = np.zeros((len(aa), len(aa[0])))
+            already_visited[i][j] = 1
+            array_[i][j] = 1
+            def dfs(pos):
+                for next_pos in get_allow_pos(pos):
+                    if already_visited[next_pos[0]][next_pos[1]] == 0:
+                        already_visited[next_pos[0]][next_pos[1]] = 1
+                        array_[next_pos[0]][next_pos[1]] = 1
+                        dfs(next_pos)
+            
+            dfs((i, j))
+            area = get_area(array_)
+            perimeter = get_perimeter(array_)
+            ans += area * perimeter
+        
+print(ans)
+
+```
+
+&lt;/p&gt;
+&lt;/details&gt; 
+
+&gt; 加一个正方形边长+4, 如果旁边每有一个正方形就-1的边长
+
+### 2题
+
+1题的边长变成边的数量
+
+&lt;details&gt;&lt;summary&gt;Details&lt;/summary&gt;
+&lt;p&gt;
+
+```python
+
+aa = []
+for i in a.splitlines():
+    aa.append(list(i))
+
+
+
+def get_area(arr):
+    area = 0
+    for i in range(len(arr)):
+        for j in range(len(arr[0])):
+            if arr[i][j] == 1:
+                area += 1
+    return area
+
+def get_perimeter(region):
+        
+    max_x = len(region) - 1
+    max_y = len(region[0]) - 1
+    min_x = min_y = 0
+    
+    def state(x, y):
+        if x &lt; 0 or x &gt; max_x or y &lt; 0 or y &gt; max_y:
+            return False
+        return region[x][y]
+    
+    perimeter = 0
+    
+    # 垂直方向扫描
+    for i in range(max_x + 1):
+        st = state(i, -1)
+        for j in range(max_y + 2):
+            if st != state(i, j):
+                if st != state(i-1, j-1) or st == state(i-1, j):
+                    perimeter += 1
+                if st != state(i+1, j-1) or st == state(i+1, j):
+                    perimeter += 1
+                st = not st
+    
+    # 水平方向扫描
+    for j in range(max_y + 1):
+        st = state(-1, j)
+        for i in range(max_x + 2):
+            if st != state(i, j):
+                if st != state(i-1, j-1) or st == state(i, j-1):
+                    perimeter += 1
+                if st != state(i-1, j+1) or st == state(i, j+1):
+                    perimeter += 1
+                st = not st
+    
+    return perimeter // 2
+
+def get_allow_pos(pos):
+    allow_pos = [(1, 0), (0, 1), (-1, 0), (0, -1)]
+    char = aa[pos[0]][pos[1]]
+    for i in allow_pos:
+        next_pos = (pos[0] + i[0], pos[1] + i[1])
+        if len(aa) &gt; next_pos[0] &gt;= 0 and len(aa[0]) &gt; next_pos[1] &gt;= 0:
+            if aa[next_pos[0]][next_pos[1]] == char:
+                yield next_pos
+
+ans = 0
+
+already_visited = np.zeros((len(aa), len(aa[0])))
+for i in range(len(aa)):
+    for j in range(len(aa[i])):
+        if already_visited[i][j] == 0:
+            # print(aa[i][j])
+            array_ = np.zeros((len(aa), len(aa[0])))
+            already_visited[i][j] = 1
+            array_[i][j] = 1
+            def dfs(pos):
+                for next_pos in get_allow_pos(pos):
+                    if already_visited[next_pos[0]][next_pos[1]] == 0:
+                        already_visited[next_pos[0]][next_pos[1]] = 1
+                        array_[next_pos[0]][next_pos[1]] = 1
+                        
+                        dfs(next_pos)
+            
+            dfs((i, j))
+            area = get_area(array_)
+            perimeter = get_perimeter(array_)
+            # print(perimeter)
+            ans += area * perimeter
+        
+print(ans)
+
+```
+
+&lt;/p&gt;
+&lt;/details&gt; 
+
+&gt; 一条边有两个角, 找到所有角之后整除2即可
+
+## 第十三题
+
+[https://adventofcode.com/2024/day/13](https://adventofcode.com/2024/day/13)
+
+### 1题
+
+按下按钮A或B, 移动老虎爪, 让老虎爪移动到指定的位置, 按下A需要三块钱, B需要一块钱
+有可能无解(无法移动到指定位置)
+
+&lt;details&gt;&lt;summary&gt;Details&lt;/summary&gt;
+&lt;p&gt;
+
+```python
+
+aa = a.split('\n\n')
+from sympy import *
+
+ans = 0
+for i in aa:
+    inputs = i.split('\n')
+    # 提取输入
+    ax, ay = inputs[0].split(': ')[1].split(', ')
+    bx, by = inputs[1].split(': ')[1].split(', ')
+    t1, t2 = inputs[2].split(': ')[1].split(', ')
+    ax, ay = int(ax[2:]), int(ay[2:])
+    bx, by = int(bx[2:]), int(by[2:])
+    t1, t2 = int(t1[2:]), int(t2[2:])
+    m = Symbol('m')
+    n = Symbol('n')
+    temp = solve([m * ax + n * bx - t1, m * ay + n * by - t2], [m, n])
+    # print(temp)
+    if temp[m].is_Integer and temp[n].is_Integer:
+        ans += int(temp[m]) * 3 + int(temp[n])
+
+print(ans)
+
+```
+
+&lt;/p&gt;
+&lt;/details&gt; 
+&gt; 二元一次方程组的整数解
+
+### 2题
+
+在一题的基础上, X轴和Y轴上都高出10000000000000(大数)
+
+&lt;details&gt;&lt;summary&gt;Details&lt;/summary&gt;
+&lt;p&gt;
+
+```python
+
+aa = a.split('\n\n')
+from sympy import *
+
+ans = 0
+for i in aa:
+    inputs = i.split('\n')
+    # 提取输入
+    ax, ay = inputs[0].split(': ')[1].split(', ')
+    bx, by = inputs[1].split(': ')[1].split(', ')
+    t1, t2 = inputs[2].split(': ')[1].split(', ')
+    ax, ay = int(ax[2:]), int(ay[2:])
+    bx, by = int(bx[2:]), int(by[2:])
+    t1, t2 = int(t1[2:]) + 10000000000000, int(t2[2:]) + 10000000000000
+    m = Symbol('m')
+    n = Symbol('n')
+    temp = solve([m * ax + n * bx - t1, m * ay + n * by - t2], [m, n])
+    # print(temp)
+    if temp[m].is_Integer and temp[n].is_Integer:
+        ans += int(temp[m]) * 3 + int(temp[n])
+
+print(ans)
+```
+
+&lt;/p&gt;
+&lt;/details&gt; 
+
+&gt; python无限精度整数, 不需要额外处理
+
+## 第十四题
+
+[https://adventofcode.com/2024/day/14](https://adventofcode.com/2024/day/14)
+
+### 1题
+
+给定点坐标, 点的移动速度, 大小固定的图
+
+求 四个象限内点的数量 之积
+象限是去掉最中间一列与一行使得图分成四个区域
+点到边界会传送到另一侧 (mod)
+
+&lt;details&gt;&lt;summary&gt;Details&lt;/summary&gt;
+&lt;p&gt;
+
+```python
+
+def main():
+    lines = a.splitlines()
+
+    robots = []
+    for line in lines:
+        p_part, v_part = line.strip().split()
+        p_x, p_y = map(int, p_part[2:].split(','))
+        v_x, v_y = map(int, v_part[2:].split(','))
+        robots.append({'p': (p_x, p_y), 'v': (v_x, v_y)})
+
+    positions = {}
+    for robot in robots:
+        x = (robot['p'][0] + robot['v'][0] * 100) % 101
+        y = (robot['p'][1] + robot['v'][1] * 100) % 103
+        positions[(x, y)] = positions.get((x, y), 0) + 1
+
+    q1 = q2 = q3 = q4 = 0
+    for (x, y), count in positions.items():
+        if x &lt; 50 and y &lt; 51:
+            q1 += count
+        elif x &gt; 50 and y &lt; 51:
+            q2 += count
+        elif x &gt; 50 and y &gt; 51:
+            q3 += count
+        elif x &lt; 50 and y &gt; 51:
+            q4 += count
+
+    safety_factor = q1 * q2 * q3 * q4
+    print(safety_factor)
+
+if __name__ == '__main__':
+    main()
+
+```
+
+&lt;/p&gt;
+&lt;/details&gt; 
+
+### 2题
+
+直接贴原题, 因为原题是阅读理解
+
+During the bathroom break, someone notices that these robots seem awfully similar to ones built and used at the North Pole. If they're the same type of robots, they should have a hard-coded Easter egg: very rarely, most of the robots should arrange themselves into a picture of a Christmas tree.
 &gt; 在上厕所的时候，有人注意到这些机器人看起来与在北极建造和使用的机器人非常相似。</description><guid isPermaLink="true">https://FairyOwO.github.io/post/2024%20Advent%20of%20Code%20-fu-pan-yu-da-an-%20%28-er-%29.html</guid><pubDate>Wed, 18 Dec 2024 02:03:04 +0000</pubDate></item><item><title>免训练的RAG pipeline</title><link>https://FairyOwO.github.io/post/mian-xun-lian-de-RAG%20pipeline.html</link><description>&gt; 本文的框架是 `llama_index`&#13;
 &#13;
 &gt; 整理参考自&#13;

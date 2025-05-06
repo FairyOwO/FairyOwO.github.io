@@ -278,7 +278,7 @@ print(ans)
 
 [https://adventofcode.com/2024/day/11](https://adventofcode.com/2024/day/11)
 
-## 1题
+### 1题
 
 给定一串数字, 根据以下规则变换
 
@@ -664,7 +664,7 @@ print(ans)
 
 [https://adventofcode.com/2024/day/14](https://adventofcode.com/2024/day/14)
 
-## 1题
+### 1题
 
 给定点坐标, 点的移动速度, 大小固定的图
 
@@ -990,7 +990,7 @@ print(ans)
 
 [https://adventofcode.com/2024/day/11](https://adventofcode.com/2024/day/11)
 
-## 1题
+### 1题
 
 给定一串数字, 根据以下规则变换
 
@@ -1376,7 +1376,7 @@ print(ans)
 
 [https://adventofcode.com/2024/day/14](https://adventofcode.com/2024/day/14)
 
-## 1题
+### 1题
 
 给定点坐标, 点的移动速度, 大小固定的图
 
@@ -1726,7 +1726,7 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
 </blockquote>
 <h2>第十一题</h2>
 <p><a href="https://adventofcode.com/2024/day/11" rel="nofollow">https://adventofcode.com/2024/day/11</a></p>
-<h2>1题</h2>
+<h3>1题</h3>
 <p>给定一串数字, 根据以下规则变换</p>
 <ol>
 <li>如果数字是0, 则数字是1</li>
@@ -2056,7 +2056,7 @@ EEEC
 </blockquote>
 <h2>第十四题</h2>
 <p><a href="https://adventofcode.com/2024/day/14" rel="nofollow">https://adventofcode.com/2024/day/14</a></p>
-<h2>1题</h2>
+<h3>1题</h3>
 <p>给定点坐标, 点的移动速度, 大小固定的图</p>
 <p>求 四个象限内点的数量 之积<br>
 象限是去掉最中间一列与一行使得图分成四个区域<br>
@@ -2197,7 +2197,7 @@ ans += i * 100 + j</p>
 <p>print(ans)</p>
 <p></p>
 </details> 
-<h2>2题</h2>
+<h3>2题</h3>
 <p>推更宽(宽一倍), 但是高度不变的箱子</p>
 <details><summary>Details</summary>
 <p>
@@ -2311,7 +2311,186 @@ ans += i * 100 + j</p>
 </details> 
 <blockquote>
 <p>横着推可以复用一题代码, 竖着推需要检测所有能推的箱子(bfs)</p>
-</blockquote></div>
+</blockquote>
+<h2>第十六题</h2>
+<p><a href="https://adventofcode.com/2024/day/16" rel="nofollow">https://adventofcode.com/2024/day/16</a></p>
+<h3>1题</h3>
+<p>迷宫 直行+1分 转弯+1000分, 找到最低分数路线</p>
+<details><summary>Details</summary>
+<p>
+</p><div class="highlight highlight-source-python"><pre class="notranslate"><span class="pl-k">import</span> <span class="pl-s1">heapq</span>
+
+<span class="pl-s1">map</span> <span class="pl-c1">=</span> <span class="pl-s1">a</span>.<span class="pl-c1">splitlines</span>()
+
+<span class="pl-k">for</span> <span class="pl-s1">i</span>, <span class="pl-s1">row</span> <span class="pl-c1">in</span> <span class="pl-en">enumerate</span>(<span class="pl-s1">map</span>):
+    <span class="pl-k">if</span> <span class="pl-s">'S'</span> <span class="pl-c1">in</span> <span class="pl-s1">row</span>:
+        <span class="pl-s1">sx</span>, <span class="pl-s1">sy</span> <span class="pl-c1">=</span> <span class="pl-s1">i</span>, <span class="pl-s1">row</span>.<span class="pl-c1">index</span>(<span class="pl-s">'S'</span>)
+    <span class="pl-k">if</span> <span class="pl-s">'E'</span> <span class="pl-c1">in</span> <span class="pl-s1">row</span>:
+        <span class="pl-s1">ex</span>, <span class="pl-s1">ey</span> <span class="pl-c1">=</span> <span class="pl-s1">i</span>, <span class="pl-s1">row</span>.<span class="pl-c1">index</span>(<span class="pl-s">'E'</span>)
+
+<span class="pl-c"># 0东，1南，2西，3北</span>
+<span class="pl-s1">directions</span> <span class="pl-c1">=</span> [(<span class="pl-c1">0</span>,<span class="pl-c1">1</span>), (<span class="pl-c1">1</span>,<span class="pl-c1">0</span>), (<span class="pl-c1">0</span>,<span class="pl-c1">-</span><span class="pl-c1">1</span>), (<span class="pl-c1">-</span><span class="pl-c1">1</span>,<span class="pl-c1">0</span>)]
+
+<span class="pl-k">def</span> <span class="pl-en">turn_left</span>(<span class="pl-s1">d</span>):
+    <span class="pl-k">return</span> (<span class="pl-s1">d</span> <span class="pl-c1">-</span> <span class="pl-c1">1</span>) <span class="pl-c1">%</span> <span class="pl-c1">4</span>
+
+<span class="pl-k">def</span> <span class="pl-en">turn_right</span>(<span class="pl-s1">d</span>):
+    <span class="pl-k">return</span> (<span class="pl-s1">d</span> <span class="pl-c1">+</span> <span class="pl-c1">1</span>) <span class="pl-c1">%</span> <span class="pl-c1">4</span>
+
+<span class="pl-c"># 检查位置是否有效（不是墙且在地图内）</span>
+<span class="pl-k">def</span> <span class="pl-en">is_valid</span>(<span class="pl-s1">x</span>, <span class="pl-s1">y</span>):
+    <span class="pl-k">if</span> <span class="pl-c1">0</span> <span class="pl-c1">&lt;=</span> <span class="pl-s1">x</span> <span class="pl-c1">&lt;</span> <span class="pl-en">len</span>(<span class="pl-s1">map</span>) <span class="pl-c1">and</span> <span class="pl-c1">0</span> <span class="pl-c1">&lt;=</span> <span class="pl-s1">y</span> <span class="pl-c1">&lt;</span> <span class="pl-en">len</span>(<span class="pl-s1">map</span>[<span class="pl-c1">0</span>]):
+        <span class="pl-k">return</span> <span class="pl-s1">map</span>[<span class="pl-s1">x</span>][<span class="pl-s1">y</span>] <span class="pl-c1">!=</span> <span class="pl-s">'#'</span>
+    <span class="pl-k">return</span> <span class="pl-c1">False</span>
+
+<span class="pl-s1">heap</span> <span class="pl-c1">=</span> []
+<span class="pl-s1">heapq</span>.<span class="pl-c1">heappush</span>(<span class="pl-s1">heap</span>, (<span class="pl-c1">0</span>, <span class="pl-s1">sx</span>, <span class="pl-s1">sy</span>, <span class="pl-c1">0</span>))
+
+<span class="pl-s1">visited</span> <span class="pl-c1">=</span> {}
+<span class="pl-s1">visited</span>[(<span class="pl-s1">sx</span>, <span class="pl-s1">sy</span>, <span class="pl-c1">0</span>)] <span class="pl-c1">=</span> <span class="pl-c1">0</span>
+
+<span class="pl-k">while</span> <span class="pl-s1">heap</span>:
+    <span class="pl-s1">current_score</span>, <span class="pl-s1">x</span>, <span class="pl-s1">y</span>, <span class="pl-s1">d</span> <span class="pl-c1">=</span> <span class="pl-s1">heapq</span>.<span class="pl-c1">heappop</span>(<span class="pl-s1">heap</span>)
+    <span class="pl-k">if</span> (<span class="pl-s1">x</span>, <span class="pl-s1">y</span>) <span class="pl-c1">==</span> (<span class="pl-s1">ex</span>, <span class="pl-s1">ey</span>):
+        <span class="pl-en">print</span>(<span class="pl-s">"最低得分为:"</span>, <span class="pl-s1">current_score</span>)
+        <span class="pl-k">break</span>
+    <span class="pl-k">if</span> <span class="pl-s1">visited</span>[(<span class="pl-s1">x</span>, <span class="pl-s1">y</span>, <span class="pl-s1">d</span>)] <span class="pl-c1">&lt;</span> <span class="pl-s1">current_score</span>:
+        <span class="pl-k">continue</span>  <span class="pl-c"># 已经有更小的得分到达这个状态</span>
+    <span class="pl-c"># 尝试前进</span>
+    <span class="pl-s1">dx</span>, <span class="pl-s1">dy</span> <span class="pl-c1">=</span> <span class="pl-s1">directions</span>[<span class="pl-s1">d</span>]
+    <span class="pl-s1">nx</span>, <span class="pl-s1">ny</span> <span class="pl-c1">=</span> <span class="pl-s1">x</span> <span class="pl-c1">+</span> <span class="pl-s1">dx</span>, <span class="pl-s1">y</span> <span class="pl-c1">+</span> <span class="pl-s1">dy</span>
+    <span class="pl-k">if</span> <span class="pl-en">is_valid</span>(<span class="pl-s1">nx</span>, <span class="pl-s1">ny</span>):
+        <span class="pl-s1">new_score</span> <span class="pl-c1">=</span> <span class="pl-s1">current_score</span> <span class="pl-c1">+</span> <span class="pl-c1">1</span>
+        <span class="pl-k">if</span> (<span class="pl-s1">nx</span>, <span class="pl-s1">ny</span>, <span class="pl-s1">d</span>) <span class="pl-c1"><span class="pl-c1">not</span> <span class="pl-c1">in</span></span> <span class="pl-s1">visited</span> <span class="pl-c1">or</span> <span class="pl-s1">new_score</span> <span class="pl-c1">&lt;</span> <span class="pl-s1">visited</span>[(<span class="pl-s1">nx</span>, <span class="pl-s1">ny</span>, <span class="pl-s1">d</span>)]:
+            <span class="pl-s1">visited</span>[(<span class="pl-s1">nx</span>, <span class="pl-s1">ny</span>, <span class="pl-s1">d</span>)] <span class="pl-c1">=</span> <span class="pl-s1">new_score</span>
+            <span class="pl-s1">heapq</span>.<span class="pl-c1">heappush</span>(<span class="pl-s1">heap</span>, (<span class="pl-s1">new_score</span>, <span class="pl-s1">nx</span>, <span class="pl-s1">ny</span>, <span class="pl-s1">d</span>))
+    <span class="pl-c"># 尝试左转</span>
+    <span class="pl-s1">new_d</span> <span class="pl-c1">=</span> <span class="pl-en">turn_left</span>(<span class="pl-s1">d</span>)
+    <span class="pl-s1">new_score</span> <span class="pl-c1">=</span> <span class="pl-s1">current_score</span> <span class="pl-c1">+</span> <span class="pl-c1">1000</span>
+    <span class="pl-k">if</span> (<span class="pl-s1">x</span>, <span class="pl-s1">y</span>, <span class="pl-s1">new_d</span>) <span class="pl-c1"><span class="pl-c1">not</span> <span class="pl-c1">in</span></span> <span class="pl-s1">visited</span> <span class="pl-c1">or</span> <span class="pl-s1">new_score</span> <span class="pl-c1">&lt;</span> <span class="pl-s1">visited</span>[(<span class="pl-s1">x</span>, <span class="pl-s1">y</span>, <span class="pl-s1">new_d</span>)]:
+        <span class="pl-s1">visited</span>[(<span class="pl-s1">x</span>, <span class="pl-s1">y</span>, <span class="pl-s1">new_d</span>)] <span class="pl-c1">=</span> <span class="pl-s1">new_score</span>
+        <span class="pl-s1">heapq</span>.<span class="pl-c1">heappush</span>(<span class="pl-s1">heap</span>, (<span class="pl-s1">new_score</span>, <span class="pl-s1">x</span>, <span class="pl-s1">y</span>, <span class="pl-s1">new_d</span>))
+    <span class="pl-c"># 尝试右转</span>
+    <span class="pl-s1">new_d</span> <span class="pl-c1">=</span> <span class="pl-en">turn_right</span>(<span class="pl-s1">d</span>)
+    <span class="pl-s1">new_score</span> <span class="pl-c1">=</span> <span class="pl-s1">current_score</span> <span class="pl-c1">+</span> <span class="pl-c1">1000</span>
+    <span class="pl-k">if</span> (<span class="pl-s1">x</span>, <span class="pl-s1">y</span>, <span class="pl-s1">new_d</span>) <span class="pl-c1"><span class="pl-c1">not</span> <span class="pl-c1">in</span></span> <span class="pl-s1">visited</span> <span class="pl-c1">or</span> <span class="pl-s1">new_score</span> <span class="pl-c1">&lt;</span> <span class="pl-s1">visited</span>[(<span class="pl-s1">x</span>, <span class="pl-s1">y</span>, <span class="pl-s1">new_d</span>)]:
+        <span class="pl-s1">visited</span>[(<span class="pl-s1">x</span>, <span class="pl-s1">y</span>, <span class="pl-s1">new_d</span>)] <span class="pl-c1">=</span> <span class="pl-s1">new_score</span>
+        <span class="pl-s1">heapq</span>.<span class="pl-c1">heappush</span>(<span class="pl-s1">heap</span>, (<span class="pl-s1">new_score</span>, <span class="pl-s1">x</span>, <span class="pl-s1">y</span>, <span class="pl-s1">new_d</span>))</pre></div>
+<p></p>
+</details> 
+<h3>2题</h3>
+<p>遍历所有最优路径, 问走过所有的路有多少格 (这一格至少属于一条最优路径)</p>
+<details><summary>Details</summary>
+<p>
+</p><div class="highlight highlight-source-python"><pre class="notranslate"><span class="pl-k">import</span> <span class="pl-s1">heapq</span>
+
+<span class="pl-c"># 定义图</span>
+<span class="pl-s1">grid</span> <span class="pl-c1">=</span> <span class="pl-s1">a</span>.<span class="pl-c1">splitlines</span>()
+
+<span class="pl-c"># 找到起点S和终点E的位置</span>
+<span class="pl-k">for</span> <span class="pl-s1">i</span> <span class="pl-c1">in</span> <span class="pl-en">range</span>(<span class="pl-en">len</span>(<span class="pl-s1">grid</span>)):
+    <span class="pl-k">if</span> <span class="pl-s">'S'</span> <span class="pl-c1">in</span> <span class="pl-s1">grid</span>[<span class="pl-s1">i</span>]:
+        <span class="pl-s1">sx</span> <span class="pl-c1">=</span> <span class="pl-s1">i</span>
+        <span class="pl-s1">sy</span> <span class="pl-c1">=</span> <span class="pl-s1">grid</span>[<span class="pl-s1">i</span>].<span class="pl-c1">index</span>(<span class="pl-s">'S'</span>)
+    <span class="pl-k">if</span> <span class="pl-s">'E'</span> <span class="pl-c1">in</span> <span class="pl-s1">grid</span>[<span class="pl-s1">i</span>]:
+        <span class="pl-s1">ex</span> <span class="pl-c1">=</span> <span class="pl-s1">i</span>
+        <span class="pl-s1">ey</span> <span class="pl-c1">=</span> <span class="pl-s1">grid</span>[<span class="pl-s1">i</span>].<span class="pl-c1">index</span>(<span class="pl-s">'E'</span>)
+
+<span class="pl-c"># 定义方向和移动向量</span>
+<span class="pl-s1">directions</span> <span class="pl-c1">=</span> [<span class="pl-s">'up'</span>, <span class="pl-s">'right'</span>, <span class="pl-s">'down'</span>, <span class="pl-s">'left'</span>]
+<span class="pl-s1">dx</span> <span class="pl-c1">=</span> [<span class="pl-c1">-</span><span class="pl-c1">1</span>, <span class="pl-c1">0</span>, <span class="pl-c1">1</span>, <span class="pl-c1">0</span>]
+<span class="pl-s1">dy</span> <span class="pl-c1">=</span> [<span class="pl-c1">0</span>, <span class="pl-c1">1</span>, <span class="pl-c1">0</span>, <span class="pl-c1">-</span><span class="pl-c1">1</span>]
+
+<span class="pl-c"># Dijkstra算法找到起点到终点的最短路径权重</span>
+<span class="pl-k">def</span> <span class="pl-en">dijkstra</span>(<span class="pl-s1">start_x</span>, <span class="pl-s1">start_y</span>, <span class="pl-s1">end_x</span>, <span class="pl-s1">end_y</span>):
+    <span class="pl-s1">heap</span> <span class="pl-c1">=</span> []
+    <span class="pl-s1">initial_direction</span> <span class="pl-c1">=</span> <span class="pl-c1">0</span>  <span class="pl-c"># 向上</span>
+    <span class="pl-s1">heapq</span>.<span class="pl-c1">heappush</span>(<span class="pl-s1">heap</span>, (<span class="pl-c1">0</span>, <span class="pl-s1">start_x</span>, <span class="pl-s1">start_y</span>, <span class="pl-s1">initial_direction</span>))
+    <span class="pl-s1">visited</span> <span class="pl-c1">=</span> {}
+    <span class="pl-s1">visited</span>[(<span class="pl-s1">start_x</span>, <span class="pl-s1">start_y</span>, <span class="pl-s1">initial_direction</span>)] <span class="pl-c1">=</span> <span class="pl-c1">0</span>
+    <span class="pl-k">while</span> <span class="pl-s1">heap</span>:
+        <span class="pl-s1">current_weight</span>, <span class="pl-s1">x</span>, <span class="pl-s1">y</span>, <span class="pl-s1">direction</span> <span class="pl-c1">=</span> <span class="pl-s1">heapq</span>.<span class="pl-c1">heappop</span>(<span class="pl-s1">heap</span>)
+        <span class="pl-k">if</span> (<span class="pl-s1">x</span>, <span class="pl-s1">y</span>) <span class="pl-c1">==</span> (<span class="pl-s1">end_x</span>, <span class="pl-s1">end_y</span>):
+            <span class="pl-k">return</span> <span class="pl-s1">current_weight</span>
+        <span class="pl-k">for</span> <span class="pl-s1">new_direction</span> <span class="pl-c1">in</span> <span class="pl-en">range</span>(<span class="pl-c1">4</span>):
+            <span class="pl-s1">nx</span> <span class="pl-c1">=</span> <span class="pl-s1">x</span> <span class="pl-c1">+</span> <span class="pl-s1">dx</span>[<span class="pl-s1">new_direction</span>]
+            <span class="pl-s1">ny</span> <span class="pl-c1">=</span> <span class="pl-s1">y</span> <span class="pl-c1">+</span> <span class="pl-s1">dy</span>[<span class="pl-s1">new_direction</span>]
+            <span class="pl-k">if</span> <span class="pl-c1">0</span> <span class="pl-c1">&lt;=</span> <span class="pl-s1">nx</span> <span class="pl-c1">&lt;</span> <span class="pl-en">len</span>(<span class="pl-s1">grid</span>) <span class="pl-c1">and</span> <span class="pl-c1">0</span> <span class="pl-c1">&lt;=</span> <span class="pl-s1">ny</span> <span class="pl-c1">&lt;</span> <span class="pl-en">len</span>(<span class="pl-s1">grid</span>[<span class="pl-c1">0</span>]) <span class="pl-c1">and</span> <span class="pl-s1">grid</span>[<span class="pl-s1">nx</span>][<span class="pl-s1">ny</span>] <span class="pl-c1">!=</span> <span class="pl-s">'#'</span>:
+                <span class="pl-k">if</span> <span class="pl-s1">new_direction</span> <span class="pl-c1">==</span> <span class="pl-s1">direction</span>:
+                    <span class="pl-s1">cost</span> <span class="pl-c1">=</span> <span class="pl-c1">1</span>
+                <span class="pl-k">else</span>:
+                    <span class="pl-s1">cost</span> <span class="pl-c1">=</span> <span class="pl-c1">1000</span>
+                <span class="pl-s1">total_weight</span> <span class="pl-c1">=</span> <span class="pl-s1">current_weight</span> <span class="pl-c1">+</span> <span class="pl-s1">cost</span>
+                <span class="pl-k">if</span> (<span class="pl-s1">nx</span>, <span class="pl-s1">ny</span>, <span class="pl-s1">new_direction</span>) <span class="pl-c1"><span class="pl-c1">not</span> <span class="pl-c1">in</span></span> <span class="pl-s1">visited</span> <span class="pl-c1">or</span> <span class="pl-s1">total_weight</span> <span class="pl-c1">&lt;</span> <span class="pl-s1">visited</span>.<span class="pl-c1">get</span>((<span class="pl-s1">nx</span>, <span class="pl-s1">ny</span>, <span class="pl-s1">new_direction</span>), <span class="pl-en">float</span>(<span class="pl-s">'inf'</span>)):
+                    <span class="pl-s1">visited</span>[(<span class="pl-s1">nx</span>, <span class="pl-s1">ny</span>, <span class="pl-s1">new_direction</span>)] <span class="pl-c1">=</span> <span class="pl-s1">total_weight</span>
+                    <span class="pl-s1">heapq</span>.<span class="pl-c1">heappush</span>(<span class="pl-s1">heap</span>, (<span class="pl-s1">total_weight</span>, <span class="pl-s1">nx</span>, <span class="pl-s1">ny</span>, <span class="pl-s1">new_direction</span>))
+    <span class="pl-k">return</span> <span class="pl-en">float</span>(<span class="pl-s">'inf'</span>)
+
+<span class="pl-c"># 正向Dijkstra</span>
+<span class="pl-s1">shortest_weight</span> <span class="pl-c1">=</span> <span class="pl-en">dijkstra</span>(<span class="pl-s1">sx</span>, <span class="pl-s1">sy</span>, <span class="pl-s1">ex</span>, <span class="pl-s1">ey</span>)
+
+<span class="pl-c"># 反向Dijkstra，从终点到每个位置的最小累计权重</span>
+<span class="pl-k">def</span> <span class="pl-en">reverse_dijkstra</span>(<span class="pl-s1">end_x</span>, <span class="pl-s1">end_y</span>, <span class="pl-s1">start_x</span>, <span class="pl-s1">start_y</span>):
+    <span class="pl-s1">heap</span> <span class="pl-c1">=</span> []
+    <span class="pl-s1">initial_direction</span> <span class="pl-c1">=</span> <span class="pl-c1">2</span>  <span class="pl-c"># 向下，因为反向</span>
+    <span class="pl-s1">heapq</span>.<span class="pl-c1">heappush</span>(<span class="pl-s1">heap</span>, (<span class="pl-c1">0</span>, <span class="pl-s1">end_x</span>, <span class="pl-s1">end_y</span>, <span class="pl-s1">initial_direction</span>))
+    <span class="pl-s1">visited</span> <span class="pl-c1">=</span> {}
+    <span class="pl-s1">visited</span>[(<span class="pl-s1">end_x</span>, <span class="pl-s1">end_y</span>, <span class="pl-s1">initial_direction</span>)] <span class="pl-c1">=</span> <span class="pl-c1">0</span>
+    <span class="pl-s1">to_end_min</span> <span class="pl-c1">=</span> {}
+    <span class="pl-k">while</span> <span class="pl-s1">heap</span>:
+        <span class="pl-s1">current_weight</span>, <span class="pl-s1">x</span>, <span class="pl-s1">y</span>, <span class="pl-s1">direction</span> <span class="pl-c1">=</span> <span class="pl-s1">heapq</span>.<span class="pl-c1">heappop</span>(<span class="pl-s1">heap</span>)
+        <span class="pl-s1">to_end_min</span>[(<span class="pl-s1">x</span>, <span class="pl-s1">y</span>)] <span class="pl-c1">=</span> <span class="pl-en">min</span>(<span class="pl-s1">to_end_min</span>.<span class="pl-c1">get</span>((<span class="pl-s1">x</span>, <span class="pl-s1">y</span>), <span class="pl-en">float</span>(<span class="pl-s">'inf'</span>)), <span class="pl-s1">current_weight</span>)
+        <span class="pl-k">for</span> <span class="pl-s1">new_direction</span> <span class="pl-c1">in</span> <span class="pl-en">range</span>(<span class="pl-c1">4</span>):
+            <span class="pl-s1">nx</span> <span class="pl-c1">=</span> <span class="pl-s1">x</span> <span class="pl-c1">+</span> <span class="pl-s1">dx</span>[<span class="pl-s1">new_direction</span>]
+            <span class="pl-s1">ny</span> <span class="pl-c1">=</span> <span class="pl-s1">y</span> <span class="pl-c1">+</span> <span class="pl-s1">dy</span>[<span class="pl-s1">new_direction</span>]
+            <span class="pl-k">if</span> <span class="pl-c1">0</span> <span class="pl-c1">&lt;=</span> <span class="pl-s1">nx</span> <span class="pl-c1">&lt;</span> <span class="pl-en">len</span>(<span class="pl-s1">grid</span>) <span class="pl-c1">and</span> <span class="pl-c1">0</span> <span class="pl-c1">&lt;=</span> <span class="pl-s1">ny</span> <span class="pl-c1">&lt;</span> <span class="pl-en">len</span>(<span class="pl-s1">grid</span>[<span class="pl-c1">0</span>]) <span class="pl-c1">and</span> <span class="pl-s1">grid</span>[<span class="pl-s1">nx</span>][<span class="pl-s1">ny</span>] <span class="pl-c1">!=</span> <span class="pl-s">'#'</span>:
+                <span class="pl-k">if</span> <span class="pl-s1">new_direction</span> <span class="pl-c1">==</span> <span class="pl-s1">direction</span>:
+                    <span class="pl-s1">cost</span> <span class="pl-c1">=</span> <span class="pl-c1">1</span>
+                <span class="pl-k">else</span>:
+                    <span class="pl-s1">cost</span> <span class="pl-c1">=</span> <span class="pl-c1">1000</span>
+                <span class="pl-s1">total_weight</span> <span class="pl-c1">=</span> <span class="pl-s1">current_weight</span> <span class="pl-c1">+</span> <span class="pl-s1">cost</span>
+                <span class="pl-k">if</span> (<span class="pl-s1">nx</span>, <span class="pl-s1">ny</span>, <span class="pl-s1">new_direction</span>) <span class="pl-c1"><span class="pl-c1">not</span> <span class="pl-c1">in</span></span> <span class="pl-s1">visited</span> <span class="pl-c1">or</span> <span class="pl-s1">total_weight</span> <span class="pl-c1">&lt;</span> <span class="pl-s1">visited</span>.<span class="pl-c1">get</span>((<span class="pl-s1">nx</span>, <span class="pl-s1">ny</span>, <span class="pl-s1">new_direction</span>), <span class="pl-en">float</span>(<span class="pl-s">'inf'</span>)):
+                    <span class="pl-s1">visited</span>[(<span class="pl-s1">nx</span>, <span class="pl-s1">ny</span>, <span class="pl-s1">new_direction</span>)] <span class="pl-c1">=</span> <span class="pl-s1">total_weight</span>
+                    <span class="pl-s1">heapq</span>.<span class="pl-c1">heappush</span>(<span class="pl-s1">heap</span>, (<span class="pl-s1">total_weight</span>, <span class="pl-s1">nx</span>, <span class="pl-s1">ny</span>, <span class="pl-s1">new_direction</span>))
+    <span class="pl-k">return</span> <span class="pl-s1">to_end_min</span>
+
+<span class="pl-s1">to_end_min</span> <span class="pl-c1">=</span> <span class="pl-en">reverse_dijkstra</span>(<span class="pl-s1">ex</span>, <span class="pl-s1">ey</span>, <span class="pl-s1">sx</span>, <span class="pl-s1">sy</span>)
+
+<span class="pl-c"># DFS找出所有最短路径</span>
+<span class="pl-s1">paths</span> <span class="pl-c1">=</span> []
+<span class="pl-k">def</span> <span class="pl-en">dfs</span>(<span class="pl-s1">x</span>, <span class="pl-s1">y</span>, <span class="pl-s1">direction</span>, <span class="pl-s1">path</span>, <span class="pl-s1">current_weight</span>):
+    <span class="pl-s1">path</span>.<span class="pl-c1">append</span>((<span class="pl-s1">x</span>, <span class="pl-s1">y</span>))
+    <span class="pl-k">if</span> (<span class="pl-s1">x</span>, <span class="pl-s1">y</span>) <span class="pl-c1">==</span> (<span class="pl-s1">ex</span>, <span class="pl-s1">ey</span>):
+        <span class="pl-k">if</span> <span class="pl-s1">current_weight</span> <span class="pl-c1">==</span> <span class="pl-s1">shortest_weight</span>:
+            <span class="pl-s1">paths</span>.<span class="pl-c1">append</span>(<span class="pl-s1">path</span>.<span class="pl-c1">copy</span>())
+        <span class="pl-s1">path</span>.<span class="pl-c1">pop</span>()
+        <span class="pl-k">return</span>
+    <span class="pl-k">for</span> <span class="pl-s1">new_direction</span> <span class="pl-c1">in</span> <span class="pl-en">range</span>(<span class="pl-c1">4</span>):
+        <span class="pl-s1">nx</span> <span class="pl-c1">=</span> <span class="pl-s1">x</span> <span class="pl-c1">+</span> <span class="pl-s1">dx</span>[<span class="pl-s1">new_direction</span>]
+        <span class="pl-s1">ny</span> <span class="pl-c1">=</span> <span class="pl-s1">y</span> <span class="pl-c1">+</span> <span class="pl-s1">dy</span>[<span class="pl-s1">new_direction</span>]
+        <span class="pl-k">if</span> <span class="pl-c1">0</span> <span class="pl-c1">&lt;=</span> <span class="pl-s1">nx</span> <span class="pl-c1">&lt;</span> <span class="pl-en">len</span>(<span class="pl-s1">grid</span>) <span class="pl-c1">and</span> <span class="pl-c1">0</span> <span class="pl-c1">&lt;=</span> <span class="pl-s1">ny</span> <span class="pl-c1">&lt;</span> <span class="pl-en">len</span>(<span class="pl-s1">grid</span>[<span class="pl-c1">0</span>]) <span class="pl-c1">and</span> <span class="pl-s1">grid</span>[<span class="pl-s1">nx</span>][<span class="pl-s1">ny</span>] <span class="pl-c1">!=</span> <span class="pl-s">'#'</span> <span class="pl-c1">and</span> (<span class="pl-s1">nx</span>, <span class="pl-s1">ny</span>) <span class="pl-c1"><span class="pl-c1">not</span> <span class="pl-c1">in</span></span> <span class="pl-s1">path</span>:
+            <span class="pl-k">if</span> <span class="pl-s1">new_direction</span> <span class="pl-c1">==</span> <span class="pl-s1">direction</span>:
+                <span class="pl-s1">cost</span> <span class="pl-c1">=</span> <span class="pl-c1">1</span>
+            <span class="pl-k">else</span>:
+                <span class="pl-s1">cost</span> <span class="pl-c1">=</span> <span class="pl-c1">1000</span>
+            <span class="pl-k">if</span> <span class="pl-s1">current_weight</span> <span class="pl-c1">+</span> <span class="pl-s1">cost</span> <span class="pl-c1">+</span> <span class="pl-s1">to_end_min</span>.<span class="pl-c1">get</span>((<span class="pl-s1">nx</span>, <span class="pl-s1">ny</span>), <span class="pl-en">float</span>(<span class="pl-s">'inf'</span>)) <span class="pl-c1">&gt;</span> <span class="pl-s1">shortest_weight</span>:
+                <span class="pl-k">continue</span>
+            <span class="pl-en">dfs</span>(<span class="pl-s1">nx</span>, <span class="pl-s1">ny</span>, <span class="pl-s1">new_direction</span>, <span class="pl-s1">path</span>, <span class="pl-s1">current_weight</span> <span class="pl-c1">+</span> <span class="pl-s1">cost</span>)
+    <span class="pl-s1">path</span>.<span class="pl-c1">pop</span>()
+
+<span class="pl-en">dfs</span>(<span class="pl-s1">sx</span>, <span class="pl-s1">sy</span>, <span class="pl-c1">0</span>, [], <span class="pl-c1">0</span>)
+
+<span class="pl-c"># 输出结果</span>
+<span class="pl-en">print</span>(<span class="pl-s">"总路径数量:"</span>, <span class="pl-en">len</span>(<span class="pl-s1">paths</span>))
+<span class="pl-en">print</span>(<span class="pl-s">"最短路径权重:"</span>, <span class="pl-s1">shortest_weight</span>)
+<span class="pl-en">print</span>(<span class="pl-s">"所有最短路径:"</span>)
+<span class="pl-s1">ans</span> <span class="pl-c1">=</span> []
+<span class="pl-k">for</span> <span class="pl-s1">path</span> <span class="pl-c1">in</span> <span class="pl-s1">paths</span>:
+    <span class="pl-s1">ans</span>.<span class="pl-c1">extend</span>(<span class="pl-s1">path</span>)
+
+<span class="pl-en">print</span>(<span class="pl-en">len</span>(<span class="pl-en">list</span>(<span class="pl-en">set</span>(<span class="pl-s1">ans</span>))))</pre></div>
+<p></p>
+</details> </div>
 <div style="font-size:small;margin-top:8px;float:right;">转载无需注明出处</div>
 
 <button class="btn btn-block" type="button" onclick="openComments()" id="cmButton">评论</button>

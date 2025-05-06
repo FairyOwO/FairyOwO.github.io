@@ -266,7 +266,7 @@ print(ans)
 
 [https://adventofcode.com/2024/day/11](https://adventofcode.com/2024/day/11)
 
-## 1题
+### 1题
 
 给定一串数字, 根据以下规则变换
 
@@ -652,7 +652,7 @@ print(ans)
 
 [https://adventofcode.com/2024/day/14](https://adventofcode.com/2024/day/14)
 
-## 1题
+### 1题
 
 给定点坐标, 点的移动速度, 大小固定的图
 
@@ -828,7 +828,7 @@ print(ans)
 </p>
 </details> 
 
-## 2题
+### 2题
 
 推更宽(宽一倍), 但是高度不变的箱子
 
@@ -965,3 +965,199 @@ print(ans)
 </details> 
 
 > 横着推可以复用一题代码, 竖着推需要检测所有能推的箱子(bfs)
+
+## 第十六题
+
+[https://adventofcode.com/2024/day/16](https://adventofcode.com/2024/day/16)
+
+### 1题
+
+迷宫 直行+1分 转弯+1000分, 找到最低分数路线
+
+<details><summary>Details</summary>
+<p>
+
+```python
+
+import heapq
+
+map = a.splitlines()
+
+for i, row in enumerate(map):
+    if 'S' in row:
+        sx, sy = i, row.index('S')
+    if 'E' in row:
+        ex, ey = i, row.index('E')
+
+# 0东，1南，2西，3北
+directions = [(0,1), (1,0), (0,-1), (-1,0)]
+
+def turn_left(d):
+    return (d - 1) % 4
+
+def turn_right(d):
+    return (d + 1) % 4
+
+# 检查位置是否有效（不是墙且在地图内）
+def is_valid(x, y):
+    if 0 <= x < len(map) and 0 <= y < len(map[0]):
+        return map[x][y] != '#'
+    return False
+
+heap = []
+heapq.heappush(heap, (0, sx, sy, 0))
+
+visited = {}
+visited[(sx, sy, 0)] = 0
+
+while heap:
+    current_score, x, y, d = heapq.heappop(heap)
+    if (x, y) == (ex, ey):
+        print("最低得分为:", current_score)
+        break
+    if visited[(x, y, d)] < current_score:
+        continue  # 已经有更小的得分到达这个状态
+    # 尝试前进
+    dx, dy = directions[d]
+    nx, ny = x + dx, y + dy
+    if is_valid(nx, ny):
+        new_score = current_score + 1
+        if (nx, ny, d) not in visited or new_score < visited[(nx, ny, d)]:
+            visited[(nx, ny, d)] = new_score
+            heapq.heappush(heap, (new_score, nx, ny, d))
+    # 尝试左转
+    new_d = turn_left(d)
+    new_score = current_score + 1000
+    if (x, y, new_d) not in visited or new_score < visited[(x, y, new_d)]:
+        visited[(x, y, new_d)] = new_score
+        heapq.heappush(heap, (new_score, x, y, new_d))
+    # 尝试右转
+    new_d = turn_right(d)
+    new_score = current_score + 1000
+    if (x, y, new_d) not in visited or new_score < visited[(x, y, new_d)]:
+        visited[(x, y, new_d)] = new_score
+        heapq.heappush(heap, (new_score, x, y, new_d))
+``` 
+
+</p>
+</details> 
+
+### 2题
+
+遍历所有最优路径, 问走过所有的路有多少格 (这一格至少属于一条最优路径)
+
+<details><summary>Details</summary>
+<p>
+
+```python
+import heapq
+
+# 定义图
+grid = a.splitlines()
+
+# 找到起点S和终点E的位置
+for i in range(len(grid)):
+    if 'S' in grid[i]:
+        sx = i
+        sy = grid[i].index('S')
+    if 'E' in grid[i]:
+        ex = i
+        ey = grid[i].index('E')
+
+# 定义方向和移动向量
+directions = ['up', 'right', 'down', 'left']
+dx = [-1, 0, 1, 0]
+dy = [0, 1, 0, -1]
+
+# Dijkstra算法找到起点到终点的最短路径权重
+def dijkstra(start_x, start_y, end_x, end_y):
+    heap = []
+    initial_direction = 0  # 向上
+    heapq.heappush(heap, (0, start_x, start_y, initial_direction))
+    visited = {}
+    visited[(start_x, start_y, initial_direction)] = 0
+    while heap:
+        current_weight, x, y, direction = heapq.heappop(heap)
+        if (x, y) == (end_x, end_y):
+            return current_weight
+        for new_direction in range(4):
+            nx = x + dx[new_direction]
+            ny = y + dy[new_direction]
+            if 0 <= nx < len(grid) and 0 <= ny < len(grid[0]) and grid[nx][ny] != '#':
+                if new_direction == direction:
+                    cost = 1
+                else:
+                    cost = 1000
+                total_weight = current_weight + cost
+                if (nx, ny, new_direction) not in visited or total_weight < visited.get((nx, ny, new_direction), float('inf')):
+                    visited[(nx, ny, new_direction)] = total_weight
+                    heapq.heappush(heap, (total_weight, nx, ny, new_direction))
+    return float('inf')
+
+# 正向Dijkstra
+shortest_weight = dijkstra(sx, sy, ex, ey)
+
+# 反向Dijkstra，从终点到每个位置的最小累计权重
+def reverse_dijkstra(end_x, end_y, start_x, start_y):
+    heap = []
+    initial_direction = 2  # 向下，因为反向
+    heapq.heappush(heap, (0, end_x, end_y, initial_direction))
+    visited = {}
+    visited[(end_x, end_y, initial_direction)] = 0
+    to_end_min = {}
+    while heap:
+        current_weight, x, y, direction = heapq.heappop(heap)
+        to_end_min[(x, y)] = min(to_end_min.get((x, y), float('inf')), current_weight)
+        for new_direction in range(4):
+            nx = x + dx[new_direction]
+            ny = y + dy[new_direction]
+            if 0 <= nx < len(grid) and 0 <= ny < len(grid[0]) and grid[nx][ny] != '#':
+                if new_direction == direction:
+                    cost = 1
+                else:
+                    cost = 1000
+                total_weight = current_weight + cost
+                if (nx, ny, new_direction) not in visited or total_weight < visited.get((nx, ny, new_direction), float('inf')):
+                    visited[(nx, ny, new_direction)] = total_weight
+                    heapq.heappush(heap, (total_weight, nx, ny, new_direction))
+    return to_end_min
+
+to_end_min = reverse_dijkstra(ex, ey, sx, sy)
+
+# DFS找出所有最短路径
+paths = []
+def dfs(x, y, direction, path, current_weight):
+    path.append((x, y))
+    if (x, y) == (ex, ey):
+        if current_weight == shortest_weight:
+            paths.append(path.copy())
+        path.pop()
+        return
+    for new_direction in range(4):
+        nx = x + dx[new_direction]
+        ny = y + dy[new_direction]
+        if 0 <= nx < len(grid) and 0 <= ny < len(grid[0]) and grid[nx][ny] != '#' and (nx, ny) not in path:
+            if new_direction == direction:
+                cost = 1
+            else:
+                cost = 1000
+            if current_weight + cost + to_end_min.get((nx, ny), float('inf')) > shortest_weight:
+                continue
+            dfs(nx, ny, new_direction, path, current_weight + cost)
+    path.pop()
+
+dfs(sx, sy, 0, [], 0)
+
+# 输出结果
+print("总路径数量:", len(paths))
+print("最短路径权重:", shortest_weight)
+print("所有最短路径:")
+ans = []
+for path in paths:
+    ans.extend(path)
+
+print(len(list(set(ans))))
+``` 
+
+</p>
+</details> 
