@@ -1,5 +1,432 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0"><channel><title>FairyOwO 的 Blog</title><link>https://FairyOwO.github.io</link><description>记录一些琐事</description><copyright>FairyOwO 的 Blog</copyright><docs>http://www.rssboard.org/rss-specification</docs><generator>python-feedgen</generator><image><url>https://github.githubassets.com/favicons/favicon.svg</url><title>avatar</title><link>https://FairyOwO.github.io</link></image><lastBuildDate>Tue, 06 May 2025 06:09:21 +0000</lastBuildDate><managingEditor>FairyOwO 的 Blog</managingEditor><ttl>60</ttl><webMaster>FairyOwO 的 Blog</webMaster><item><title>基于 deepseek 的 r1 复现, 对传统强化学习的思考 (挖坑)</title><link>https://FairyOwO.github.io/post/ji-yu-%20deepseek%20-de-%20r1%20-fu-xian-%2C%20-dui-chuan-tong-qiang-hua-xue-xi-de-si-kao-%20%28-wa-keng-%29.html</link><description>&gt; 本文存在大量口齿不清
+<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0"><channel><title>FairyOwO 的 Blog</title><link>https://FairyOwO.github.io</link><description>记录一些琐事</description><copyright>FairyOwO 的 Blog</copyright><docs>http://www.rssboard.org/rss-specification</docs><generator>python-feedgen</generator><image><url>https://github.githubassets.com/favicons/favicon.svg</url><title>avatar</title><link>https://FairyOwO.github.io</link></image><lastBuildDate>Tue, 06 May 2025 06:41:48 +0000</lastBuildDate><managingEditor>FairyOwO 的 Blog</managingEditor><ttl>60</ttl><webMaster>FairyOwO 的 Blog</webMaster><item><title>2024 Advent of Code 复盘与答案 (三)</title><link>https://FairyOwO.github.io/post/2024%20Advent%20of%20Code%20-fu-pan-yu-da-an-%20%28-san-%29.html</link><description>[Advent of Code](https://adventofcode.com/)
+
+使用 python 编写, 没有整理代码, 所以非常乱(变量乱取名, 没有注释, 逻辑奇怪, 并非最佳实现)
+可以使用 gpt 相关工具辅助查看
+
+&gt; 如果没有特意说明, 变量 a 统一存放所有原始字符串
+
+## 第十七题
+
+[https://adventofcode.com/2024/day/17](https://adventofcode.com/2024/day/17)
+
+### 1题
+
+尝试模拟计算机, 寄存器+特定操作码
+
+&gt; 题非常麻烦, 建议看原文
+
+&lt;details&gt;&lt;summary&gt;Details&lt;/summary&gt;
+&lt;p&gt;
+
+```python
+
+def main():
+    input_data = a.splitlines()
+    
+    # Parse initial register values
+    registers = {
+        'A': int(input_data[0].split(': ')[1]),
+        'B': int(input_data[1].split(': ')[1]),
+        'C': int(input_data[2].split(': ')[1]),
+    }
+    
+    # Parse program
+    program = list(map(int, input_data[4].split(': ')[1].split(',')))
+    
+    output = []
+    ip = 0
+    program_length = len(program)
+    
+    def get_combo_value(operand):
+        if operand == 4:
+            return registers['A']
+        elif operand == 5:
+            return registers['B']
+        elif operand == 6:
+            return registers['C']
+        else:
+            return operand  # 0-3
+    
+    while ip &lt; program_length:
+        if ip + 1 &gt;= program_length:
+            break  # Invalid instruction, halt
+        opcode = program[ip]
+        operand = program[ip + 1]
+        
+        if opcode == 0:  # adv
+            denominator = 2 ** get_combo_value(operand)
+            registers['A'] = registers['A'] // denominator
+            ip += 2
+        elif opcode == 1:  # bxl
+            registers['B'] ^= operand
+            ip += 2
+        elif opcode == 2:  # bst
+            registers['B'] = get_combo_value(operand) % 8
+            ip += 2
+        elif opcode == 3:  # jnz
+            if registers['A'] != 0:
+                ip = operand
+            else:
+                ip += 2
+        elif opcode == 4:  # bxc
+            registers['B'] ^= registers['C']
+            ip += 2
+        elif opcode == 5:  # out
+            output_value = get_combo_value(operand) % 8
+            output.append(str(output_value))
+            ip += 2
+        elif opcode == 6:  # bdv
+            denominator = 2 ** get_combo_value(operand)
+            registers['B'] = registers['A'] // denominator
+            ip += 2
+        elif opcode == 7:  # cdv
+            denominator = 2 ** get_combo_value(operand)
+            registers['C'] = registers['A'] // denominator
+            ip += 2
+        else:
+            ip += 2  # Invalid opcode, skip
+        
+    print(','.join(output))
+
+if __name__ == '__main__':
+    main()
+``` 
+
+&lt;/p&gt;
+&lt;/details&gt; 
+
+### 2题
+
+在给定操作码下, 推断最小的寄存器中的满足条件的值(寄存器中的值等于输出的值)
+
+&lt;details&gt;&lt;summary&gt;Details&lt;/summary&gt;
+&lt;p&gt;
+
+```python
+program = list(map(int, a.splitlines()[4].split(': ')[1].split(',')))
+n = len(program)
+program = program[::-1]
+
+choices = next_choices = [0]
+for oo in program:
+    choices = next_choices
+    next_choices = []
+    while choices:
+        a = choices.pop()
+        for i in range(8):
+            aa = (a &lt;&lt; 3) | i
+            bb = i ^ 1
+            cc = aa &gt;&gt; bb
+            bb = (bb ^ cc ^ 4) % 8
+            if bb == oo:
+                next_choices.append(aa)
+    # print(next_choices)
+    
+print(min(next_choices))
+
+# z = (A % 8) ^ 1
+# out = z ^ (A &gt;&gt; z) ^ 4
+``` 
+
+&lt;/p&gt;
+&lt;/details&gt; 
+
+## 第十八题
+
+[https://adventofcode.com/2024/day/18](https://adventofcode.com/2024/day/18)
+
+### 1题
+
+走二维迷宫
+
+&lt;details&gt;&lt;summary&gt;Details&lt;/summary&gt;
+&lt;p&gt;
+
+```python
+
+import heapq
+from collections import defaultdict
+
+# print(all_map)
+
+start = (0, 0)
+end = (70, 70)
+
+
+
+
+flag = False
+temp = a.splitlines()
+temp = temp[:1024]
+# while not flag:
+all_map = [['.' for _ in range(71)] for _ in range(71)]
+for i in temp:
+    x, y = map(int, i.split(','))
+    all_map[x][y] = '#'
+
+
+def get_allow_pos(pos):
+    for i in [(0, 1), (1, 0), (-1, 0), (0, -1)]:
+        next_step = (pos[0] + i[0], pos[1] + i[1])
+        if len(all_map) &gt; next_step[0] &gt;= 0 and len(all_map[0]) &gt; next_step[1] &gt;= 0:
+            if all_map[next_step[0]][next_step[1]] == '.':
+                yield (pos[0] + i[0], pos[1] + i[1])
+
+node = []
+heapq.heappush(node, (0, start))
+visited = defaultdict(int)
+visited[start] = 0
+
+while node:
+    step, (x, y) = heapq.heappop(node)
+    if (x, y) == end:
+        flag = True
+        print(step)
+        break
+    if visited[(x, y)] &lt; step:
+        continue
+    for next in get_allow_pos((x, y)):
+        if next not in visited or step + 1 &lt; visited[(next[0], next[1])]:
+            visited[(next[0], next[1])] = step + 1
+            heapq.heappush(node, (step + 1, next))
+``` 
+
+&lt;/p&gt;
+&lt;/details&gt; 
+
+### 2题
+
+让迷宫无解的最新的坐标是多少
+
+&lt;details&gt;&lt;summary&gt;Details&lt;/summary&gt;
+&lt;p&gt;
+
+```python
+
+import heapq
+from collections import defaultdict
+
+# print(all_map)
+
+start = (0, 0)
+end = (70, 70)
+
+flag = False
+temp = a.splitlines()
+temp.append('')
+while not flag:
+    all_map = [['.' for _ in range(71)] for _ in range(71)]
+    print(temp.pop())
+    for i in temp:
+        x, y = map(int, i.split(','))
+        all_map[x][y] = '#'
+
+    def get_allow_pos(pos):
+        for i in [(0, 1), (1, 0), (-1, 0), (0, -1)]:
+            next_step = (pos[0] + i[0], pos[1] + i[1])
+            if len(all_map) &gt; next_step[0] &gt;= 0 and len(all_map[0]) &gt; next_step[1] &gt;= 0:
+                if all_map[next_step[0]][next_step[1]] == '.':
+                    yield (pos[0] + i[0], pos[1] + i[1])
+
+    node = []
+    heapq.heappush(node, (0, start))
+    visited = defaultdict(int)
+    visited[start] = 0
+
+    while node:
+        step, (x, y) = heapq.heappop(node)
+        if (x, y) == end:
+            flag = True
+            print(step)
+            break
+        if visited[(x, y)] &lt; step:
+            continue
+        for next in get_allow_pos((x, y)):
+            if next not in visited or step + 1 &lt; visited[(next[0], next[1])]:
+                visited[(next[0], next[1])] = step + 1
+                heapq.heappush(node, (step + 1, next))
+``` 
+
+&lt;/p&gt;
+&lt;/details&gt; 
+
+## 第十九题
+
+[https://adventofcode.com/2024/day/19](https://adventofcode.com/2024/day/19)
+
+### 1题
+
+给定几个图案片段, 与几种图案(包括不可完成图案), 找出有多少种设计方案
+
+&lt;details&gt;&lt;summary&gt;Details&lt;/summary&gt;
+&lt;p&gt;
+
+```python
+
+aa = a.splitlines()
+has = aa[0]
+has = has.split(', ')
+all_possible = aa[2:]
+
+
+def dp(s):
+    n = len(s)
+    dp_state = [0] * (n + 1)
+    dp_state[0] = 1
+    for i in range(n):
+        if dp_state[i]:
+            for j in has:
+                l = len(j)
+                if i + l &lt;= n and s[i:i+l] == j:
+                    dp_state[i+l] = 1
+    return dp_state[n]
+
+print(dp('abaa'))
+
+ans = 0
+for i in all_possible:
+    ans += dp(i)
+
+print(ans)
+
+``` 
+
+&lt;/p&gt;
+&lt;/details&gt; 
+
+### 2题
+
+再将每个设计的不同方法的数量加起来
+
+&lt;details&gt;&lt;summary&gt;Details&lt;/summary&gt;
+&lt;p&gt;
+
+```python
+aa = a.splitlines()
+has = aa[0]
+has = has.split(', ')
+all_possible = aa[2:]
+
+def dp(s):
+    n = len(s)
+    dp_state = [0] * (n + 1)
+    dp_state[0] = 1
+    for i in range(n):
+        if dp_state[i]:
+            for j in has:
+                l = len(j)
+                if i + l &lt;= n and s[i:i+l] == j:
+                    dp_state[i+l] += dp_state[i]
+    return dp_state[n]
+
+
+ans = 0
+for i in all_possible:
+    ans += dp(i)
+
+print(ans)
+
+``` 
+
+&lt;/p&gt;
+&lt;/details&gt; 
+
+## 第二十题
+
+[https://adventofcode.com/2024/day/20](https://adventofcode.com/2024/day/20)
+
+### 1题
+
+走迷宫, 但允许穿墙 走一步1ps, 允许穿墙一次 最多2 皮秒内禁止碰撞一次
+求有多少种能省100ps的穿墙方式
+
+&lt;details&gt;&lt;summary&gt;Details&lt;/summary&gt;
+&lt;p&gt;
+
+```python
+
+aa = [list(i) for i in a.splitlines()]
+walls = [(-1, -1)]
+# 开始结束
+for i in range(len(aa)):
+    for j in range(len(aa[i])):
+        if aa[i][j] == 'S':
+            start = (i, j)
+            aa[i][j] = '.'
+        elif aa[i][j] == 'E':
+            end = (i, j)
+            aa[i][j] = '.'
+        elif aa[i][j] == '#':
+            walls.append((i, j))
+
+new_walls = []
+for i in range(len(walls)):
+    if i == 0:
+        continue
+    if walls[i][0] == 0 or walls[i][0] == len(aa) - 1 or walls[i][1] == 0 or walls[i][1] == len(aa[0]) - 1:
+        continue
+    # 如果wall的上下或者左右无墙, 则加入new_walls, 注意边界
+    if walls[i][0] - 1 &gt;= 0 and aa[walls[i][0] - 1][walls[i][1]] != '#' and walls[i][0] + 1 &lt; len(aa) and aa[walls[i][0] + 1][walls[i][1]] != '#':
+        new_walls.append((walls[i][0], walls[i][1]))
+    if walls[i][1] - 1 &gt;= 0 and aa[walls[i][0]][walls[i][1] - 1] != '#' and walls[i][1] + 1 &lt; len(aa[0]) and aa[walls[i][0]][walls[i][1] + 1] != '#':
+        new_walls.append((walls[i][0], walls[i][1]))
+
+# print(new_walls)
+walls = new_walls
+
+print(start, end)
+
+from copy import deepcopy
+import heapq
+from collections import defaultdict
+
+ans = []
+aaa = 0
+flag = True
+for i in walls:
+    all_map = deepcopy(aa)
+    if not flag:
+        all_map[i[0]][i[1]] = '.'
+
+    def get_allow_pos(pos):
+        for i in [(0, 1), (1, 0), (-1, 0), (0, -1)]:
+            next_step = (pos[0] + i[0], pos[1] + i[1])
+            if len(all_map) &gt; next_step[0] &gt;= 0 and len(all_map[0]) &gt; next_step[1] &gt;= 0:
+                if all_map[next_step[0]][next_step[1]] == '.':
+                    yield (pos[0] + i[0], pos[1] + i[1])
+
+
+    node = []
+    heapq.heappush(node, (0, start))
+    visited = defaultdict(int)
+    visited[start] = 0
+    while node:
+        step, (x, y) = heapq.heappop(node)
+        if (x, y) == end:
+            if flag:
+                aaa = step
+                flag = False
+            else:
+                if aaa - step &gt;= 100:
+                    ans.append(aaa - step)
+            break
+        if visited[(x, y)] &lt; step:
+            continue
+        for next in get_allow_pos((x, y)):
+            if next not in visited or step + 1 &lt; visited[(next[0], next[1])]:
+                visited[(next[0], next[1])] = step + 1
+                heapq.heappush(node, (step + 1, next))
+print(len(ans))
+
+``` 
+
+&lt;/p&gt;
+&lt;/details&gt; 
+
+### 2题
+
+穿墙允许20ps, 作弊不需要使用全部 20 皮秒；作弊可以持续任意时间，最长可达 20 皮秒, 但还是只能用一次, 任何未使用的作弊时间都会丢失；它不能被保存以供以后再次作弊。</description><guid isPermaLink="true">https://FairyOwO.github.io/post/2024%20Advent%20of%20Code%20-fu-pan-yu-da-an-%20%28-san-%29.html</guid><pubDate>Tue, 06 May 2025 06:41:19 +0000</pubDate></item><item><title>基于 deepseek 的 r1 复现, 对传统强化学习的思考 (挖坑)</title><link>https://FairyOwO.github.io/post/ji-yu-%20deepseek%20-de-%20r1%20-fu-xian-%2C%20-dui-chuan-tong-qiang-hua-xue-xi-de-si-kao-%20%28-wa-keng-%29.html</link><description>&gt; 本文存在大量口齿不清
 
 deepseek-r1持续火热, 已有大量的复现训练过程
 
