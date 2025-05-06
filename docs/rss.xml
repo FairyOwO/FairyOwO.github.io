@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0"><channel><title>FairyOwO 的 Blog</title><link>https://FairyOwO.github.io</link><description>记录一些琐事</description><copyright>FairyOwO 的 Blog</copyright><docs>http://www.rssboard.org/rss-specification</docs><generator>python-feedgen</generator><image><url>https://github.githubassets.com/favicons/favicon.svg</url><title>avatar</title><link>https://FairyOwO.github.io</link></image><lastBuildDate>Tue, 06 May 2025 06:41:48 +0000</lastBuildDate><managingEditor>FairyOwO 的 Blog</managingEditor><ttl>60</ttl><webMaster>FairyOwO 的 Blog</webMaster><item><title>2024 Advent of Code 复盘与答案 (三)</title><link>https://FairyOwO.github.io/post/2024%20Advent%20of%20Code%20-fu-pan-yu-da-an-%20%28-san-%29.html</link><description>[Advent of Code](https://adventofcode.com/)
+<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0"><channel><title>FairyOwO 的 Blog</title><link>https://FairyOwO.github.io</link><description>记录一些琐事</description><copyright>FairyOwO 的 Blog</copyright><docs>http://www.rssboard.org/rss-specification</docs><generator>python-feedgen</generator><image><url>https://github.githubassets.com/favicons/favicon.svg</url><title>avatar</title><link>https://FairyOwO.github.io</link></image><lastBuildDate>Tue, 06 May 2025 06:44:10 +0000</lastBuildDate><managingEditor>FairyOwO 的 Blog</managingEditor><ttl>60</ttl><webMaster>FairyOwO 的 Blog</webMaster><item><title>2024 Advent of Code 复盘与答案 (三) (17-25题)</title><link>https://FairyOwO.github.io/post/2024%20Advent%20of%20Code%20-fu-pan-yu-da-an-%20%28-san-%29%20%2817-25-ti-%29.html</link><description>[Advent of Code](https://adventofcode.com/)
 
 使用 python 编写, 没有整理代码, 所以非常乱(变量乱取名, 没有注释, 逻辑奇怪, 并非最佳实现)
 可以使用 gpt 相关工具辅助查看
@@ -426,7 +426,7 @@ print(len(ans))
 
 ### 2题
 
-穿墙允许20ps, 作弊不需要使用全部 20 皮秒；作弊可以持续任意时间，最长可达 20 皮秒, 但还是只能用一次, 任何未使用的作弊时间都会丢失；它不能被保存以供以后再次作弊。</description><guid isPermaLink="true">https://FairyOwO.github.io/post/2024%20Advent%20of%20Code%20-fu-pan-yu-da-an-%20%28-san-%29.html</guid><pubDate>Tue, 06 May 2025 06:41:19 +0000</pubDate></item><item><title>基于 deepseek 的 r1 复现, 对传统强化学习的思考 (挖坑)</title><link>https://FairyOwO.github.io/post/ji-yu-%20deepseek%20-de-%20r1%20-fu-xian-%2C%20-dui-chuan-tong-qiang-hua-xue-xi-de-si-kao-%20%28-wa-keng-%29.html</link><description>&gt; 本文存在大量口齿不清
+穿墙允许20ps, 作弊不需要使用全部 20 皮秒；作弊可以持续任意时间，最长可达 20 皮秒, 但还是只能用一次, 任何未使用的作弊时间都会丢失；它不能被保存以供以后再次作弊。</description><guid isPermaLink="true">https://FairyOwO.github.io/post/2024%20Advent%20of%20Code%20-fu-pan-yu-da-an-%20%28-san-%29%20%2817-25-ti-%29.html</guid><pubDate>Tue, 06 May 2025 06:41:19 +0000</pubDate></item><item><title>基于 deepseek 的 r1 复现, 对传统强化学习的思考 (挖坑)</title><link>https://FairyOwO.github.io/post/ji-yu-%20deepseek%20-de-%20r1%20-fu-xian-%2C%20-dui-chuan-tong-qiang-hua-xue-xi-de-si-kao-%20%28-wa-keng-%29.html</link><description>&gt; 本文存在大量口齿不清
 
 deepseek-r1持续火热, 已有大量的复现训练过程
 
