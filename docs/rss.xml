@@ -1,5 +1,13 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0"><channel><title>FairyOwO 的 Blog</title><link>https://FairyOwO.github.io</link><description>记录一些琐事</description><copyright>FairyOwO 的 Blog</copyright><docs>http://www.rssboard.org/rss-specification</docs><generator>python-feedgen</generator><image><url>https://github.githubassets.com/favicons/favicon.svg</url><title>avatar</title><link>https://FairyOwO.github.io</link></image><lastBuildDate>Tue, 06 May 2025 06:44:10 +0000</lastBuildDate><managingEditor>FairyOwO 的 Blog</managingEditor><ttl>60</ttl><webMaster>FairyOwO 的 Blog</webMaster><item><title>2024 Advent of Code 复盘与答案 (三) (17-25题)</title><link>https://FairyOwO.github.io/post/2024%20Advent%20of%20Code%20-fu-pan-yu-da-an-%20%28-san-%29%20%2817-25-ti-%29.html</link><description>[Advent of Code](https://adventofcode.com/)
+<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0"><channel><title>FairyOwO 的 Blog</title><link>https://FairyOwO.github.io</link><description>记录一些琐事</description><copyright>FairyOwO 的 Blog</copyright><docs>http://www.rssboard.org/rss-specification</docs><generator>python-feedgen</generator><image><url>https://github.githubassets.com/favicons/favicon.svg</url><title>avatar</title><link>https://FairyOwO.github.io</link></image><lastBuildDate>Tue, 03 Jun 2025 07:20:30 +0000</lastBuildDate><managingEditor>FairyOwO 的 Blog</managingEditor><ttl>60</ttl><webMaster>FairyOwO 的 Blog</webMaster><item><title>随机(一) 应用上的随机</title><link>https://FairyOwO.github.io/post/sui-ji-%28-yi-%29%20-ying-yong-shang-de-sui-ji.html</link><description>&gt; 写在前面: 本文探讨的真随机与伪随机的定义: 只要满足随机性检测的, 即为真随机. 其余皆为伪随机
+&gt; 区别于通过物理现象或不可预测的事件产生的真随机数, 与程序生成的伪随机数, 两者将在下一篇介绍
+&gt; 常见的伪随机有: 抽卡低保算法等
+
+## 引言
+
+大多数人知道'随机', 但在实际生活中, 缺混淆相关概念, 这里做一个简单的介绍, 本文希望从统计测试和生成机制两个视角厘清二者的界限.
+
+在应用篇视角下，我们关注的是一个数字序列在特定场景中“表现”得如何，而非其“出身”如何。</description><guid isPermaLink="true">https://FairyOwO.github.io/post/sui-ji-%28-yi-%29%20-ying-yong-shang-de-sui-ji.html</guid><pubDate>Tue, 03 Jun 2025 07:20:05 +0000</pubDate></item><item><title>2024 Advent of Code 复盘与答案 (三) (17-25题)</title><link>https://FairyOwO.github.io/post/2024%20Advent%20of%20Code%20-fu-pan-yu-da-an-%20%28-san-%29%20%2817-25-ti-%29.html</link><description>[Advent of Code](https://adventofcode.com/)
 
 使用 python 编写, 没有整理代码, 所以非常乱(变量乱取名, 没有注释, 逻辑奇怪, 并非最佳实现)
 可以使用 gpt 相关工具辅助查看
