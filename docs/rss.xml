@@ -1,5 +1,48 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0"><channel><title>FairyOwO 的 Blog</title><link>https://FairyOwO.github.io</link><description>记录一些琐事</description><copyright>FairyOwO 的 Blog</copyright><docs>http://www.rssboard.org/rss-specification</docs><generator>python-feedgen</generator><image><url>https://github.githubassets.com/favicons/favicon.svg</url><title>avatar</title><link>https://FairyOwO.github.io</link></image><lastBuildDate>Tue, 03 Jun 2025 07:20:30 +0000</lastBuildDate><managingEditor>FairyOwO 的 Blog</managingEditor><ttl>60</ttl><webMaster>FairyOwO 的 Blog</webMaster><item><title>随机(一) 应用上的随机</title><link>https://FairyOwO.github.io/post/sui-ji-%28-yi-%29%20-ying-yong-shang-de-sui-ji.html</link><description>&gt; 写在前面: 本文探讨的真随机与伪随机的定义: 只要满足随机性检测的, 即为真随机. 其余皆为伪随机
+<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0"><channel><title>FairyOwO 的 Blog</title><link>https://FairyOwO.github.io</link><description>记录一些琐事</description><copyright>FairyOwO 的 Blog</copyright><docs>http://www.rssboard.org/rss-specification</docs><generator>python-feedgen</generator><image><url>https://github.githubassets.com/favicons/favicon.svg</url><title>avatar</title><link>https://FairyOwO.github.io</link></image><lastBuildDate>Fri, 01 Aug 2025 08:47:19 +0000</lastBuildDate><managingEditor>FairyOwO 的 Blog</managingEditor><ttl>60</ttl><webMaster>FairyOwO 的 Blog</webMaster><item><title>随机(二) 计算机的随机实现</title><link>https://FairyOwO.github.io/post/sui-ji-%28-er-%29%20-ji-suan-ji-de-sui-ji-shi-xian.html</link><description>&gt; 写在前面, 本文讨论的真伪随机与前文不同, 真随机数为通过物理现象或不可预测的事件产生, 伪随机数为确定性的数学算法产生, 区别于前文随机性检验来区分真伪随机.
+
+## 引言
+
+当我们深入到随机数的底层实现, 关注点则从随机数的表现行为转向到生成本源. 在计算机程序视角下, 在没有相关硬件下, 无法生成真随机数.
+
+在讨论之前, 先对真伪随机数下定义:
+
+真随机数: 物理世界中客观存在的, 本质上不可预测或至少是极难精确预测的自然过程, 这些过程被称为'熵源'
+伪随机数: 由确定性的数学算法 (即伪随机数生成器PRNG) 产生.
+
+真随机数的产生不依赖于任何确定性的算法, 理论上, 其输出序列是不可重现, 不可预测的. 每一个新的真随机数都是对物理熵源在某一时刻状态的独立'采样'.
+
+伪随机数则不同, PRNG从一个初始值——称为 '种子' ——开始, 通过固定的递推公式或算法规则, 生成一个数字序列. 这个序列虽然在统计特性上可能与真随机序列非常相似, 甚至能够通过严格的随机性测试, 但其本质是完全确定的: 只要种子和算法相同, 产生的序列也必然完全相同. 
+
+## '捕获' 真随机数
+
+对应PRNG, 真随机数有一个真随机数生成器TRNG, 是通过硬件设备捕捉和处理物理熵源信号, 将其转换为可用的随机比特流.
+
+常见的物理熵源有: 热噪声, [大气噪声](https://www.random.org/), 放射性衰变, 量子现象, 非线性动力学混沌系统.
+对于一些x86处理器, 带有硬件随机数生成器, 使用了CPU硬件电路中物理噪声源.
+
+有了熵源, 接下来就是 '捕获' 他, 最经典的就是使用传感器: 例如光电二极管, 核辐射探测器, 放大器等, 获得的信号通常为为连续的, 微弱的模拟信号, 这个时候我们需要将他转换成数字信号.
+
+在经过信号放大后, 使用模数转换器即可完成转换成数字信号: 将模拟信号在特定时刻的幅值量化成数字值.
+&gt; 参考音频模拟信号转数字信号
+
+对于事件驱动的随机事件(放射性衰变), 则可以测量连续事件之间的时间间隔, 然后将这些时间间隔数字化.
+
+在转换成数字信号后, 原始比特流仍然不完美, 可能会出现统计偏差或者出现相关性. 因此, 几乎所有的实用TRNG都会包含一个后处理阶段, 对原始比特流进行'提纯', 以改善其统计特性, 使其更接近理想的均匀分布和独立性. 详见 [https://en.wikipedia.org/wiki/Randomness_extractor](https://en.wikipedia.org/wiki/Randomness_extractor)
+
+TRNG提供了最高质量的, 不可预测的随机性. 但是代价是不可复现, 生成速率较低等问题, 成本与复杂度较高, 环境敏感. 由于熵源可能退化或受到干扰, TRNG必须内置持续的健康监测机制. 这些测试 (通常是一些简化的在线随机性统计测试) 用于实时监控熵源和输出比特流的质量, 一旦检测到异常 (如输出长时间为全0或全1，或者统计特性明显偏离预期等随机性检验), 系统应能发出警报或停止输出, 以防止使用低质量的随机数. 
+
+一个'真'的TRNG, 其真实性不仅取决于其所依赖的物理现象的随机本质, 更依赖于整个信号链 (从采集, 数字化到后处理) 的精心设计, 严格实现和持续验证. 任何环节的瑕疵都可能损害其输出的随机性质量.
+
+## '伪造' 随机数
+
+伪随机数生成器 (PRNG) 是利用确定性的数学算法来产生数字序列的程序. 这些序列虽然不是真正随机的, 但其设计目标是使其在统计特性上尽可能地模仿真随机序列. 
+
+PRNG的核心运作需要一个种子与一个确定性算法
+
+TODO
+
+。</description><guid isPermaLink="true">https://FairyOwO.github.io/post/sui-ji-%28-er-%29%20-ji-suan-ji-de-sui-ji-shi-xian.html</guid><pubDate>Fri, 01 Aug 2025 08:46:54 +0000</pubDate></item><item><title>随机(一) 应用上的随机</title><link>https://FairyOwO.github.io/post/sui-ji-%28-yi-%29%20-ying-yong-shang-de-sui-ji.html</link><description>&gt; 写在前面: 本文探讨的真随机与伪随机的定义: 只要满足随机性检测的, 即为真随机. 其余皆为伪随机
 &gt; 区别于通过物理现象或不可预测的事件产生的真随机数, 与程序生成的伪随机数, 两者将在下一篇介绍
 &gt; 常见的伪随机有: 抽卡低保算法等
 
