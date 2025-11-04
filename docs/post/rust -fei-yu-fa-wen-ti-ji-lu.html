@@ -164,7 +164,118 @@ cargo add  # 添加三方库
 <p>可能没有值的操作，返回 Option (有值或无值)。 这种方式强迫你在编译时就必须显式处理所有可能的失败路径，极大地提高了代码的健壮性。</p>
 <h3>编译器</h3>
 <p>rust 编译器是我见过的错误信息最完善的编译器，他会将问题具体指出，并给出一个可能的修复方案（有时候不是很准）<br>
-在ai时代，这无疑非常方便于 ai coding agent，尽管在 benchmark 中 各类 ai 对于 rust 支持并非 python 或者 java 这么完善，但有编译器详细的报错信息，在一轮代码输出错误的情况下，很快就能自行修复</p></div>
+在ai时代，这无疑非常方便于 ai coding agent，尽管在 benchmark 中 各类 ai 对于 rust 支持并非 python 或者 java 这么完善，但有编译器详细的报错信息，在一轮代码输出错误的情况下，很快就能自行修复</p>
+<h3>错误处理</h3>
+<p>.unwrap() 或 .expect() 操作比较危险，需要保证不会错误 一般来说 使用操作符 <code class="notranslate">?</code> 来自动管理 Result</p>
+<h3>文档</h3>
+<div class="highlight highlight-source-rust"><pre class="notranslate"><span class="pl-c">/// 将两个数相加。</span>
+<span class="pl-c"></span><span class="pl-c">///</span>
+<span class="pl-c"></span><span class="pl-c">/// # Examples</span>
+<span class="pl-c"></span><span class="pl-c">///</span>
+<span class="pl-c"></span><span class="pl-c">/// ```</span>
+<span class="pl-c"></span><span class="pl-c">/// let result = my_crate::add(2, 2);</span>
+<span class="pl-c"></span><span class="pl-c">/// assert_eq!(result, 4);</span>
+<span class="pl-c"></span><span class="pl-c">/// ```</span>
+<span class="pl-c"></span><span class="pl-k">pub</span> <span class="pl-k">fn</span> <span class="pl-en">add</span><span class="pl-kos">(</span><span class="pl-s1">a</span><span class="pl-kos">:</span> <span class="pl-smi">i32</span><span class="pl-kos">,</span> <span class="pl-s1">b</span><span class="pl-kos">:</span> <span class="pl-smi">i32</span><span class="pl-kos">)</span> -&gt; <span class="pl-smi">i32</span> <span class="pl-kos">{</span>
+    a + b
+<span class="pl-kos">}</span></pre></div>
+<p>顶上的<code class="notranslate">///</code>部分就是文档注释，在文档注释中的```代码块就是测试用例 在cargo test中会被执行<br>
+<code class="notranslate">//!</code> 是整个项目或者模块的注释 用来介绍项目或者模块是干什么的</p>
+<h3>git hook</h3>
+<h4>脚本版</h4>
+<div class="highlight highlight-source-shell"><pre class="notranslate"><span class="pl-c"><span class="pl-c">#!</span>/bin/sh</span>
+
+<span class="pl-c1">echo</span> <span class="pl-s"><span class="pl-pds">"</span>Running pre-commit hook...<span class="pl-pds">"</span></span>
+
+<span class="pl-c"><span class="pl-c">#</span> 1. 检查格式化</span>
+<span class="pl-c1">echo</span> <span class="pl-s"><span class="pl-pds">"</span>Checking formatting (cargo fmt)...<span class="pl-pds">"</span></span>
+cargo fmt -- --check
+<span class="pl-k">if</span> [ <span class="pl-smi">$?</span> <span class="pl-k">-ne</span> 0 ]<span class="pl-k">;</span> <span class="pl-k">then</span>
+    <span class="pl-c1">echo</span> <span class="pl-s"><span class="pl-pds">"</span>Error: Code is not formatted. Run 'cargo fmt' and re-commit.<span class="pl-pds">"</span></span>
+    <span class="pl-c1">exit</span> 1
+<span class="pl-k">fi</span>
+
+<span class="pl-c"><span class="pl-c">#</span> 2. 检查 Clippy Lints (将所有警告视为错误)</span>
+<span class="pl-c1">echo</span> <span class="pl-s"><span class="pl-pds">"</span>Checking lints (cargo clippy)...<span class="pl-pds">"</span></span>
+cargo clippy --all-targets -- -D warnings
+<span class="pl-k">if</span> [ <span class="pl-smi">$?</span> <span class="pl-k">-ne</span> 0 ]<span class="pl-k">;</span> <span class="pl-k">then</span>
+    <span class="pl-c1">echo</span> <span class="pl-s"><span class="pl-pds">"</span>Error: Clippy found issues. Fix them and re-commit.<span class="pl-pds">"</span></span>
+    <span class="pl-c1">exit</span> 1
+<span class="pl-k">fi</span>
+
+<span class="pl-c"><span class="pl-c">#</span> 3. 运行测试</span>
+<span class="pl-c1">echo</span> <span class="pl-s"><span class="pl-pds">"</span>Running tests (cargo test)...<span class="pl-pds">"</span></span>
+cargo <span class="pl-c1">test</span>
+<span class="pl-k">if</span> [ <span class="pl-smi">$?</span> <span class="pl-k">-ne</span> 0 ]<span class="pl-k">;</span> <span class="pl-k">then</span>
+    <span class="pl-c1">echo</span> <span class="pl-s"><span class="pl-pds">"</span>Error: Tests failed. Fix them and re-commit.<span class="pl-pds">"</span></span>
+    <span class="pl-c1">exit</span> 1
+<span class="pl-k">fi</span>
+
+<span class="pl-c1">echo</span> <span class="pl-s"><span class="pl-pds">"</span>All checks passed. Committing...<span class="pl-pds">"</span></span>
+<span class="pl-c1">exit</span> 0</pre></div>
+<blockquote>
+<p>不要忘了给可执行权限 <code class="notranslate">chmod +x </code></p>
+</blockquote>
+<h4>pre-commit版</h4>
+<div class="highlight highlight-source-yaml"><pre class="notranslate"><span class="pl-ent">repos</span>:
+-   <span class="pl-ent">repo</span>: <span class="pl-s">https://github.com/pre-commit/pre-commit-hooks</span>
+    <span class="pl-ent">rev</span>: <span class="pl-s">v4.4.0</span>
+    <span class="pl-ent">hooks</span>:
+    -   <span class="pl-ent">id</span>: <span class="pl-s">check-toml </span><span class="pl-c"><span class="pl-c">#</span> 检查 Cargo.toml 语法</span>
+    -   <span class="pl-ent">id</span>: <span class="pl-s">check-yaml</span>
+    -   <span class="pl-ent">id</span>: <span class="pl-s">end-of-file-fixer</span>
+    -   <span class="pl-ent">id</span>: <span class="pl-s">trailing-whitespace</span>
+
+-   <span class="pl-ent">repo</span>: <span class="pl-s">local</span>
+    <span class="pl-ent">hooks</span>:
+    -   <span class="pl-ent">id</span>: <span class="pl-s">rust-fmt</span>
+        <span class="pl-ent">name</span>: <span class="pl-s">rust-fmt</span>
+        <span class="pl-ent">entry</span>: <span class="pl-s">cargo fmt --all -- --check</span>
+        <span class="pl-ent">language</span>: <span class="pl-s">system</span>
+        <span class="pl-ent">types</span>: <span class="pl-s">[rust]</span>
+        <span class="pl-ent">pass_filenames</span>: <span class="pl-c1">false</span>
+
+    -   <span class="pl-ent">id</span>: <span class="pl-s">rust-clippy</span>
+        <span class="pl-ent">name</span>: <span class="pl-s">rust-clippy</span>
+        <span class="pl-ent">entry</span>: <span class="pl-s">cargo clippy --all-targets -- -D warnings</span>
+        <span class="pl-ent">language</span>: <span class="pl-s">system</span>
+        <span class="pl-ent">types</span>: <span class="pl-s">[rust]</span>
+        <span class="pl-ent">pass_filenames</span>: <span class="pl-c1">false</span>
+
+    -   <span class="pl-ent">id</span>: <span class="pl-s">rust-test</span>
+        <span class="pl-ent">name</span>: <span class="pl-s">rust-test</span>
+        <span class="pl-ent">entry</span>: <span class="pl-s">cargo test</span>
+        <span class="pl-ent">language</span>: <span class="pl-s">system</span>
+        <span class="pl-ent">types</span>: <span class="pl-s">[rust]</span>
+        <span class="pl-ent">pass_filenames</span>: <span class="pl-c1">false</span></pre></div>
+<h4>github ci 版</h4>
+<div class="highlight highlight-source-yaml"><pre class="notranslate"><span class="pl-ent">name</span>: <span class="pl-s">Rust CI</span>
+
+<span class="pl-ent">on</span>:
+  <span class="pl-ent">push</span>:
+    <span class="pl-ent">branches</span>: <span class="pl-s">[ "main" ]</span>
+  <span class="pl-ent">pull_request</span>:
+    <span class="pl-ent">branches</span>: <span class="pl-s">[ "main" ]</span>
+
+<span class="pl-ent">jobs</span>:
+  <span class="pl-ent">build_and_test</span>:
+    <span class="pl-ent">runs-on</span>: <span class="pl-s">ubuntu-latest</span>
+    <span class="pl-ent">steps</span>:
+    - <span class="pl-ent">uses</span>: <span class="pl-s">actions/checkout@v3</span>
+
+    - <span class="pl-ent">name</span>: <span class="pl-s">Install Rust</span>
+      <span class="pl-ent">uses</span>: <span class="pl-s">dtolnay/rust-toolchain@stable</span>
+      <span class="pl-ent">with</span>:
+        <span class="pl-ent">components</span>: <span class="pl-s">clippy, rustfmt</span>
+
+    - <span class="pl-ent">name</span>: <span class="pl-s">Check formatting</span>
+      <span class="pl-ent">run</span>: <span class="pl-s">cargo fmt --all -- --check</span>
+
+    - <span class="pl-ent">name</span>: <span class="pl-s">Check lints</span>
+      <span class="pl-ent">run</span>: <span class="pl-s">cargo clippy --all-targets -- -D warnings</span>
+
+    - <span class="pl-ent">name</span>: <span class="pl-s">Run tests</span>
+      <span class="pl-ent">run</span>: <span class="pl-s">cargo test</span></pre></div></div>
 <div style="font-size:small;margin-top:8px;float:right;">转载无需注明出处</div>
 
 <button class="btn btn-block" type="button" onclick="openComments()" id="cmButton">评论</button>

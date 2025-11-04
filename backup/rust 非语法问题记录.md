@@ -100,3 +100,132 @@ Result 与 Option 另一个重大的思想转变是错误处理。Rust 没有 tr
 rust 编译器是我见过的错误信息最完善的编译器，他会将问题具体指出，并给出一个可能的修复方案（有时候不是很准）
 在ai时代，这无疑非常方便于 ai coding agent，尽管在 benchmark 中 各类 ai 对于 rust 支持并非 python 或者 java 这么完善，但有编译器详细的报错信息，在一轮代码输出错误的情况下，很快就能自行修复
 
+### 错误处理
+
+.unwrap() 或 .expect() 操作比较危险，需要保证不会错误 一般来说 使用操作符 `?` 来自动管理 Result
+
+### 文档
+
+```rust
+/// 将两个数相加。
+///
+/// # Examples
+///
+/// ```
+/// let result = my_crate::add(2, 2);
+/// assert_eq!(result, 4);
+/// ```
+pub fn add(a: i32, b: i32) -> i32 {
+    a + b
+}
+```
+
+顶上的`///`部分就是文档注释，在文档注释中的```代码块就是测试用例 在cargo test中会被执行
+`//!` 是整个项目或者模块的注释 用来介绍项目或者模块是干什么的
+
+### git hook
+
+#### 脚本版
+
+```sh
+#!/bin/sh
+
+echo "Running pre-commit hook..."
+
+# 1. 检查格式化
+echo "Checking formatting (cargo fmt)..."
+cargo fmt -- --check
+if [ $? -ne 0 ]; then
+    echo "Error: Code is not formatted. Run 'cargo fmt' and re-commit."
+    exit 1
+fi
+
+# 2. 检查 Clippy Lints (将所有警告视为错误)
+echo "Checking lints (cargo clippy)..."
+cargo clippy --all-targets -- -D warnings
+if [ $? -ne 0 ]; then
+    echo "Error: Clippy found issues. Fix them and re-commit."
+    exit 1
+fi
+
+# 3. 运行测试
+echo "Running tests (cargo test)..."
+cargo test
+if [ $? -ne 0 ]; then
+    echo "Error: Tests failed. Fix them and re-commit."
+    exit 1
+fi
+
+echo "All checks passed. Committing..."
+exit 0
+```
+
+> 不要忘了给可执行权限 `chmod +x `
+
+#### pre-commit版
+
+```yaml
+repos:
+-   repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.4.0
+    hooks:
+    -   id: check-toml # 检查 Cargo.toml 语法
+    -   id: check-yaml
+    -   id: end-of-file-fixer
+    -   id: trailing-whitespace
+
+-   repo: local
+    hooks:
+    -   id: rust-fmt
+        name: rust-fmt
+        entry: cargo fmt --all -- --check
+        language: system
+        types: [rust]
+        pass_filenames: false
+
+    -   id: rust-clippy
+        name: rust-clippy
+        entry: cargo clippy --all-targets -- -D warnings
+        language: system
+        types: [rust]
+        pass_filenames: false
+
+    -   id: rust-test
+        name: rust-test
+        entry: cargo test
+        language: system
+        types: [rust]
+        pass_filenames: false
+```
+
+#### github ci 版
+
+```yaml
+name: Rust CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build_and_test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Install Rust
+      uses: dtolnay/rust-toolchain@stable
+      with:
+        components: clippy, rustfmt
+
+    - name: Check formatting
+      run: cargo fmt --all -- --check
+
+    - name: Check lints
+      run: cargo clippy --all-targets -- -D warnings
+
+    - name: Run tests
+      run: cargo test
+```
