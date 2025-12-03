@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html data-color-mode="light" data-dark-theme="dark_colorblind" data-light-theme="light" lang="zh-CN">
+<head>
+    <meta content="text/html; charset=utf-8" http-equiv="content-type" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <link href='https://mirrors.sustech.edu.cn/cdnjs/ajax/libs/Primer/21.0.7/primer.css' rel='stylesheet' />
+    
+    <link rel="icon" href="https://github.githubassets.com/favicons/favicon.svg"><script>
+        let theme = localStorage.getItem("meek_theme") || "light";
+        document.documentElement.setAttribute("data-color-mode", theme);
+    </script>
+<meta name="description" content="## 概述
+
+逆向新手题 `jocker.exe` 的windows可执行文件。">
+<meta property="og:title" content="入门逆向工程之新手题writeup">
+<meta property="og:description" content="## 概述
+
+逆向新手题 `jocker.exe` 的windows可执行文件。">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://FairyOwO.github.io/post/ru-men-ni-xiang-gong-cheng-zhi-xin-shou-ti-writeup.html">
+<meta property="og:image" content="https://github.githubassets.com/favicons/favicon.svg">
+<title>入门逆向工程之新手题writeup</title>
+<link href="//unpkg.com/@wooorm/starry-night@2.1.1/style/both.css" rel="stylesheet" />
+
+
+</head>
+<style>
+body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;padding: 45px;font-size: 16px;font-family: sans-serif;line-height: 1.25;}
+#header{display:flex;padding-bottom:8px;border-bottom: 1px solid var(--borderColor-muted, var(--color-border-muted));margin-bottom: 16px;}
+#footer {margin-top:64px; text-align: center;font-size: small;}
+
+</style>
+
+<style>
+.postTitle{margin: auto 0;font-size:40px;font-weight:bold;}
+.title-right{display:flex;margin:auto 0 0 auto;}
+.title-right .circle{padding: 14px 16px;margin-right:8px;}
+#postBody{border-bottom: 1px solid var(--color-border-default);padding-bottom:36px;}
+#postBody hr{height:2px;}
+#cmButton{height:48px;margin-top:48px;}
+#comments{margin-top:64px;}
+.g-emoji{font-size:24px;}
+@media (max-width: 600px) {
+    body {padding: 8px;}
+    .postTitle{font-size:24px;}
+}
+.copy-feedback {
+    display: none;
+    position: absolute;
+    top: 10px;
+    right: 50px;
+    color: var(--color-fg-on-emphasis);
+    background-color: var(--color-fg-muted);
+    border-radius: 3px;
+    padding: 5px 8px;
+    font-size: 12px;
+}
+</style>
+
+
+
+
+<body>
+    <div id="header">
+<h1 class="postTitle">入门逆向工程之新手题writeup</h1>
+<div class="title-right">
+    <a href="https://FairyOwO.github.io" id="buttonHome" class="btn btn-invisible circle" title="首页">
+        <svg class="octicon" width="16" height="16">
+            <path id="pathHome" fill-rule="evenodd"></path>
+        </svg>
+    </a>
+    
+    <a href="https://github.com/FairyOwO/FairyOwO.github.io/issues/16" target="_blank" class="btn btn-invisible circle" title="Issue">
+        <svg class="octicon" width="16" height="16">
+            <path id="pathIssue" fill-rule="evenodd"></path>
+        </svg>
+    </a>
+    
+
+    <a class="btn btn-invisible circle" onclick="modeSwitch();" title="切换主题">
+        <svg class="octicon" width="16" height="16" >
+            <path id="themeSwitch" fill-rule="evenodd"></path>
+        </svg>
+    </a>
+
+</div>
+</div>
+    <div id="content">
+<div class="markdown-body" id="postBody"><h2>概述</h2>
+<p>逆向新手题 <code class="notranslate">jocker.exe</code> 的windows可执行文件。该程序要求用户输入一个 Flag，并通过一系列验证来判断输入的正确性。通过对 main 函数伪代码的初步分析，发现程序包含自修改代码（Self-Modifying Code, SMC）以及多阶段的 Flag 验证逻辑。</p>
+<blockquote>
+<p>以下不能显示的图片即程序，下载后需要修改后缀，建议使用虚拟机等工具来进行分析以防程序被植入病毒。</p>
+</blockquote>
+<p><a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/032b632a-f08c-4a5c-b066-ca211fa89956"><img src="https://github.com/user-attachments/assets/032b632a-f08c-4a5c-b066-ca211fa89956" alt="Image" style="max-width: 100%;"></a></p>
+<h2>环境工具</h2>
+<ul>
+<li>windows11</li>
+<li>IDA Pro 9.1</li>
+<li>python（自带于IDA中）</li>
+</ul>
+<h2>分析流程</h2>
+<h3>反编译与初步分析</h3>
+<p>在 ctf 的逆向过程中首先需要找到入口，也就是 <code class="notranslate">main</code> 函数。<br>
+使用 IDA Pro 加载 jocker.exe 后，首先定位到 <code class="notranslate">main</code> 函数。其就在 IDA 左侧 function 窗口，segment 在 .text 中。其伪代码如下所示：</p>
+<div class="highlight highlight-source-c"><pre class="notranslate"><span class="pl-smi">int</span> __cdecl <span class="pl-en">main</span>(<span class="pl-smi">int</span> <span class="pl-s1">argc</span>, <span class="pl-k">const</span> <span class="pl-smi">char</span> <span class="pl-c1">*</span><span class="pl-c1">*</span><span class="pl-s1">argv</span>, <span class="pl-k">const</span> <span class="pl-smi">char</span> <span class="pl-c1">*</span><span class="pl-c1">*</span><span class="pl-s1">envp</span>)
+{
+  <span class="pl-smi">char</span> <span class="pl-s1">Str</span>[<span class="pl-c1">50</span>];      <span class="pl-c">// [esp+12h] [ebp-96h] BYREF</span>
+  <span class="pl-smi">char</span> <span class="pl-s1">Destination</span>[<span class="pl-c1">80</span>]; <span class="pl-c">// [esp+44h] [ebp-64h] BYREF</span>
+  <span class="pl-smi">DWORD</span> <span class="pl-s1">flOldProtect</span>; <span class="pl-c">// [esp+94h] [ebp-14h] BYREF</span>
+  <span class="pl-smi">size_t</span> <span class="pl-s1">v7</span>;         <span class="pl-c">// [esp+98h] [ebp-10h]</span>
+  <span class="pl-smi">int</span> <span class="pl-s1">i</span>;             <span class="pl-c">// [esp+9Ch] [ebp-Ch]</span>
+
+  <span class="pl-en">__main</span>();
+  <span class="pl-en">puts</span>(<span class="pl-s">"please input you flag:"</span>);
+  <span class="pl-k">if</span> ( !<span class="pl-en">VirtualProtect</span>(<span class="pl-s1">encrypt</span>, <span class="pl-c1">0xC8u</span>, <span class="pl-c1">4u</span>, <span class="pl-c1">&amp;</span><span class="pl-s1">flOldProtect</span>) )
+    <span class="pl-en">exit</span>(<span class="pl-c1">1</span>);
+  <span class="pl-en">scanf</span>(<span class="pl-s">"%40s"</span>, <span class="pl-s1">Str</span>);
+  <span class="pl-s1">v7</span> <span class="pl-c1">=</span> <span class="pl-en">strlen</span>(<span class="pl-s1">Str</span>);
+  <span class="pl-k">if</span> ( <span class="pl-s1">v7</span> <span class="pl-c1">!=</span> <span class="pl-c1">24</span> )
+  {
+    <span class="pl-en">puts</span>(<span class="pl-s">"Wrong!"</span>);
+    <span class="pl-en">exit</span>(<span class="pl-c1">0</span>);
+  }
+  <span class="pl-en">strcpy</span>(<span class="pl-s1">Destination</span>, <span class="pl-s1">Str</span>);
+  <span class="pl-en">wrong</span>(<span class="pl-s1">Str</span>);
+  <span class="pl-en">omg</span>(<span class="pl-s1">Str</span>);
+  <span class="pl-k">for</span> ( <span class="pl-s1">i</span> <span class="pl-c1">=</span> <span class="pl-c1">0</span>; <span class="pl-s1">i</span> &lt;= <span class="pl-c1">186</span>; <span class="pl-c1">++</span><span class="pl-s1">i</span> )
+    <span class="pl-c1">*</span>((<span class="pl-smi">_BYTE</span> <span class="pl-c1">*</span>)<span class="pl-s1">encrypt</span> <span class="pl-c1">+</span> <span class="pl-s1">i</span>) ^= <span class="pl-c1">0x41u</span>;
+  <span class="pl-k">if</span> ( <span class="pl-en">encrypt</span>(<span class="pl-s1">Destination</span>) )
+    <span class="pl-en">finally</span>(<span class="pl-s1">Destination</span>);
+  <span class="pl-k">return</span> <span class="pl-c1">0</span>;
+}</pre></div>
+<blockquote>
+<p>在跳转到 main 汇编函数段的时候，按下空格会进入图视角，按下 f5 会进入伪代码视角</p>
+</blockquote>
+<p>关键信息：</p>
+<ol>
+<li>程序通过 <code class="notranslate">scanf("%40s", Str)</code>  获取用户输入，并检查其长度。此处 <code class="notranslate">v7 != 24</code> 的判断表明 Flag 的总长度应为 24 字节。</li>
+<li>存在自修改代码
+<ul>
+<li><code class="notranslate">VirtualProtect(encrypt, 0xC8u, 4u, &amp;flOldProtect)</code>: 这行代码修改了 <code class="notranslate">encrypt</code> 函数所在内存区域的保护属性，使其变为可写 (PAGE_READWRITE)。</li>
+<li><code class="notranslate">for ( i = 0; i &lt;= 186; ++i ) *((_BYTE *)encrypt + i) ^= 0x41u;</code>: 这是一个循环，对 <code class="notranslate">encrypt</code> 函数起始地址后的 187 字节（从 <code class="notranslate">encrypt</code> 到 <code class="notranslate">encrypt + 186</code>）进行 <code class="notranslate">0x41</code> 的异或操作。这表明 <code class="notranslate">encrypt</code> 函数在程序加载时是加密状态，运行时才被解密。</li>
+</ul>
+</li>
+<li><code class="notranslate">encrypt(Destination)</code> 和 <code class="notranslate">finally(Destination)</code> 是两个关键的验证函数。<code class="notranslate">Destination</code> 变量保存了用户输入的 Flag 副本。</li>
+<li><code class="notranslate">wrong(Str)</code> 和 <code class="notranslate">omg(Str)</code> 在 <code class="notranslate">strcpy(Destination, Str)</code> 之后被调用，可能用于对 <code class="notranslate">Str</code> 进行混淆或无关操作。由于 <code class="notranslate">encrypt</code> 和 <code class="notranslate">finally</code> 使用的是 <code class="notranslate">Destination</code>，因此可以暂时忽略 <code class="notranslate">wrong</code> 和 <code class="notranslate">omg</code> 对 Flag 核心逻辑的影响。</li>
+</ol>
+<h3>解密自修改代码（修复 <code class="notranslate">encrypt</code> 函数）</h3>
+<p>由于 <code class="notranslate">encrypt</code> 函数在静态文件中是加密状态，直接在 IDA Pro 查看其伪代码将是无效的。需要先执行其自修改逻辑。<br>
+这里有两种方法，可以通过 IDA Pro 动态调试， dbg 等动态调试工具在解密完之后打断点，来获取其解密的代码。<br>
+也可以审阅其代码来获得其自修改逻辑，根据他的其自修改逻辑来解密获得源代码。<br>
+这里自修改逻辑较为简单（直接在 <code class="notranslate">main</code> 函数中即可得知，且为简单的异或操作），故选择第二种方法</p>
+<p>操作流程</p>
+<ol>
+<li>定位 encrypt 函数地址: 在 main 函数的伪代码中双击 encrypt，可以跳转到其汇编视图，并获取其起始地址。本例中，该地址为 0x401500。</li>
+<li>编写 IDA PYTHON 并运行：
+<div class="highlight highlight-source-python"><pre class="notranslate"><span class="pl-k">import</span> <span class="pl-s1">idc</span>
+
+<span class="pl-s1">start_addr</span> <span class="pl-c1">=</span> <span class="pl-c1">0x401500</span>  <span class="pl-c"># encrypt 函数的起始地址</span>
+<span class="pl-s1">length</span> <span class="pl-c1">=</span> <span class="pl-c1">187</span>           <span class="pl-c"># 循环长度，0到186，共187个字节</span>
+<span class="pl-s1">key</span> <span class="pl-c1">=</span> <span class="pl-c1">0x41</span>             <span class="pl-c"># 异或的 Key</span>
+
+<span class="pl-en">print</span>(<span class="pl-s">f"开始修复地址 <span class="pl-s1"><span class="pl-kos">{</span><span class="pl-en">hex</span>(<span class="pl-s1">start_addr</span>)<span class="pl-kos">}</span></span> 处的代码..."</span>)
+
+<span class="pl-k">for</span> <span class="pl-s1">i</span> <span class="pl-c1">in</span> <span class="pl-en">range</span>(<span class="pl-s1">length</span>):
+    <span class="pl-s1">current_addr</span> <span class="pl-c1">=</span> <span class="pl-s1">start_addr</span> <span class="pl-c1">+</span> <span class="pl-s1">i</span>
+    <span class="pl-s1">original_byte</span> <span class="pl-c1">=</span> <span class="pl-s1">idc</span>.<span class="pl-c1">get_wide_byte</span>(<span class="pl-s1">current_addr</span>)
+    <span class="pl-s1">new_byte</span> <span class="pl-c1">=</span> <span class="pl-s1">original_byte</span> <span class="pl-c1">^</span> <span class="pl-s1">key</span>
+    <span class="pl-s1">idc</span>.<span class="pl-c1">patch_byte</span>(<span class="pl-s1">current_addr</span>, <span class="pl-s1">new_byte</span>)
+
+<span class="pl-en">print</span>(<span class="pl-s">"修复完成！请刷新反汇编视图。"</span>)</pre></div>
+<blockquote>
+<p>其位于左上角 file 下拉框中 Script Command 下 选择 python 语言</p>
+</blockquote>
+</li>
+<li>刷新重建 IDA 的函数识别功能
+<ol>
+<li>跳转到 0x401500 (G 快捷键，输入地址)。</li>
+<li>选中该区域，按 U 键取消定义。</li>
+<li>将光标置于 0x401500 处，按 C 键将其转换为代码。</li>
+<li>按 P 键创建函数，让 IDA Pro 重新分析该区域的代码逻辑。</li>
+<li>按 F5 键查看 encrypt 函数的伪代码。</li>
+</ol>
+</li>
+</ol>
+<h3>解密 flag 第一部分</h3>
+<p>操作流程</p>
+<ol>
+<li>分析修复好的 <code class="notranslate">encrtpt</code> 函数
+<div class="highlight highlight-source-c"><pre class="notranslate"><span class="pl-smi">int</span> __cdecl <span class="pl-en">encrypt</span>(<span class="pl-smi">char</span> <span class="pl-c1">*</span><span class="pl-s1">a1</span>)
+{
+  <span class="pl-smi">_DWORD</span> <span class="pl-s1">v2</span>[<span class="pl-c1">19</span>]; <span class="pl-c">// [esp+1Ch] [ebp-6Ch] BYREF</span>
+  <span class="pl-smi">int</span> <span class="pl-s1">v3</span>;        <span class="pl-c">// [esp+68h] [ebp-20h]</span>
+  <span class="pl-smi">int</span> <span class="pl-s1">i</span>;         <span class="pl-c">// [esp+6Ch] [ebp-1Ch]</span>
+
+  <span class="pl-s1">v3</span> <span class="pl-c1">=</span> <span class="pl-c1">1</span>;
+  <span class="pl-en">qmemcpy</span>(<span class="pl-s1">v2</span>, <span class="pl-c1">&amp;</span><span class="pl-s1">unk_403040</span>, <span class="pl-k">sizeof</span>(<span class="pl-s1">v2</span>)); <span class="pl-c">// 将数据从 unk_403040 拷贝到 v2</span>
+  <span class="pl-k">for</span> ( <span class="pl-s1">i</span> <span class="pl-c1">=</span> <span class="pl-c1">0</span>; <span class="pl-s1">i</span> &lt;= <span class="pl-c1">18</span>; <span class="pl-c1">++</span><span class="pl-s1">i</span> )           <span class="pl-c">// 循环 19 次 (0-18)</span>
+  {
+    <span class="pl-k">if</span> ( (<span class="pl-smi">char</span>)(<span class="pl-s1">a1</span>[<span class="pl-s1">i</span>] ^ <span class="pl-s1">Buffer</span>[<span class="pl-s1">i</span>]) <span class="pl-c1">!=</span> <span class="pl-s1">v2</span>[<span class="pl-s1">i</span>] ) <span class="pl-c">// 核心比较逻辑</span>
+    {
+      <span class="pl-en">puts</span>(<span class="pl-s">"wrong ~"</span>);
+      <span class="pl-s1">v3</span> <span class="pl-c1">=</span> <span class="pl-c1">0</span>;
+      <span class="pl-en">exit</span>(<span class="pl-c1">0</span>);
+    }
+  }
+  <span class="pl-en">puts</span>(<span class="pl-s">"come here"</span>);
+  <span class="pl-k">return</span> <span class="pl-s1">v3</span>;
+}</pre></div>
+<ol>
+<li>循环 <code class="notranslate">i &lt;= 18</code> 表明 <code class="notranslate">encrypt</code> 函数验证了 Flag 的前 19 个字节。结合 <code class="notranslate">main</code> 函数中 Flag 总长度为 24 字节的判断，可知还有 5 个字节未被 <code class="notranslate">encrypt</code> 验证。</li>
+<li>`(char)(a1[i] ^ Buffer[i]) != v2[i]
+<ul>
+<li><code class="notranslate">a1[i]</code> 是用户输入的 Flag 字符。</li>
+<li><code class="notranslate">Buffer[i]</code> 是一个硬编码的字符串。在汇编代码中，<code class="notranslate">Buffer</code> 被IDA自动识别为 <code class="notranslate">"hahahaha_do_you_find_me?"</code>。</li>
+<li><code class="notranslate">v2[i]</code> 是从 <code class="notranslate">unk_403040</code> 拷贝过来的 4 字节整数数组。</li>
+</ul>
+</li>
+<li>解密公式：根据 <code class="notranslate">(a1[i] ^ Buffer[i]) == v2[i]</code>，可以推导出 <code class="notranslate">a1[i] = v2[i] ^ Buffer[i]</code>。</li>
+</ol>
+</li>
+<li>提取密文数据<br>
+<code class="notranslate">v2</code> 数组的密文数据位于 <code class="notranslate">unk_403040</code>。在 IDA Pro 中按 <code class="notranslate">G</code> 键跳转到 <code class="notranslate">0x403040</code> 处。可以看到一系列 4 字节的数值（例如 <code class="notranslate">0E 00 00 00</code> 代表十进制的 14）。</li>
+<li>解密密文数据，编写 IDA PYTHON 并运行
+<div class="highlight highlight-source-python"><pre class="notranslate"><span class="pl-k">import</span> <span class="pl-s1">idc</span>
+
+<span class="pl-s1">cipher_addr</span> <span class="pl-c1">=</span> <span class="pl-c1">0x403040</span> <span class="pl-c"># 密文数据起始地址</span>
+<span class="pl-s1">length</span> <span class="pl-c1">=</span> <span class="pl-c1">19</span>            <span class="pl-c"># 验证的 Flag 长度</span>
+<span class="pl-s1">key_string</span> <span class="pl-c1">=</span> <span class="pl-s">"hahahaha_do_you_find_me?"</span> <span class="pl-c"># Buffer 字符串</span>
+
+<span class="pl-en">print</span>(<span class="pl-s">"-"</span> <span class="pl-c1">*</span> <span class="pl-c1">20</span>)
+<span class="pl-en">print</span>(<span class="pl-s">"开始解密第一部分 Flag..."</span>)
+
+<span class="pl-s1">flag_part1</span> <span class="pl-c1">=</span> <span class="pl-s">""</span>
+<span class="pl-k">for</span> <span class="pl-s1">i</span> <span class="pl-c1">in</span> <span class="pl-en">range</span>(<span class="pl-s1">length</span>):
+    <span class="pl-s1">cipher_val</span> <span class="pl-c1">=</span> <span class="pl-s1">idc</span>.<span class="pl-c1">get_wide_dword</span>(<span class="pl-s1">cipher_addr</span> <span class="pl-c1">+</span> <span class="pl-s1">i</span> <span class="pl-c1">*</span> <span class="pl-c1">4</span>) <span class="pl-c"># 读取 4 字节的密文值</span>
+    <span class="pl-s1">key_val</span> <span class="pl-c1">=</span> <span class="pl-en">ord</span>(<span class="pl-s1">key_string</span>[<span class="pl-s1">i</span>])                         <span class="pl-c"># 获取 Key 字符串对应字符的 ASCII 值</span>
+    <span class="pl-s1">flag_char</span> <span class="pl-c1">=</span> <span class="pl-en">chr</span>(<span class="pl-s1">cipher_val</span> <span class="pl-c1">^</span> <span class="pl-s1">key_val</span>)                <span class="pl-c"># 异或还原</span>
+    <span class="pl-s1">flag_part1</span> <span class="pl-c1">+=</span> <span class="pl-s1">flag_char</span>
+
+<span class="pl-en">print</span>(<span class="pl-s">"解密结果(Flag第一部分): "</span> <span class="pl-c1">+</span> <span class="pl-s1">flag_part1</span>)
+<span class="pl-en">print</span>(<span class="pl-s">"-"</span> <span class="pl-c1">*</span> <span class="pl-c1">20</span>)</pre></div>
+</li>
+</ol>
+<p>最终获得flag的第一部分：<code class="notranslate">flag{d07abccf8a410c</code>。</p>
+<h3>获取 flag 第二部分</h3>
+<p>程序在 <code class="notranslate">encrypt(Destination)</code> 成功后调用 <code class="notranslate">finally(Destination)</code>。根据程序运行时的提示信息 "I hide the last part, you will not succeed!!!" 和 "最后五位隐藏在finally函数中"，可知 Flag 的剩余 5 字节在此函数中验证。</p>
+<p><code class="notranslate">finally</code> 函数的伪代码如下：</p>
+<div class="highlight highlight-source-c"><pre class="notranslate"><span class="pl-smi">int</span> __cdecl <span class="pl-en">finally</span>(<span class="pl-smi">char</span> <span class="pl-c1">*</span><span class="pl-s1">a1</span>)
+{
+  <span class="pl-smi">__time32_t</span> <span class="pl-s1">v1</span>; <span class="pl-c">// eax</span>
+  <span class="pl-smi">char</span> <span class="pl-s1">v3</span>[<span class="pl-c1">7</span>];    <span class="pl-c">// [esp+13h] [ebp-15h] BYREF</span>
+  <span class="pl-smi">__int16</span> <span class="pl-s1">v4</span>;    <span class="pl-c">// [esp+1Ah] [ebp-Eh]</span>
+  <span class="pl-smi">int</span> <span class="pl-s1">v5</span>;        <span class="pl-c">// [esp+1Ch] [ebp-Ch]</span>
+
+  <span class="pl-en">strcpy</span>(<span class="pl-s1">v3</span>, <span class="pl-s">"%tp&amp;:"</span>); <span class="pl-c">// 关键信息：v3 被初始化为 "%tp&amp;:"</span>
+  <span class="pl-s1">v1</span> <span class="pl-c1">=</span> <span class="pl-en">time</span>(<span class="pl-c1">0</span>);
+  <span class="pl-en">srand</span>(<span class="pl-s1">v1</span>);
+  <span class="pl-s1">v5</span> <span class="pl-c1">=</span> <span class="pl-en">rand</span>() % <span class="pl-c1">100</span>; <span class="pl-c">// 生成一个随机数</span>
+  <span class="pl-s1">v3</span>[<span class="pl-c1">6</span>] <span class="pl-c1">=</span> <span class="pl-c1">0</span>;         <span class="pl-c">// 填充终止符，实际 v3 长度为 5</span>
+  <span class="pl-s1">v4</span> <span class="pl-c1">=</span> <span class="pl-c1">0</span>;
+  <span class="pl-c">// 核心比较逻辑，但被随机数 v5 混淆</span>
+  <span class="pl-k">if</span> ( (<span class="pl-s1">v3</span>[(<span class="pl-smi">unsigned <span class="pl-smi">__int8</span></span>)<span class="pl-s1">v3</span>[<span class="pl-c1">5</span>]] <span class="pl-c1">!=</span> <span class="pl-s1">a1</span>[(<span class="pl-smi">unsigned <span class="pl-smi">__int8</span></span>)<span class="pl-s1">v3</span>[<span class="pl-c1">5</span>]]) <span class="pl-c1">==</span> <span class="pl-s1">v5</span> )
+    <span class="pl-k">return</span> <span class="pl-en">puts</span>(<span class="pl-s">"Really??? Did you find it?OMG!!!"</span>);
+  <span class="pl-k">else</span>
+    <span class="pl-k">return</span> <span class="pl-en">puts</span>(<span class="pl-s">"I hide the last part, you will not succeed!!!"</span>);
+}</pre></div>
+<p>关键信息：</p>
+<ol>
+<li>函数中使用了 <code class="notranslate">time(0)</code>、<code class="notranslate">srand(v1)</code> 和 <code class="notranslate">rand() % 100</code> 生成随机数 <code class="notranslate">v5</code>，并将其用于判断条件。</li>
+<li>最重要的线索在于 <code class="notranslate">strcpy(v3, "%tp&amp;:")</code>。这个字符串的长度正好是 5 个字节（不包含终止符），与我们缺失的 Flag 长度吻合。</li>
+<li>ctf 的 flag 格式遵循 <code class="notranslate">flag{...}</code> 格式，因此最后一位字符必然是 <code class="notranslate">}</code>。</li>
+</ol>
+<p>考虑到整个挑战中使用了异或操作，推测 <code class="notranslate">finally</code> 函数也使用异或来隐藏 Flag 的最后一部分。<br>
+已知 <code class="notranslate">v3</code> 字符串为 <code class="notranslate">"%tp&amp;:"</code>。<br>
+我们知道 Flag 的最后一位是 <code class="notranslate">}</code> (ASCII 0x7D)。<br>
+<code class="notranslate">v3</code> 字符串的最后一位是 <code class="notranslate">:</code> (ASCII 0x3A)。<br>
+假设存在一个 Key，使得 <code class="notranslate">v3[4] ^ Key = Flag[23]</code>。<br>
+即 <code class="notranslate">0x3A ^ Key = 0x7D</code>。<br>
+通过计算 <code class="notranslate">Key = 0x3A ^ 0x7D = 0x47</code>。</p>
+<p>使用计算出的 Key (<code class="notranslate">0x47</code>) 对 <code class="notranslate">"%tp&amp;:"</code> 的所有字符进行异或解密。</p>
+<p>编写 IDA PYTHON 并运行</p>
+<div class="highlight highlight-source-python"><pre class="notranslate"><span class="pl-s1">cipher_last</span> <span class="pl-c1">=</span> <span class="pl-s">"%tp&amp;:"</span> <span class="pl-c"># finally 函数中隐藏的字符串</span>
+<span class="pl-s1">key</span> <span class="pl-c1">=</span> <span class="pl-c1">0x47</span>            <span class="pl-c"># 推测出的异或 Key (通过 ':' ^ '}' 计算)</span>
+
+<span class="pl-s1">flag_last_part</span> <span class="pl-c1">=</span> <span class="pl-s">""</span>
+
+<span class="pl-en">print</span>(<span class="pl-s">"-"</span> <span class="pl-c1">*</span> <span class="pl-c1">20</span>)
+<span class="pl-en">print</span>(<span class="pl-s">"正在解密最后一部分 Flag..."</span>)
+
+<span class="pl-k">for</span> <span class="pl-s1">char</span> <span class="pl-c1">in</span> <span class="pl-s1">cipher_last</span>:
+    <span class="pl-s1">decoded_char</span> <span class="pl-c1">=</span> <span class="pl-en">chr</span>(<span class="pl-en">ord</span>(<span class="pl-s1">char</span>) <span class="pl-c1">^</span> <span class="pl-s1">key</span>) <span class="pl-c"># 异或解密</span>
+    <span class="pl-s1">flag_last_part</span> <span class="pl-c1">+=</span> <span class="pl-s1">decoded_char</span>
+
+<span class="pl-en">print</span>(<span class="pl-s">"解密结果: "</span> <span class="pl-c1">+</span> <span class="pl-s1">flag_last_part</span>)
+
+<span class="pl-s1">flag_first_part</span> <span class="pl-c1">=</span> <span class="pl-s">"flag{d07abccf8a410c"</span> <span class="pl-c"># 第一部分 Flag</span>
+<span class="pl-s1">final_flag</span> <span class="pl-c1">=</span> <span class="pl-s1">flag_first_part</span> <span class="pl-c1">+</span> <span class="pl-s1">flag_last_part</span>
+<span class="pl-en">print</span>(<span class="pl-s">"<span class="pl-cce">\n</span>完整 Flag: "</span> <span class="pl-c1">+</span> <span class="pl-s1">final_flag</span>)
+<span class="pl-en">print</span>(<span class="pl-s">"-"</span> <span class="pl-c1">*</span> <span class="pl-c1">20</span>)</pre></div>
+<p>运行上述脚本，得到 Flag 的最后 5 字节：<code class="notranslate">b37a}</code>。<br>
+将两部分 Flag 拼接，得到最终的 Flag：<code class="notranslate">flag{d07abccf8a410cb37a}</code>。</p></div>
+<div style="font-size:small;margin-top:8px;float:right;">转载无需注明出处</div>
+
+<button class="btn btn-block" type="button" onclick="openComments()" id="cmButton">评论</button>
+<div class="comments" id="comments"></div>
+
+</div>
+    <div id="footer"><div id="footer1">Copyright © <span id="copyrightYear"></span> <a href="https://FairyOwO.github.io">FairyOwO 的 Blog</a></div>
+<div id="footer2">
+    <span id="runday"></span><span>Powered by <a href="https://meekdai.com/Gmeek.html" target="_blank">Gmeek</a></span>
+</div>
+
+<script>
+var now=new Date();
+document.getElementById("copyrightYear").innerHTML=now.getFullYear();
+
+if("11/22/2024"!=""){
+    var startSite=new Date("11/22/2024");
+    var diff=now.getTime()-startSite.getTime();
+    var diffDay=Math.floor(diff/(1000*60*60*24));
+    document.getElementById("runday").innerHTML="网站运行"+diffDay+"天"+" • ";
+}
+</script></div>
+</body>
+<script>
+var IconList={'sun': 'M8 10.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5zM8 12a4 4 0 100-8 4 4 0 000 8zM8 0a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0V.75A.75.75 0 018 0zm0 13a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0v-1.5A.75.75 0 018 13zM2.343 2.343a.75.75 0 011.061 0l1.06 1.061a.75.75 0 01-1.06 1.06l-1.06-1.06a.75.75 0 010-1.06zm9.193 9.193a.75.75 0 011.06 0l1.061 1.06a.75.75 0 01-1.06 1.061l-1.061-1.06a.75.75 0 010-1.061zM16 8a.75.75 0 01-.75.75h-1.5a.75.75 0 010-1.5h1.5A.75.75 0 0116 8zM3 8a.75.75 0 01-.75.75H.75a.75.75 0 010-1.5h1.5A.75.75 0 013 8zm10.657-5.657a.75.75 0 010 1.061l-1.061 1.06a.75.75 0 11-1.06-1.06l1.06-1.06a.75.75 0 011.06 0zm-9.193 9.193a.75.75 0 010 1.06l-1.06 1.061a.75.75 0 11-1.061-1.06l1.06-1.061a.75.75 0 011.061 0z', 'moon': 'M9.598 1.591a.75.75 0 01.785-.175 7 7 0 11-8.967 8.967.75.75 0 01.961-.96 5.5 5.5 0 007.046-7.046.75.75 0 01.175-.786zm1.616 1.945a7 7 0 01-7.678 7.678 5.5 5.5 0 107.678-7.678z', 'sync': 'M1.705 8.005a.75.75 0 0 1 .834.656 5.5 5.5 0 0 0 9.592 2.97l-1.204-1.204a.25.25 0 0 1 .177-.427h3.646a.25.25 0 0 1 .25.25v3.646a.25.25 0 0 1-.427.177l-1.38-1.38A7.002 7.002 0 0 1 1.05 8.84a.75.75 0 0 1 .656-.834ZM8 2.5a5.487 5.487 0 0 0-4.131 1.869l1.204 1.204A.25.25 0 0 1 4.896 6H1.25A.25.25 0 0 1 1 5.75V2.104a.25.25 0 0 1 .427-.177l1.38 1.38A7.002 7.002 0 0 1 14.95 7.16a.75.75 0 0 1-1.49.178A5.5 5.5 0 0 0 8 2.5Z', 'home': 'M6.906.664a1.749 1.749 0 0 1 2.187 0l5.25 4.2c.415.332.657.835.657 1.367v7.019A1.75 1.75 0 0 1 13.25 15h-3.5a.75.75 0 0 1-.75-.75V9H7v5.25a.75.75 0 0 1-.75.75h-3.5A1.75 1.75 0 0 1 1 13.25V6.23c0-.531.242-1.034.657-1.366l5.25-4.2Zm1.25 1.171a.25.25 0 0 0-.312 0l-5.25 4.2a.25.25 0 0 0-.094.196v7.019c0 .138.112.25.25.25H5.5V8.25a.75.75 0 0 1 .75-.75h3.5a.75.75 0 0 1 .75.75v5.25h2.75a.25.25 0 0 0 .25-.25V6.23a.25.25 0 0 0-.094-.195Z', 'github': 'M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27-.68 0-1.36.09-2 .27-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.31 2.69.94 0 .67.01 1.3.01 1.49 0 .21-.15.45-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8Z', 'copy': 'M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 0 1 0 1.5h-1.5a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-1.5a.75.75 0 0 1 1.5 0v1.5A1.75 1.75 0 0 1 9.25 16h-7.5A1.75 1.75 0 0 1 0 14.25Z M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0 1 14.25 11h-7.5A1.75 1.75 0 0 1 5 9.25Zm1.75-.25a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-7.5a.25.25 0 0 0-.25-.25Z', 'check': 'M13.78 4.22a.75.75 0 0 1 0 1.06l-7.25 7.25a.75.75 0 0 1-1.06 0L2.22 9.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018L6 10.94l6.72-6.72a.75.75 0 0 1 1.06 0Z'};
+var utterancesLoad=0;
+
+let themeSettings={
+    "dark": ["dark","moon","#00f0ff","dark-blue"],
+    "light": ["light","sun","#ff5000","github-light"],
+    "auto": ["auto","sync","","preferred-color-scheme"]
+};
+function changeTheme(mode, icon, color, utheme){
+    document.documentElement.setAttribute("data-color-mode",mode);
+    document.getElementById("themeSwitch").setAttribute("d",value=IconList[icon]);
+    document.getElementById("themeSwitch").parentNode.style.color=color;
+    if(utterancesLoad==1){utterancesTheme(utheme);}
+}
+function modeSwitch(){
+    let currentMode=document.documentElement.getAttribute('data-color-mode');
+    let newMode = currentMode === "light" ? "dark" : currentMode === "dark" ? "auto" : "light";
+    localStorage.setItem("meek_theme", newMode);
+    if(themeSettings[newMode]){
+        changeTheme(...themeSettings[newMode]);
+    }
+}
+function utterancesTheme(theme){
+    const message={type:'set-theme',theme: theme};
+    const iframe=document.getElementsByClassName('utterances-frame')[0];
+    iframe.contentWindow.postMessage(message,'https://utteranc.es');
+}
+if(themeSettings[theme]){changeTheme(...themeSettings[theme]);}
+console.log("\n %c Gmeek last https://github.com/Meekdai/Gmeek \n","padding:5px 0;background:#02d81d;color:#fff");
+</script>
+
+<script>
+document.getElementById("pathHome").setAttribute("d",IconList["home"]);
+document.getElementById("pathIssue").setAttribute("d",IconList["github"]);
+
+
+
+function openComments(){
+    cm=document.getElementById("comments");
+    cmButton=document.getElementById("cmButton");
+    cmButton.innerHTML="loading";
+    span=document.createElement("span");
+    span.setAttribute("class","AnimatedEllipsis");
+    cmButton.appendChild(span);
+
+    script=document.createElement("script");
+    script.setAttribute("src","https://utteranc.es/client.js");
+    script.setAttribute("repo","FairyOwO/FairyOwO.github.io");
+    script.setAttribute("issue-term","title");
+    
+    if(localStorage.getItem("meek_theme")=="dark"){script.setAttribute("theme","dark-blue");}
+    else if(localStorage.getItem("meek_theme")=="light") {script.setAttribute("theme","github-light");}
+    else{script.setAttribute("theme","preferred-color-scheme");}
+    
+    script.setAttribute("crossorigin","anonymous");
+    script.setAttribute("async","");
+    cm.appendChild(script);
+
+    int=self.setInterval("iFrameLoading()",200);
+}
+
+function iFrameLoading(){
+    var utterances=document.getElementsByClassName('utterances');
+    if(utterances.length==1){
+        if(utterances[0].style.height!=""){
+            utterancesLoad=1;
+            int=window.clearInterval(int);
+            document.getElementById("cmButton").style.display="none";
+            console.log("utterances Load OK");
+        }
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const createClipboardHTML = (codeContent, additionalClasses = '') => `
+        <pre class="notranslate"><code class="notranslate">${codeContent}</code></pre>
+        <div class="clipboard-container position-absolute right-0 top-0 ${additionalClasses}">
+            <clipboard-copy class="ClipboardButton btn m-2 p-0" role="button" style="display: inherit;">
+                <svg height="16" width="16" class="octicon octicon-copy m-2"><path d="${IconList["copy"]}"></path></svg>
+                <svg height="16" width="16" class="octicon octicon-check color-fg-success m-2 d-none"><path d="${IconList["check"]}"></path></svg>
+            </clipboard-copy>
+            <div class="copy-feedback">Copied!</div>
+        </div>
+    `;
+
+    const handleCodeElements = (selector = '') => {
+        document.querySelectorAll(selector).forEach(codeElement => {
+            const codeContent = codeElement.innerHTML;
+            const newStructure = document.createElement('div');
+            newStructure.className = 'snippet-clipboard-content position-relative overflow-auto';
+            newStructure.innerHTML = createClipboardHTML(codeContent);
+
+            const parentElement = codeElement.parentElement;
+            if (selector.includes('highlight')) {
+                parentElement.insertBefore(newStructure, codeElement.nextSibling);
+                parentElement.removeChild(codeElement);
+            } else {
+                parentElement.parentElement.replaceChild(newStructure, parentElement);
+            }
+        });
+    };
+
+    handleCodeElements('pre.notranslate > code.notranslate');
+    handleCodeElements('div.highlight > pre.notranslate');
+
+    let currentFeedback = null;
+    document.querySelectorAll('clipboard-copy').forEach(copyButton => {
+        copyButton.addEventListener('click', () => {
+            const codeContent = copyButton.closest('.snippet-clipboard-content').innerText;
+            const tempTextArea = document.createElement('textarea');
+            tempTextArea.value = codeContent;
+            document.body.appendChild(tempTextArea);
+            tempTextArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempTextArea);
+
+            const copyIcon = copyButton.querySelector('.octicon-copy');
+            const checkIcon = copyButton.querySelector('.octicon-check');
+            const copyFeedback = copyButton.nextElementSibling;
+
+            if (currentFeedback && currentFeedback !== copyFeedback) {currentFeedback.style.display = 'none';}
+            currentFeedback = copyFeedback;
+
+            copyIcon.classList.add('d-none');
+            checkIcon.classList.remove('d-none');
+            copyFeedback.style.display = 'block';
+            copyButton.style.borderColor = 'var(--color-success-fg)';
+
+            setTimeout(() => {
+                copyIcon.classList.remove('d-none');
+                checkIcon.classList.add('d-none');
+                copyFeedback.style.display = 'none';
+                copyButton.style.borderColor = '';
+            }, 2000);
+        });
+    });
+});
+
+</script>
+
+
+</html>
