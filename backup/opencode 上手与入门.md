@@ -68,7 +68,9 @@ nix run nixpkgs#opencode           # or github:anomalyco/opencode for latest dev
 5. OAuth 登录 反重力
     > 注意 这里需要 CLIProxyAPI 与 浏览器 一起经过代理
 
-这个时候已经可以用了 地址是: [http://localhost:8317/v1/responses](http://localhost:8317/v1/responses)
+这个时候已经可以用了 response 地址是: [http://localhost:8317/v1/responses](http://localhost:8317/v1/responses)
+
+> 不止有 response 的地址 还支持不同厂的地址, 例如 openai 地址
 
 模型列表是:
 
