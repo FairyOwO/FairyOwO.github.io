@@ -1,0 +1,908 @@
+<!DOCTYPE html>
+<html data-color-mode="light" data-dark-theme="dark_colorblind" data-light-theme="light" lang="zh-CN">
+<head>
+    <meta content="text/html; charset=utf-8" http-equiv="content-type" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <link href='https://mirrors.sustech.edu.cn/cdnjs/ajax/libs/Primer/21.0.7/primer.css' rel='stylesheet' />
+    
+    <link rel="icon" href="https://github.githubassets.com/favicons/favicon.svg"><script>
+        let theme = localStorage.getItem("meek_theme") || "light";
+        document.documentElement.setAttribute("data-color-mode", theme);
+    </script>
+<meta name="description" content="## opencode 上手与入门
+
+随着code agent的发展 效率与可用性已经大幅上涨
+部分mcp服务器 (例如content7或者是定向检索代码的mcp服务器) 可以明显提升效果
+这里记录一下 如何安装并配置opencode
+
+这里选择的是 opencode + 反重力 cli to api 的方案
+
+同类agent:
+claude code(cc)
+codex(cx)
+
+> 如果选择更省心的方案推荐 claude code + 购买中转服务 + 自行配置一些mcp(尽管不是必须的, 但配置好后效果会大幅提升)
+> 如果选择多 agent 方案 推荐 主模型使用 opus 细节使用 gpt5.x-codex 干活模型使用 glm-4.x [https://github.com/bfly123/claude_code_bridge](https://github.com/bfly123/claude_code_bridge) 注: 模型具有时效性
+
+### 安装 你喜欢的包管理器
+
+这里选择的是 [nodejs](https://nodejs.org/zh-cn/download/) 中的 npx
+
+> 许多 mcp 服务器使用了npx来启动, 如果仅使用 opencode 的话 可以不进行安装
+
+### 安装 opencode
+
+详见文档, 这里仅作记录
+
+[https://github.com/anomalyco/opencode](https://github.com/anomalyco/opencode)
+
+```sh
+# YOLO
+curl -fsSL https://opencode.ai/install | bash
+
+# Package managers
+npm i -g opencode-ai@latest        # or bun/pnpm/yarn
+scoop bucket add extras; scoop install extras/opencode  # Windows
+choco install opencode             # Windows
+brew install opencode              # macOS and Linux
+paru -S opencode-bin               # Arch Linux
+mise use -g opencode               # Any OS
+nix run nixpkgs#opencode           # or github:anomalyco/opencode for latest dev branch
+```
+
+或者是前往 [release](https://github.com/anomalyco/opencode/releases) 直接下载安装包或者免安装的 zip
+
+### 获取 api
+
+> 有成品账号代理直连,中转等方案能拿到api可以忽略此章节
+
+#### 反重力
+
+这是一个google出的类似于cursor的代码编辑器 开通google ai pro会员, 在正确的地区, 即可使用
+
+> 你可以用家庭组 大号需要拉五个小号进家庭组 注意地区与付款锁 这样额度可以乘以六倍
+
+这里使用 [CLIProxyAPI](https://github.com/router-for-me/CLIProxyAPI) 来将其转换成api提供给opencode使用
+
+> 注意 当前 opencode 与 CLIProxyAPI 一起使用 会有兼容性问题 调用工具的时候会中断 需要手动继续
+
+1. 下载 release 并解压
+2. 修改配置文件 `config.example.yaml` 并修改成 `config.yaml`
+
+    ```yaml
+    proxy-url: socks5://user:pass@192.168.1.1:1080/  # 你需要改成你的, 这里proxy用于访问google 所以ip需要纯净
+    allow-remote: false  # 如果你在服务器上搭建, 则需要允许
+    ```
+
+3. 启动, 并访问 [webui](http://localhost:8317/management.html)
+4. 根据实际情况配置
+5. OAuth 登录 反重力
+    > 注意 这里需要 CLIProxyAPI 与 浏览器 一起经过代理
+
+这个时候已经可以用了 地址是: [http://localhost:8317/v1/responses](http://localhost:8317/v1/responses)
+
+模型列表是:
+
+```text
+gemini-2.5-flash
+gemini-3-pro-image-preview
+gemini-2.5-computer-use-preview-10-2025
+gemini-3-pro-preview
+gemini-3-flash-preview
+gemini-2.5-flash-lite
+gemini-claude-sonnet-4-5
+gemini-claude-opus-4-5-thinking
+gemini-claude-sonnet-4-5-thinking
+gpt-oss-120b-medium
+```
+
+> 注意 因为羊毛被薅太多 这里claude与gpt模型用量非常少
+
+### opencode 配置代理与中转
+
+opencode使用环境变量配置代理
+
+```sh
+export HTTPS_PROXY=https://proxy.example.com:8080
+export HTTP_PROXY=http://proxy.example.com:8080
+export NO_PROXY=localhost,127.0.0.1
+# 注意 NO_PROXY 也要
+```
+
+opencode 需要手动写配置文件 `~/config/opencode/opencode.json`
+
+参考:
+
+```jsonc
+{
+  'plugin': [
+    'oh-my-opencode',
+    // 'opencode-antigravity-auth@1.2.7'  // 自带的反重力插件 这里我们用其他方案代替, 所以不需要
+  ],
+  '$schema': 'https://opencode.ai/config.json',
+  'provider': {
+    'Antigravity': {
+      'npm': '@ai-sdk/openai-compatible',
+      'name': 'Antigravity',
+      'options': {
+        'baseURL': 'http://localhost:8317/v1'  // 默认CLIProxyAPI地址
+      },
+      'models': {
+        'gemini-3-pro-preview': {
+          'name': 'Gemini 3 Pro preview (Antigravity)',
+          'thinking': true,
+          'attachment': true,
+          'limit': {
+            'context': 1048576,
+            'output': 65535
+          },
+          'modalities': {
+            'input': [
+              'text',
+              'image',
+              'pdf'
+            ],
+            'output': [
+              'text'
+            ]
+          }
+        },
+        'gemini-3-flash-preview': {
+          'name': 'Gemini 3 Flash (Antigravity)',
+          'attachment': true,
+          'limit': {
+            'context': 1048576,
+            'output': 65536
+          },
+          'modalities': {
+            'input': [
+              'text',
+              'image',
+              'pdf'
+            ],
+            'output': [
+              'text'
+            ]
+          }
+        },
+        'gemini-2.5-flash-lite': {
+          'name': 'Gemini 2.5 Flash Lite (Antigravity)',
+          'attachment': true,
+          'limit': {
+            'context': 1048576,
+            'output': 65536
+          },
+          'modalities': {
+            'input': [
+              'text',
+              'image',
+              'pdf'
+            ],
+            'output': [
+              'text'
+            ]
+          }
+        }
+      }
+    },
+  }
+}
+```
+
+> 你可以通过ai来自动生成配置文件
+
+如果这边是中转的 api, 那么仅需要修改 opencode.json 中 修改 provider 中的 options.baseURL
+新版本的 opencode 可能不会创建这个配置文件, 需要手动配置
+配置好后去 opencode 中配置 api 即可
+
+### 安装oh my opencode
+
+#### 使用opencode agent 安装
+
+既然都安装了 opencode 不妨来试试
+直接将 [oh my opencode](https://github.com/code-yeongyu/oh-my-opencode) 项目地址发送给 opencode 来让他帮你安装吧
+
+[https://github.com/code-yeongyu/oh-my-opencode](https://github.com/code-yeongyu/oh-my-opencode)
+
+> 注意 这里opencode 会自动帮你安装 bunx 来安装这个项目, 如果不想要的话 需要强调使用npx安装
+> oh my opencode 也可以用来登录反重力账号, 插件名称是 opencode-antigravity-auth, 将反重力支持模型到opencode中运行 但如果之前使用 CLIProxyAPI 来使用反重力, 则无需安装这个插件
+
+#### 手动
+
+详见文档, 这里仅作记录
+
+```sh
+bunx oh-my-opencode install
+# or use npx if bunx doesn't work
+npx oh-my-opencode install
+```
+
+#### 配置文件
+
+之前使用我们自己的 opencode 配置文件 这里当然需要自行配置 oh-my-opencode 的配置文件, 当然你也可以让ai来做这件事情 详见文档
+
+这里摘抄一下每个agent是干什么的
+
+```text
+Sisyphus (anthropic/claude-opus-4-5)：默认 Agent。">
+<meta property="og:title" content="opencode 上手与入门">
+<meta property="og:description" content="## opencode 上手与入门
+
+随着code agent的发展 效率与可用性已经大幅上涨
+部分mcp服务器 (例如content7或者是定向检索代码的mcp服务器) 可以明显提升效果
+这里记录一下 如何安装并配置opencode
+
+这里选择的是 opencode + 反重力 cli to api 的方案
+
+同类agent:
+claude code(cc)
+codex(cx)
+
+> 如果选择更省心的方案推荐 claude code + 购买中转服务 + 自行配置一些mcp(尽管不是必须的, 但配置好后效果会大幅提升)
+> 如果选择多 agent 方案 推荐 主模型使用 opus 细节使用 gpt5.x-codex 干活模型使用 glm-4.x [https://github.com/bfly123/claude_code_bridge](https://github.com/bfly123/claude_code_bridge) 注: 模型具有时效性
+
+### 安装 你喜欢的包管理器
+
+这里选择的是 [nodejs](https://nodejs.org/zh-cn/download/) 中的 npx
+
+> 许多 mcp 服务器使用了npx来启动, 如果仅使用 opencode 的话 可以不进行安装
+
+### 安装 opencode
+
+详见文档, 这里仅作记录
+
+[https://github.com/anomalyco/opencode](https://github.com/anomalyco/opencode)
+
+```sh
+# YOLO
+curl -fsSL https://opencode.ai/install | bash
+
+# Package managers
+npm i -g opencode-ai@latest        # or bun/pnpm/yarn
+scoop bucket add extras; scoop install extras/opencode  # Windows
+choco install opencode             # Windows
+brew install opencode              # macOS and Linux
+paru -S opencode-bin               # Arch Linux
+mise use -g opencode               # Any OS
+nix run nixpkgs#opencode           # or github:anomalyco/opencode for latest dev branch
+```
+
+或者是前往 [release](https://github.com/anomalyco/opencode/releases) 直接下载安装包或者免安装的 zip
+
+### 获取 api
+
+> 有成品账号代理直连,中转等方案能拿到api可以忽略此章节
+
+#### 反重力
+
+这是一个google出的类似于cursor的代码编辑器 开通google ai pro会员, 在正确的地区, 即可使用
+
+> 你可以用家庭组 大号需要拉五个小号进家庭组 注意地区与付款锁 这样额度可以乘以六倍
+
+这里使用 [CLIProxyAPI](https://github.com/router-for-me/CLIProxyAPI) 来将其转换成api提供给opencode使用
+
+> 注意 当前 opencode 与 CLIProxyAPI 一起使用 会有兼容性问题 调用工具的时候会中断 需要手动继续
+
+1. 下载 release 并解压
+2. 修改配置文件 `config.example.yaml` 并修改成 `config.yaml`
+
+    ```yaml
+    proxy-url: socks5://user:pass@192.168.1.1:1080/  # 你需要改成你的, 这里proxy用于访问google 所以ip需要纯净
+    allow-remote: false  # 如果你在服务器上搭建, 则需要允许
+    ```
+
+3. 启动, 并访问 [webui](http://localhost:8317/management.html)
+4. 根据实际情况配置
+5. OAuth 登录 反重力
+    > 注意 这里需要 CLIProxyAPI 与 浏览器 一起经过代理
+
+这个时候已经可以用了 地址是: [http://localhost:8317/v1/responses](http://localhost:8317/v1/responses)
+
+模型列表是:
+
+```text
+gemini-2.5-flash
+gemini-3-pro-image-preview
+gemini-2.5-computer-use-preview-10-2025
+gemini-3-pro-preview
+gemini-3-flash-preview
+gemini-2.5-flash-lite
+gemini-claude-sonnet-4-5
+gemini-claude-opus-4-5-thinking
+gemini-claude-sonnet-4-5-thinking
+gpt-oss-120b-medium
+```
+
+> 注意 因为羊毛被薅太多 这里claude与gpt模型用量非常少
+
+### opencode 配置代理与中转
+
+opencode使用环境变量配置代理
+
+```sh
+export HTTPS_PROXY=https://proxy.example.com:8080
+export HTTP_PROXY=http://proxy.example.com:8080
+export NO_PROXY=localhost,127.0.0.1
+# 注意 NO_PROXY 也要
+```
+
+opencode 需要手动写配置文件 `~/config/opencode/opencode.json`
+
+参考:
+
+```jsonc
+{
+  'plugin': [
+    'oh-my-opencode',
+    // 'opencode-antigravity-auth@1.2.7'  // 自带的反重力插件 这里我们用其他方案代替, 所以不需要
+  ],
+  '$schema': 'https://opencode.ai/config.json',
+  'provider': {
+    'Antigravity': {
+      'npm': '@ai-sdk/openai-compatible',
+      'name': 'Antigravity',
+      'options': {
+        'baseURL': 'http://localhost:8317/v1'  // 默认CLIProxyAPI地址
+      },
+      'models': {
+        'gemini-3-pro-preview': {
+          'name': 'Gemini 3 Pro preview (Antigravity)',
+          'thinking': true,
+          'attachment': true,
+          'limit': {
+            'context': 1048576,
+            'output': 65535
+          },
+          'modalities': {
+            'input': [
+              'text',
+              'image',
+              'pdf'
+            ],
+            'output': [
+              'text'
+            ]
+          }
+        },
+        'gemini-3-flash-preview': {
+          'name': 'Gemini 3 Flash (Antigravity)',
+          'attachment': true,
+          'limit': {
+            'context': 1048576,
+            'output': 65536
+          },
+          'modalities': {
+            'input': [
+              'text',
+              'image',
+              'pdf'
+            ],
+            'output': [
+              'text'
+            ]
+          }
+        },
+        'gemini-2.5-flash-lite': {
+          'name': 'Gemini 2.5 Flash Lite (Antigravity)',
+          'attachment': true,
+          'limit': {
+            'context': 1048576,
+            'output': 65536
+          },
+          'modalities': {
+            'input': [
+              'text',
+              'image',
+              'pdf'
+            ],
+            'output': [
+              'text'
+            ]
+          }
+        }
+      }
+    },
+  }
+}
+```
+
+> 你可以通过ai来自动生成配置文件
+
+如果这边是中转的 api, 那么仅需要修改 opencode.json 中 修改 provider 中的 options.baseURL
+新版本的 opencode 可能不会创建这个配置文件, 需要手动配置
+配置好后去 opencode 中配置 api 即可
+
+### 安装oh my opencode
+
+#### 使用opencode agent 安装
+
+既然都安装了 opencode 不妨来试试
+直接将 [oh my opencode](https://github.com/code-yeongyu/oh-my-opencode) 项目地址发送给 opencode 来让他帮你安装吧
+
+[https://github.com/code-yeongyu/oh-my-opencode](https://github.com/code-yeongyu/oh-my-opencode)
+
+> 注意 这里opencode 会自动帮你安装 bunx 来安装这个项目, 如果不想要的话 需要强调使用npx安装
+> oh my opencode 也可以用来登录反重力账号, 插件名称是 opencode-antigravity-auth, 将反重力支持模型到opencode中运行 但如果之前使用 CLIProxyAPI 来使用反重力, 则无需安装这个插件
+
+#### 手动
+
+详见文档, 这里仅作记录
+
+```sh
+bunx oh-my-opencode install
+# or use npx if bunx doesn't work
+npx oh-my-opencode install
+```
+
+#### 配置文件
+
+之前使用我们自己的 opencode 配置文件 这里当然需要自行配置 oh-my-opencode 的配置文件, 当然你也可以让ai来做这件事情 详见文档
+
+这里摘抄一下每个agent是干什么的
+
+```text
+Sisyphus (anthropic/claude-opus-4-5)：默认 Agent。">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://FairyOwO.github.io/post/opencode%20-shang-shou-yu-ru-men.html">
+<meta property="og:image" content="https://github.githubassets.com/favicons/favicon.svg">
+<title>opencode 上手与入门</title>
+<link href="//unpkg.com/@wooorm/starry-night@2.1.1/style/both.css" rel="stylesheet" />
+
+
+</head>
+<style>
+body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;padding: 45px;font-size: 16px;font-family: sans-serif;line-height: 1.25;}
+#header{display:flex;padding-bottom:8px;border-bottom: 1px solid var(--borderColor-muted, var(--color-border-muted));margin-bottom: 16px;}
+#footer {margin-top:64px; text-align: center;font-size: small;}
+
+</style>
+
+<style>
+.postTitle{margin: auto 0;font-size:40px;font-weight:bold;}
+.title-right{display:flex;margin:auto 0 0 auto;}
+.title-right .circle{padding: 14px 16px;margin-right:8px;}
+#postBody{border-bottom: 1px solid var(--color-border-default);padding-bottom:36px;}
+#postBody hr{height:2px;}
+#cmButton{height:48px;margin-top:48px;}
+#comments{margin-top:64px;}
+.g-emoji{font-size:24px;}
+@media (max-width: 600px) {
+    body {padding: 8px;}
+    .postTitle{font-size:24px;}
+}
+.copy-feedback {
+    display: none;
+    position: absolute;
+    top: 10px;
+    right: 50px;
+    color: var(--color-fg-on-emphasis);
+    background-color: var(--color-fg-muted);
+    border-radius: 3px;
+    padding: 5px 8px;
+    font-size: 12px;
+}
+</style>
+
+
+
+
+<body>
+    <div id="header">
+<h1 class="postTitle">opencode 上手与入门</h1>
+<div class="title-right">
+    <a href="https://FairyOwO.github.io" id="buttonHome" class="btn btn-invisible circle" title="首页">
+        <svg class="octicon" width="16" height="16">
+            <path id="pathHome" fill-rule="evenodd"></path>
+        </svg>
+    </a>
+    
+    <a href="https://github.com/FairyOwO/FairyOwO.github.io/issues/17" target="_blank" class="btn btn-invisible circle" title="Issue">
+        <svg class="octicon" width="16" height="16">
+            <path id="pathIssue" fill-rule="evenodd"></path>
+        </svg>
+    </a>
+    
+
+    <a class="btn btn-invisible circle" onclick="modeSwitch();" title="切换主题">
+        <svg class="octicon" width="16" height="16" >
+            <path id="themeSwitch" fill-rule="evenodd"></path>
+        </svg>
+    </a>
+
+</div>
+</div>
+    <div id="content">
+<div class="markdown-body" id="postBody"><h2>opencode 上手与入门</h2>
+<p>随着code agent的发展 效率与可用性已经大幅上涨<br>
+部分mcp服务器 (例如content7或者是定向检索代码的mcp服务器) 可以明显提升效果<br>
+这里记录一下 如何安装并配置opencode</p>
+<p>这里选择的是 opencode + 反重力 cli to api 的方案</p>
+<p>同类agent:<br>
+claude code(cc)<br>
+codex(cx)</p>
+<blockquote>
+<p>如果选择更省心的方案推荐 claude code + 购买中转服务 + 自行配置一些mcp(尽管不是必须的, 但配置好后效果会大幅提升)<br>
+如果选择多 agent 方案 推荐 主模型使用 opus 细节使用 gpt5.x-codex 干活模型使用 glm-4.x <a href="https://github.com/bfly123/claude_code_bridge">https://github.com/bfly123/claude_code_bridge</a> 注: 模型具有时效性</p>
+</blockquote>
+<h3>安装 你喜欢的包管理器</h3>
+<p>这里选择的是 <a href="https://nodejs.org/zh-cn/download/" rel="nofollow">nodejs</a> 中的 npx</p>
+<blockquote>
+<p>许多 mcp 服务器使用了npx来启动, 如果仅使用 opencode 的话 可以不进行安装</p>
+</blockquote>
+<h3>安装 opencode</h3>
+<p>详见文档, 这里仅作记录</p>
+<p><a href="https://github.com/anomalyco/opencode">https://github.com/anomalyco/opencode</a></p>
+<div class="highlight highlight-source-shell"><pre class="notranslate"><span class="pl-c"><span class="pl-c">#</span> YOLO</span>
+curl -fsSL https://opencode.ai/install <span class="pl-k">|</span> bash
+
+<span class="pl-c"><span class="pl-c">#</span> Package managers</span>
+npm i -g opencode-ai@latest        <span class="pl-c"><span class="pl-c">#</span> or bun/pnpm/yarn</span>
+scoop bucket add extras<span class="pl-k">;</span> scoop install extras/opencode  <span class="pl-c"><span class="pl-c">#</span> Windows</span>
+choco install opencode             <span class="pl-c"><span class="pl-c">#</span> Windows</span>
+brew install opencode              <span class="pl-c"><span class="pl-c">#</span> macOS and Linux</span>
+paru -S opencode-bin               <span class="pl-c"><span class="pl-c">#</span> Arch Linux</span>
+mise use -g opencode               <span class="pl-c"><span class="pl-c">#</span> Any OS</span>
+nix run nixpkgs#opencode           <span class="pl-c"><span class="pl-c">#</span> or github:anomalyco/opencode for latest dev branch</span></pre></div>
+<p>或者是前往 <a href="https://github.com/anomalyco/opencode/releases">release</a> 直接下载安装包或者免安装的 zip</p>
+<h3>获取 api</h3>
+<blockquote>
+<p>有成品账号代理直连,中转等方案能拿到api可以忽略此章节</p>
+</blockquote>
+<h4>反重力</h4>
+<p>这是一个google出的类似于cursor的代码编辑器 开通google ai pro会员, 在正确的地区, 即可使用</p>
+<blockquote>
+<p>你可以用家庭组 大号需要拉五个小号进家庭组 注意地区与付款锁 这样额度可以乘以六倍</p>
+</blockquote>
+<p>这里使用 <a href="https://github.com/router-for-me/CLIProxyAPI">CLIProxyAPI</a> 来将其转换成api提供给opencode使用</p>
+<blockquote>
+<p>注意 当前 opencode 与 CLIProxyAPI 一起使用 会有兼容性问题 调用工具的时候会中断 需要手动继续</p>
+</blockquote>
+<ol>
+<li>
+<p>下载 release 并解压</p>
+</li>
+<li>
+<p>修改配置文件 <code class="notranslate">config.example.yaml</code> 并修改成 <code class="notranslate">config.yaml</code></p>
+<div class="highlight highlight-source-yaml"><pre class="notranslate"><span class="pl-ent">proxy-url</span>: <span class="pl-s">socks5://user:pass@192.168.1.1:1080/  </span><span class="pl-c"><span class="pl-c">#</span> 你需要改成你的, 这里proxy用于访问google 所以ip需要纯净</span>
+<span class="pl-ent">allow-remote</span>: <span class="pl-s">false  </span><span class="pl-c"><span class="pl-c">#</span> 如果你在服务器上搭建, 则需要允许</span></pre></div>
+</li>
+<li>
+<p>启动, 并访问 <a href="http://localhost:8317/management.html" rel="nofollow">webui</a></p>
+</li>
+<li>
+<p>根据实际情况配置</p>
+</li>
+<li>
+<p>OAuth 登录 反重力</p>
+<blockquote>
+<p>注意 这里需要 CLIProxyAPI 与 浏览器 一起经过代理</p>
+</blockquote>
+</li>
+</ol>
+<p>这个时候已经可以用了 地址是: <a href="http://localhost:8317/v1/responses" rel="nofollow">http://localhost:8317/v1/responses</a></p>
+<p>模型列表是:</p>
+<pre lang="text" class="notranslate"><code class="notranslate">gemini-2.5-flash
+gemini-3-pro-image-preview
+gemini-2.5-computer-use-preview-10-2025
+gemini-3-pro-preview
+gemini-3-flash-preview
+gemini-2.5-flash-lite
+gemini-claude-sonnet-4-5
+gemini-claude-opus-4-5-thinking
+gemini-claude-sonnet-4-5-thinking
+gpt-oss-120b-medium
+</code></pre>
+<blockquote>
+<p>注意 因为羊毛被薅太多 这里claude与gpt模型用量非常少</p>
+</blockquote>
+<h3>opencode 配置代理与中转</h3>
+<p>opencode使用环境变量配置代理</p>
+<div class="highlight highlight-source-shell"><pre class="notranslate"><span class="pl-k">export</span> HTTPS_PROXY=https://proxy.example.com:8080
+<span class="pl-k">export</span> HTTP_PROXY=http://proxy.example.com:8080
+<span class="pl-k">export</span> NO_PROXY=localhost,127.0.0.1
+<span class="pl-c"><span class="pl-c">#</span> 注意 NO_PROXY 也要</span></pre></div>
+<p>opencode 需要手动写配置文件 <code class="notranslate">~/config/opencode/opencode.json</code></p>
+<p>参考:</p>
+<div class="highlight highlight-source-json-comments"><pre class="notranslate">{
+  <span class="pl-ent">"plugin"</span>: [
+    <span class="pl-s"><span class="pl-pds">"</span>oh-my-opencode<span class="pl-pds">"</span></span>,
+    <span class="pl-c"><span class="pl-c">//</span> "opencode-antigravity-auth@1.2.7"  // 自带的反重力插件 这里我们用其他方案代替, 所以不需要</span>
+  ],
+  <span class="pl-ent">"$schema"</span>: <span class="pl-s"><span class="pl-pds">"</span>https://opencode.ai/config.json<span class="pl-pds">"</span></span>,
+  <span class="pl-ent">"provider"</span>: {
+    <span class="pl-ent">"Antigravity"</span>: {
+      <span class="pl-ent">"npm"</span>: <span class="pl-s"><span class="pl-pds">"</span>@ai-sdk/openai-compatible<span class="pl-pds">"</span></span>,
+      <span class="pl-ent">"name"</span>: <span class="pl-s"><span class="pl-pds">"</span>Antigravity<span class="pl-pds">"</span></span>,
+      <span class="pl-ent">"options"</span>: {
+        <span class="pl-ent">"baseURL"</span>: <span class="pl-s"><span class="pl-pds">"</span>http://localhost:8317/v1<span class="pl-pds">"</span></span>  <span class="pl-c"><span class="pl-c">//</span> 默认CLIProxyAPI地址</span>
+      },
+      <span class="pl-ent">"models"</span>: {
+        <span class="pl-ent">"gemini-3-pro-preview"</span>: {
+          <span class="pl-ent">"name"</span>: <span class="pl-s"><span class="pl-pds">"</span>Gemini 3 Pro preview (Antigravity)<span class="pl-pds">"</span></span>,
+          <span class="pl-ent">"thinking"</span>: <span class="pl-c1">true</span>,
+          <span class="pl-ent">"attachment"</span>: <span class="pl-c1">true</span>,
+          <span class="pl-ent">"limit"</span>: {
+            <span class="pl-ent">"context"</span>: <span class="pl-c1">1048576</span>,
+            <span class="pl-ent">"output"</span>: <span class="pl-c1">65535</span>
+          },
+          <span class="pl-ent">"modalities"</span>: {
+            <span class="pl-ent">"input"</span>: [
+              <span class="pl-s"><span class="pl-pds">"</span>text<span class="pl-pds">"</span></span>,
+              <span class="pl-s"><span class="pl-pds">"</span>image<span class="pl-pds">"</span></span>,
+              <span class="pl-s"><span class="pl-pds">"</span>pdf<span class="pl-pds">"</span></span>
+            ],
+            <span class="pl-ent">"output"</span>: [
+              <span class="pl-s"><span class="pl-pds">"</span>text<span class="pl-pds">"</span></span>
+            ]
+          }
+        },
+        <span class="pl-ent">"gemini-3-flash-preview"</span>: {
+          <span class="pl-ent">"name"</span>: <span class="pl-s"><span class="pl-pds">"</span>Gemini 3 Flash (Antigravity)<span class="pl-pds">"</span></span>,
+          <span class="pl-ent">"attachment"</span>: <span class="pl-c1">true</span>,
+          <span class="pl-ent">"limit"</span>: {
+            <span class="pl-ent">"context"</span>: <span class="pl-c1">1048576</span>,
+            <span class="pl-ent">"output"</span>: <span class="pl-c1">65536</span>
+          },
+          <span class="pl-ent">"modalities"</span>: {
+            <span class="pl-ent">"input"</span>: [
+              <span class="pl-s"><span class="pl-pds">"</span>text<span class="pl-pds">"</span></span>,
+              <span class="pl-s"><span class="pl-pds">"</span>image<span class="pl-pds">"</span></span>,
+              <span class="pl-s"><span class="pl-pds">"</span>pdf<span class="pl-pds">"</span></span>
+            ],
+            <span class="pl-ent">"output"</span>: [
+              <span class="pl-s"><span class="pl-pds">"</span>text<span class="pl-pds">"</span></span>
+            ]
+          }
+        },
+        <span class="pl-ent">"gemini-2.5-flash-lite"</span>: {
+          <span class="pl-ent">"name"</span>: <span class="pl-s"><span class="pl-pds">"</span>Gemini 2.5 Flash Lite (Antigravity)<span class="pl-pds">"</span></span>,
+          <span class="pl-ent">"attachment"</span>: <span class="pl-c1">true</span>,
+          <span class="pl-ent">"limit"</span>: {
+            <span class="pl-ent">"context"</span>: <span class="pl-c1">1048576</span>,
+            <span class="pl-ent">"output"</span>: <span class="pl-c1">65536</span>
+          },
+          <span class="pl-ent">"modalities"</span>: {
+            <span class="pl-ent">"input"</span>: [
+              <span class="pl-s"><span class="pl-pds">"</span>text<span class="pl-pds">"</span></span>,
+              <span class="pl-s"><span class="pl-pds">"</span>image<span class="pl-pds">"</span></span>,
+              <span class="pl-s"><span class="pl-pds">"</span>pdf<span class="pl-pds">"</span></span>
+            ],
+            <span class="pl-ent">"output"</span>: [
+              <span class="pl-s"><span class="pl-pds">"</span>text<span class="pl-pds">"</span></span>
+            ]
+          }
+        }
+      }
+    },
+  }
+}</pre></div>
+<blockquote>
+<p>你可以通过ai来自动生成配置文件</p>
+</blockquote>
+<p>如果这边是中转的 api, 那么仅需要修改 opencode.json 中 修改 provider 中的 options.baseURL<br>
+新版本的 opencode 可能不会创建这个配置文件, 需要手动配置<br>
+配置好后去 opencode 中配置 api 即可</p>
+<h3>安装oh my opencode</h3>
+<h4>使用opencode agent 安装</h4>
+<p>既然都安装了 opencode 不妨来试试<br>
+直接将 <a href="https://github.com/code-yeongyu/oh-my-opencode">oh my opencode</a> 项目地址发送给 opencode 来让他帮你安装吧</p>
+<p><a href="https://github.com/code-yeongyu/oh-my-opencode">https://github.com/code-yeongyu/oh-my-opencode</a></p>
+<blockquote>
+<p>注意 这里opencode 会自动帮你安装 bunx 来安装这个项目, 如果不想要的话 需要强调使用npx安装<br>
+oh my opencode 也可以用来登录反重力账号, 插件名称是 opencode-antigravity-auth, 将反重力支持模型到opencode中运行 但如果之前使用 CLIProxyAPI 来使用反重力, 则无需安装这个插件</p>
+</blockquote>
+<h4>手动</h4>
+<p>详见文档, 这里仅作记录</p>
+<div class="highlight highlight-source-shell"><pre class="notranslate">bunx oh-my-opencode install
+<span class="pl-c"><span class="pl-c">#</span> or use npx if bunx doesn't work</span>
+npx oh-my-opencode install</pre></div>
+<h4>配置文件</h4>
+<p>之前使用我们自己的 opencode 配置文件 这里当然需要自行配置 oh-my-opencode 的配置文件, 当然你也可以让ai来做这件事情 详见文档</p>
+<p>这里摘抄一下每个agent是干什么的</p>
+<pre lang="text" class="notranslate"><code class="notranslate">Sisyphus (anthropic/claude-opus-4-5)：默认 Agent。 OpenCode 专属的强力 AI 编排器。指挥专业子 Agent 搞定复杂任务。主打后台任务委派和 Todo 驱动。用 Claude Opus 4.5 加上扩展思考（32k token 预算），智商拉满。
+oracle (openai/gpt-5.2)：架构师、代码审查员、战略家。GPT-5.2 的逻辑推理和深度分析能力不是盖的。致敬 AmpCode。
+librarian (anthropic/claude-sonnet-4-5 或 google/gemini-3-flash)：多仓库分析、查文档、找示例。配置 Antigravity 认证时使用 Gemini 3 Flash，否则使用 Claude Sonnet 4.5 深入理解代码库，GitHub 调研，给出的答案都有据可查。致敬 AmpCode。
+explore (opencode/grok-code、google/gemini-3-flash 或 anthropic/claude-haiku-4-5)：极速代码库扫描、模式匹配。配置 Antigravity 认证时使用 Gemini 3 Flash，Claude max20 可用时使用 Haiku，否则用 Grok。致敬 Claude Code。
+frontend-ui-ux-engineer (google/gemini-3-pro-preview)：设计师出身的程序员。UI 做得那是真漂亮。Gemini 写这种创意美观的代码是一绝。
+document-writer (google/gemini-3-pro-preview)：技术写作专家。Gemini 文笔好，写出来的东西读着顺畅。
+multimodal-looker (google/gemini-3-flash)：视觉内容专家。PDF、图片、图表，看一眼就知道里头有啥。
+</code></pre>
+<div class="highlight highlight-source-json-comments"><pre class="notranslate">{
+  <span class="pl-ent">"$schema"</span>: <span class="pl-s"><span class="pl-pds">"</span>https://raw.githubusercontent.com/code-yeongyu/oh-my-opencode/master/assets/oh-my-opencode.schema.json<span class="pl-pds">"</span></span>,
+  <span class="pl-ent">"google_auth"</span>: <span class="pl-c1">false</span>,
+  <span class="pl-ent">"agents"</span>: {
+    <span class="pl-ent">"Sisyphus"</span>: {
+      <span class="pl-ent">"model"</span>: <span class="pl-s"><span class="pl-pds">"</span>Antigravity/gemini-claude-opus-4-5-thinking<span class="pl-pds">"</span></span>
+    },
+    <span class="pl-ent">"librarian"</span>: {
+      <span class="pl-ent">"model"</span>: <span class="pl-s"><span class="pl-pds">"</span>Antigravity/gemini-3-flash<span class="pl-pds">"</span></span>
+    },
+    <span class="pl-ent">"explore"</span>: {
+      <span class="pl-ent">"model"</span>: <span class="pl-s"><span class="pl-pds">"</span>Antigravity/gemini-3-flash<span class="pl-pds">"</span></span>
+    },
+    <span class="pl-ent">"oracle"</span>: {
+      <span class="pl-ent">"model"</span>: <span class="pl-s"><span class="pl-pds">"</span>Antigravity/gemini-3-pro-preview<span class="pl-pds">"</span></span>  <span class="pl-c"><span class="pl-c">//</span> 后期更换成 gpt 5.2</span>
+    },
+    <span class="pl-ent">"frontend-ui-ux-engineer"</span>: {
+      <span class="pl-ent">"model"</span>: <span class="pl-s"><span class="pl-pds">"</span>Antigravity/gemini-3-pro-preview<span class="pl-pds">"</span></span>
+    },
+    <span class="pl-ent">"document-writer"</span>: {
+      <span class="pl-ent">"model"</span>: <span class="pl-s"><span class="pl-pds">"</span>Antigravity/gemini-3-flash<span class="pl-pds">"</span></span>
+    },
+    <span class="pl-ent">"multimodal-looker"</span>: {
+      <span class="pl-ent">"model"</span>: <span class="pl-s"><span class="pl-pds">"</span>Antigravity/gemini-3-flash<span class="pl-pds">"</span></span>
+    }
+  }
+}</pre></div>
+<h3>ref</h3>
+<p><a href="https://linux.do/t/topic/1404993" rel="nofollow">https://linux.do/t/topic/1404993</a><br>
+<a href="https://opencode.ai/docs" rel="nofollow">https://opencode.ai/docs</a><br>
+<a href="https://help.router-for.me/cn/" rel="nofollow">https://help.router-for.me/cn/</a><br>
+<a href="https://github.com/code-yeongyu/oh-my-opencode">https://github.com/code-yeongyu/oh-my-opencode</a></p></div>
+<div style="font-size:small;margin-top:8px;float:right;">转载无需注明出处</div>
+
+<button class="btn btn-block" type="button" onclick="openComments()" id="cmButton">评论</button>
+<div class="comments" id="comments"></div>
+
+</div>
+    <div id="footer"><div id="footer1">Copyright © <span id="copyrightYear"></span> <a href="https://FairyOwO.github.io">FairyOwO 的 Blog</a></div>
+<div id="footer2">
+    <span id="runday"></span><span>Powered by <a href="https://meekdai.com/Gmeek.html" target="_blank">Gmeek</a></span>
+</div>
+
+<script>
+var now=new Date();
+document.getElementById("copyrightYear").innerHTML=now.getFullYear();
+
+if("11/22/2024"!=""){
+    var startSite=new Date("11/22/2024");
+    var diff=now.getTime()-startSite.getTime();
+    var diffDay=Math.floor(diff/(1000*60*60*24));
+    document.getElementById("runday").innerHTML="网站运行"+diffDay+"天"+" • ";
+}
+</script></div>
+</body>
+<script>
+var IconList={'sun': 'M8 10.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5zM8 12a4 4 0 100-8 4 4 0 000 8zM8 0a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0V.75A.75.75 0 018 0zm0 13a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0v-1.5A.75.75 0 018 13zM2.343 2.343a.75.75 0 011.061 0l1.06 1.061a.75.75 0 01-1.06 1.06l-1.06-1.06a.75.75 0 010-1.06zm9.193 9.193a.75.75 0 011.06 0l1.061 1.06a.75.75 0 01-1.06 1.061l-1.061-1.06a.75.75 0 010-1.061zM16 8a.75.75 0 01-.75.75h-1.5a.75.75 0 010-1.5h1.5A.75.75 0 0116 8zM3 8a.75.75 0 01-.75.75H.75a.75.75 0 010-1.5h1.5A.75.75 0 013 8zm10.657-5.657a.75.75 0 010 1.061l-1.061 1.06a.75.75 0 11-1.06-1.06l1.06-1.06a.75.75 0 011.06 0zm-9.193 9.193a.75.75 0 010 1.06l-1.06 1.061a.75.75 0 11-1.061-1.06l1.06-1.061a.75.75 0 011.061 0z', 'moon': 'M9.598 1.591a.75.75 0 01.785-.175 7 7 0 11-8.967 8.967.75.75 0 01.961-.96 5.5 5.5 0 007.046-7.046.75.75 0 01.175-.786zm1.616 1.945a7 7 0 01-7.678 7.678 5.5 5.5 0 107.678-7.678z', 'sync': 'M1.705 8.005a.75.75 0 0 1 .834.656 5.5 5.5 0 0 0 9.592 2.97l-1.204-1.204a.25.25 0 0 1 .177-.427h3.646a.25.25 0 0 1 .25.25v3.646a.25.25 0 0 1-.427.177l-1.38-1.38A7.002 7.002 0 0 1 1.05 8.84a.75.75 0 0 1 .656-.834ZM8 2.5a5.487 5.487 0 0 0-4.131 1.869l1.204 1.204A.25.25 0 0 1 4.896 6H1.25A.25.25 0 0 1 1 5.75V2.104a.25.25 0 0 1 .427-.177l1.38 1.38A7.002 7.002 0 0 1 14.95 7.16a.75.75 0 0 1-1.49.178A5.5 5.5 0 0 0 8 2.5Z', 'home': 'M6.906.664a1.749 1.749 0 0 1 2.187 0l5.25 4.2c.415.332.657.835.657 1.367v7.019A1.75 1.75 0 0 1 13.25 15h-3.5a.75.75 0 0 1-.75-.75V9H7v5.25a.75.75 0 0 1-.75.75h-3.5A1.75 1.75 0 0 1 1 13.25V6.23c0-.531.242-1.034.657-1.366l5.25-4.2Zm1.25 1.171a.25.25 0 0 0-.312 0l-5.25 4.2a.25.25 0 0 0-.094.196v7.019c0 .138.112.25.25.25H5.5V8.25a.75.75 0 0 1 .75-.75h3.5a.75.75 0 0 1 .75.75v5.25h2.75a.25.25 0 0 0 .25-.25V6.23a.25.25 0 0 0-.094-.195Z', 'github': 'M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27-.68 0-1.36.09-2 .27-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.31 2.69.94 0 .67.01 1.3.01 1.49 0 .21-.15.45-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8Z', 'copy': 'M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 0 1 0 1.5h-1.5a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-1.5a.75.75 0 0 1 1.5 0v1.5A1.75 1.75 0 0 1 9.25 16h-7.5A1.75 1.75 0 0 1 0 14.25Z M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0 1 14.25 11h-7.5A1.75 1.75 0 0 1 5 9.25Zm1.75-.25a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-7.5a.25.25 0 0 0-.25-.25Z', 'check': 'M13.78 4.22a.75.75 0 0 1 0 1.06l-7.25 7.25a.75.75 0 0 1-1.06 0L2.22 9.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018L6 10.94l6.72-6.72a.75.75 0 0 1 1.06 0Z'};
+var utterancesLoad=0;
+
+let themeSettings={
+    "dark": ["dark","moon","#00f0ff","dark-blue"],
+    "light": ["light","sun","#ff5000","github-light"],
+    "auto": ["auto","sync","","preferred-color-scheme"]
+};
+function changeTheme(mode, icon, color, utheme){
+    document.documentElement.setAttribute("data-color-mode",mode);
+    document.getElementById("themeSwitch").setAttribute("d",value=IconList[icon]);
+    document.getElementById("themeSwitch").parentNode.style.color=color;
+    if(utterancesLoad==1){utterancesTheme(utheme);}
+}
+function modeSwitch(){
+    let currentMode=document.documentElement.getAttribute('data-color-mode');
+    let newMode = currentMode === "light" ? "dark" : currentMode === "dark" ? "auto" : "light";
+    localStorage.setItem("meek_theme", newMode);
+    if(themeSettings[newMode]){
+        changeTheme(...themeSettings[newMode]);
+    }
+}
+function utterancesTheme(theme){
+    const message={type:'set-theme',theme: theme};
+    const iframe=document.getElementsByClassName('utterances-frame')[0];
+    iframe.contentWindow.postMessage(message,'https://utteranc.es');
+}
+if(themeSettings[theme]){changeTheme(...themeSettings[theme]);}
+console.log("\n %c Gmeek last https://github.com/Meekdai/Gmeek \n","padding:5px 0;background:#02d81d;color:#fff");
+</script>
+
+<script>
+document.getElementById("pathHome").setAttribute("d",IconList["home"]);
+document.getElementById("pathIssue").setAttribute("d",IconList["github"]);
+
+
+
+function openComments(){
+    cm=document.getElementById("comments");
+    cmButton=document.getElementById("cmButton");
+    cmButton.innerHTML="loading";
+    span=document.createElement("span");
+    span.setAttribute("class","AnimatedEllipsis");
+    cmButton.appendChild(span);
+
+    script=document.createElement("script");
+    script.setAttribute("src","https://utteranc.es/client.js");
+    script.setAttribute("repo","FairyOwO/FairyOwO.github.io");
+    script.setAttribute("issue-term","title");
+    
+    if(localStorage.getItem("meek_theme")=="dark"){script.setAttribute("theme","dark-blue");}
+    else if(localStorage.getItem("meek_theme")=="light") {script.setAttribute("theme","github-light");}
+    else{script.setAttribute("theme","preferred-color-scheme");}
+    
+    script.setAttribute("crossorigin","anonymous");
+    script.setAttribute("async","");
+    cm.appendChild(script);
+
+    int=self.setInterval("iFrameLoading()",200);
+}
+
+function iFrameLoading(){
+    var utterances=document.getElementsByClassName('utterances');
+    if(utterances.length==1){
+        if(utterances[0].style.height!=""){
+            utterancesLoad=1;
+            int=window.clearInterval(int);
+            document.getElementById("cmButton").style.display="none";
+            console.log("utterances Load OK");
+        }
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const createClipboardHTML = (codeContent, additionalClasses = '') => `
+        <pre class="notranslate"><code class="notranslate">${codeContent}</code></pre>
+        <div class="clipboard-container position-absolute right-0 top-0 ${additionalClasses}">
+            <clipboard-copy class="ClipboardButton btn m-2 p-0" role="button" style="display: inherit;">
+                <svg height="16" width="16" class="octicon octicon-copy m-2"><path d="${IconList["copy"]}"></path></svg>
+                <svg height="16" width="16" class="octicon octicon-check color-fg-success m-2 d-none"><path d="${IconList["check"]}"></path></svg>
+            </clipboard-copy>
+            <div class="copy-feedback">Copied!</div>
+        </div>
+    `;
+
+    const handleCodeElements = (selector = '') => {
+        document.querySelectorAll(selector).forEach(codeElement => {
+            const codeContent = codeElement.innerHTML;
+            const newStructure = document.createElement('div');
+            newStructure.className = 'snippet-clipboard-content position-relative overflow-auto';
+            newStructure.innerHTML = createClipboardHTML(codeContent);
+
+            const parentElement = codeElement.parentElement;
+            if (selector.includes('highlight')) {
+                parentElement.insertBefore(newStructure, codeElement.nextSibling);
+                parentElement.removeChild(codeElement);
+            } else {
+                parentElement.parentElement.replaceChild(newStructure, parentElement);
+            }
+        });
+    };
+
+    handleCodeElements('pre.notranslate > code.notranslate');
+    handleCodeElements('div.highlight > pre.notranslate');
+
+    let currentFeedback = null;
+    document.querySelectorAll('clipboard-copy').forEach(copyButton => {
+        copyButton.addEventListener('click', () => {
+            const codeContent = copyButton.closest('.snippet-clipboard-content').innerText;
+            const tempTextArea = document.createElement('textarea');
+            tempTextArea.value = codeContent;
+            document.body.appendChild(tempTextArea);
+            tempTextArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempTextArea);
+
+            const copyIcon = copyButton.querySelector('.octicon-copy');
+            const checkIcon = copyButton.querySelector('.octicon-check');
+            const copyFeedback = copyButton.nextElementSibling;
+
+            if (currentFeedback && currentFeedback !== copyFeedback) {currentFeedback.style.display = 'none';}
+            currentFeedback = copyFeedback;
+
+            copyIcon.classList.add('d-none');
+            checkIcon.classList.remove('d-none');
+            copyFeedback.style.display = 'block';
+            copyButton.style.borderColor = 'var(--color-success-fg)';
+
+            setTimeout(() => {
+                copyIcon.classList.remove('d-none');
+                checkIcon.classList.add('d-none');
+                copyFeedback.style.display = 'none';
+                copyButton.style.borderColor = '';
+            }, 2000);
+        });
+    });
+});
+
+</script>
+
+
+</html>
