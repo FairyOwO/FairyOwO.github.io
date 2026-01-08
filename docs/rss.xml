@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0"><channel><title>FairyOwO 的 Blog</title><link>https://FairyOwO.github.io</link><description>记录一些琐事</description><copyright>FairyOwO 的 Blog</copyright><docs>http://www.rssboard.org/rss-specification</docs><generator>python-feedgen</generator><image><url>https://github.githubassets.com/favicons/favicon.svg</url><title>avatar</title><link>https://FairyOwO.github.io</link></image><lastBuildDate>Mon, 05 Jan 2026 09:09:18 +0000</lastBuildDate><managingEditor>FairyOwO 的 Blog</managingEditor><ttl>60</ttl><webMaster>FairyOwO 的 Blog</webMaster><item><title>opencode 上手与入门</title><link>https://FairyOwO.github.io/post/opencode%20-shang-shou-yu-ru-men.html</link><description>## opencode 上手与入门
+<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0"><channel><title>FairyOwO 的 Blog</title><link>https://FairyOwO.github.io</link><description>记录一些琐事</description><copyright>FairyOwO 的 Blog</copyright><docs>http://www.rssboard.org/rss-specification</docs><generator>python-feedgen</generator><image><url>https://github.githubassets.com/favicons/favicon.svg</url><title>avatar</title><link>https://FairyOwO.github.io</link></image><lastBuildDate>Thu, 08 Jan 2026 03:29:26 +0000</lastBuildDate><managingEditor>FairyOwO 的 Blog</managingEditor><ttl>60</ttl><webMaster>FairyOwO 的 Blog</webMaster><item><title>opencode 上手与入门</title><link>https://FairyOwO.github.io/post/opencode%20-shang-shou-yu-ru-men.html</link><description>## opencode 上手与入门
 
 随着code agent的发展 效率与可用性已经大幅上涨
 部分mcp服务器 (例如content7或者是定向检索代码的mcp服务器) 可以明显提升效果
@@ -55,6 +55,7 @@ nix run nixpkgs#opencode           # or github:anomalyco/opencode for latest dev
 这里使用 [CLIProxyAPI](https://github.com/router-for-me/CLIProxyAPI) 来将其转换成api提供给opencode使用
 
 &gt; 注意 当前 opencode 与 CLIProxyAPI 一起使用 会有兼容性问题 调用工具的时候会中断 需要手动继续
+&gt; [6.6.89](https://github.com/router-for-me/CLIProxyAPI/releases/tag/v6.6.89) 已修复
 
 1. 下载 release 并解压
 2. 修改配置文件 `config.example.yaml` 并修改成 `config.yaml`

@@ -54,6 +54,7 @@ nix run nixpkgs#opencode           # or github:anomalyco/opencode for latest dev
 这里使用 [CLIProxyAPI](https://github.com/router-for-me/CLIProxyAPI) 来将其转换成api提供给opencode使用
 
 > 注意 当前 opencode 与 CLIProxyAPI 一起使用 会有兼容性问题 调用工具的时候会中断 需要手动继续
+> [6.6.89](https://github.com/router-for-me/CLIProxyAPI/releases/tag/v6.6.89) 已修复
 
 1. 下载 release 并解压
 2. 修改配置文件 `config.example.yaml` 并修改成 `config.yaml`
