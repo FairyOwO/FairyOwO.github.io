@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0"><channel><title>FairyOwO 的 Blog</title><link>https://FairyOwO.github.io</link><description>记录一些琐事</description><copyright>FairyOwO 的 Blog</copyright><docs>http://www.rssboard.org/rss-specification</docs><generator>python-feedgen</generator><image><url>https://github.githubassets.com/favicons/favicon.svg</url><title>avatar</title><link>https://FairyOwO.github.io</link></image><lastBuildDate>Tue, 13 Jan 2026 07:16:40 +0000</lastBuildDate><managingEditor>FairyOwO 的 Blog</managingEditor><ttl>60</ttl><webMaster>FairyOwO 的 Blog</webMaster><item><title>2025 Advent of Code 复盘与答案</title><link>https://FairyOwO.github.io/post/2025%20Advent%20of%20Code%20-fu-pan-yu-da-an.html</link><description>[Advent of Code](https://adventofcode.com/)
+<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0"><channel><title>FairyOwO 的 Blog</title><link>https://FairyOwO.github.io</link><description>记录一些琐事</description><copyright>FairyOwO 的 Blog</copyright><docs>http://www.rssboard.org/rss-specification</docs><generator>python-feedgen</generator><image><url>https://github.githubassets.com/favicons/favicon.svg</url><title>avatar</title><link>https://FairyOwO.github.io</link></image><lastBuildDate>Tue, 13 Jan 2026 07:18:19 +0000</lastBuildDate><managingEditor>FairyOwO 的 Blog</managingEditor><ttl>60</ttl><webMaster>FairyOwO 的 Blog</webMaster><item><title>2025 Advent of Code 复盘与答案</title><link>https://FairyOwO.github.io/post/2025%20Advent%20of%20Code%20-fu-pan-yu-da-an.html</link><description>[Advent of Code](https://adventofcode.com/)
 
 使用 python 编写, 没有整理代码, 所以非常乱(变量乱取名, 没有注释, 逻辑奇怪, 并非最佳实现)
 可以使用 gpt 相关工具辅助查看
@@ -7,6 +7,8 @@
 &gt; 如果没有特意说明, 变量 aaa 统一存放所有原始字符串
 
 &gt; 今年的 ai 翻译工具好了很多 翻译的更容易懂了 许多
+
+&gt; 今年只有12题
 
 ## 第一题
 

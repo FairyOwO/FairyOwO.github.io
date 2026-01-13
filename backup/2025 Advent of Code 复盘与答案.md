@@ -7,6 +7,8 @@
 
 > 今年的 ai 翻译工具好了很多 翻译的更容易懂了 许多
 
+> 今年只有12题
+
 ## 第一题
 
 [https://adventofcode.com/2025/day/1](https://adventofcode.com/2025/day/1)
