@@ -74,6 +74,7 @@ nix run nixpkgs#opencode           # or github:anomalyco/opencode for latest dev
     ```yaml
     proxy-url: socks5://user:pass@192.168.1.1:1080/  # 你需要改成你的, 这里proxy用于访问google 所以ip需要纯净
     allow-remote: false  # 如果你在服务器上搭建, 则需要允许
+    secret-key: 123  # 一定要配置不然进不去
     ```
 
 3. 启动, 并访问 [webui](http://localhost:8317/management.html)
@@ -294,6 +295,7 @@ nix run nixpkgs#opencode           # or github:anomalyco/opencode for latest dev
     ```yaml
     proxy-url: socks5://user:pass@192.168.1.1:1080/  # 你需要改成你的, 这里proxy用于访问google 所以ip需要纯净
     allow-remote: false  # 如果你在服务器上搭建, 则需要允许
+    secret-key: 123  # 一定要配置不然进不去
     ```
 
 3. 启动, 并访问 [webui](http://localhost:8317/management.html)
@@ -572,7 +574,8 @@ nix run nixpkgs#opencode           <span class="pl-c"><span class="pl-c">#</span
 <li>
 <p>修改配置文件 <code class="notranslate">config.example.yaml</code> 并修改成 <code class="notranslate">config.yaml</code></p>
 <div class="highlight highlight-source-yaml"><pre class="notranslate"><span class="pl-ent">proxy-url</span>: <span class="pl-s">socks5://user:pass@192.168.1.1:1080/  </span><span class="pl-c"><span class="pl-c">#</span> 你需要改成你的, 这里proxy用于访问google 所以ip需要纯净</span>
-<span class="pl-ent">allow-remote</span>: <span class="pl-s">false  </span><span class="pl-c"><span class="pl-c">#</span> 如果你在服务器上搭建, 则需要允许</span></pre></div>
+<span class="pl-ent">allow-remote</span>: <span class="pl-s">false  </span><span class="pl-c"><span class="pl-c">#</span> 如果你在服务器上搭建, 则需要允许</span>
+<span class="pl-ent">secret-key</span>: <span class="pl-c1">123</span>  <span class="pl-c"><span class="pl-c">#</span> 一定要配置不然进不去</span></pre></div>
 </li>
 <li>
 <p>启动, 并访问 <a href="http://localhost:8317/management.html" rel="nofollow">webui</a></p>

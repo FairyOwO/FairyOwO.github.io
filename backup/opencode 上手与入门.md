@@ -62,6 +62,7 @@ nix run nixpkgs#opencode           # or github:anomalyco/opencode for latest dev
     ```yaml
     proxy-url: socks5://user:pass@192.168.1.1:1080/  # 你需要改成你的, 这里proxy用于访问google 所以ip需要纯净
     allow-remote: false  # 如果你在服务器上搭建, 则需要允许
+    secret-key: 123  # 一定要配置不然进不去
     ```
 
 3. 启动, 并访问 [webui](http://localhost:8317/management.html)
