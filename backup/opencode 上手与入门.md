@@ -256,6 +256,17 @@ multimodal-looker (google/gemini-3-flash)：视觉内容专家。PDF、图片、
 }
 ```
 
+#### 魔法词语
+
+`oh my opencode` 有一些魔法词 这里摘抄一下 在提示词里面出现这些词会激活特殊模式
+
+```text
+关键词检测器：自动检测提示中的关键词并激活专门模式：
+ultrawork / ulw：最大性能模式，带并行智能体编排
+search / find / 찾아 / 検索：最大化搜索力度，带并行 explore 和 librarian 智能体
+analyze / investigate / 분석 / 調査：深度分析模式，带多阶段专家咨询
+```
+
 ### ref
 
 https://linux.do/t/topic/1404993
