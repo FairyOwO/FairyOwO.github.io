@@ -114,74 +114,92 @@ opencode 需要手动写配置文件 `~/config/opencode/opencode.json`
   ],
   "$schema": "https://opencode.ai/config.json",
   "provider": {
-    "Antigravity": {
-      "npm": "@ai-sdk/openai-compatible",
-      "name": "Antigravity",
-      "options": {
-        "baseURL": "http://localhost:8317/v1"  // 默认CLIProxyAPI地址
-      },
+    "cpa-oai": {
+      "npm": "@ai-sdk/openai",
+      "name": "cpa-oai",
+      "options": { "baseURL": "http://localhost:8317/v1" },
+      "models": {
+        "gpt-5.2": {
+          "name": "gpt-5.2",
+          "thinking": true,
+          "options": {
+            "include": ["reasoning.encrypted_content"],
+            "store": false,
+            "reasoningEffort": "high",
+            "textVerbosity": "high",
+            "reasoningSummary": "auto"
+          }
+        }
+      }
+    },
+    "cpa-claude": {
+      "npm": "@ai-sdk/anthropic",
+      "name": "cpa-claude",
+      "options": { "baseURL": "http://localhost:8317/v1" },
+      "models": {
+        "gemini-claude-opus-4-5-thinking": {
+          "name": "claude opus 4.5 thinking",
+          "thinking": true,
+          "attachment": true,
+          "limit": { "context": 200000, "output": 64000 },
+          "modalities": {
+            "input": ["text", "image", "pdf"],
+            "output": ["text"]
+          }
+        },
+        "claude-opus-4-5-20251101": {
+          "name": "muluo claude opus 4.5",
+          "thinking": true,
+          "attachment": true,
+          "limit": { "context": 200000, "output": 64000 },
+          "modalities": {
+            "input": ["text", "image", "pdf"],
+            "output": ["text"]
+          }
+        }
+      }
+    },
+    "cpa-gemini": {
+      "npm": "@ai-sdk/google",
+      "name": "cpa-gemini",
+      "options": { "baseURL": "http://localhost:8317/v1beta" },
       "models": {
         "gemini-3-pro-preview": {
           "name": "Gemini 3 Pro preview (Antigravity)",
           "thinking": true,
           "attachment": true,
-          "limit": {
-            "context": 1048576,
-            "output": 65535
-          },
+          "limit": { "context": 1048576, "output": 65535 },
           "modalities": {
-            "input": [
-              "text",
-              "image",
-              "pdf"
-            ],
-            "output": [
-              "text"
-            ]
+            "input": ["text", "image", "pdf"],
+            "output": ["text"]
           }
         },
         "gemini-3-flash-preview": {
           "name": "Gemini 3 Flash (Antigravity)",
           "attachment": true,
-          "limit": {
-            "context": 1048576,
-            "output": 65536
-          },
+          "limit": { "context": 1048576, "output": 65536 },
           "modalities": {
-            "input": [
-              "text",
-              "image",
-              "pdf"
-            ],
-            "output": [
-              "text"
-            ]
+            "input": ["text", "image", "pdf"],
+            "output": ["text"]
           }
         },
         "gemini-2.5-flash-lite": {
           "name": "Gemini 2.5 Flash Lite (Antigravity)",
           "attachment": true,
-          "limit": {
-            "context": 1048576,
-            "output": 65536
-          },
+          "limit": { "context": 1048576, "output": 65536 },
           "modalities": {
-            "input": [
-              "text",
-              "image",
-              "pdf"
-            ],
-            "output": [
-              "text"
-            ]
+            "input": ["text", "image", "pdf"],
+            "output": ["text"]
           }
         }
       }
-    },
+    }
   }
 }
 ```
 
+> 可能有格式上的问题 需要修改左右括号
+> 反重力是没有 gpt 5.2的 这里仅记录配置
 > 你可以通过ai来自动生成配置文件
 
 如果这边是中转的 api, 那么仅需要修改 opencode.json 中 修改 provider 中的 options.baseURL
@@ -232,25 +250,25 @@ multimodal-looker (google/gemini-3-flash)：视觉内容专家。PDF、图片、
   "google_auth": false,
   "agents": {
     "Sisyphus": {
-      "model": "Antigravity/gemini-claude-opus-4-5-thinking"
+      "model": "cpa-claude/gemini-claude-opus-4-5-thinking"
     },
     "librarian": {
-      "model": "Antigravity/gemini-3-flash"
+      "model": "cpa-gemini/gemini-3-flash"
     },
     "explore": {
-      "model": "Antigravity/gemini-3-flash"
+      "model": "cpa-gemini/gemini-3-flash"
     },
     "oracle": {
-      "model": "Antigravity/gemini-3-pro-preview"  // 后期更换成 gpt 5.2
+      "model": "cpa-gemini/gemini-3-pro-preview"  // 后期更换成 gpt 5.2
     },
     "frontend-ui-ux-engineer": {
-      "model": "Antigravity/gemini-3-pro-preview"
+      "model": "cpa-gemini/gemini-3-pro-preview"
     },
     "document-writer": {
-      "model": "Antigravity/gemini-3-flash"
+      "model": "cpa-gemini/gemini-3-flash"
     },
     "multimodal-looker": {
-      "model": "Antigravity/gemini-3-flash"
+      "model": "cpa-gemini/gemini-3-flash"
     }
   }
 }
