@@ -491,7 +491,7 @@ Sisyphus (anthropic/claude-opus-4-5)：默认 Agent。">
 <meta property="og:url" content="https://FairyOwO.github.io/post/opencode%20-shang-shou-yu-ru-men.html">
 <meta property="og:image" content="https://github.githubassets.com/favicons/favicon.svg">
 <title>opencode 上手与入门</title>
-
+<link href="//unpkg.com/@wooorm/starry-night@2.1.1/style/both.css" rel="stylesheet" />
 
 
 </head>
@@ -515,7 +515,17 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
     body {padding: 8px;}
     .postTitle{font-size:24px;}
 }
-
+.copy-feedback {
+    display: none;
+    position: absolute;
+    top: 10px;
+    right: 50px;
+    color: var(--color-fg-on-emphasis);
+    background-color: var(--color-fg-muted);
+    border-radius: 3px;
+    padding: 5px 8px;
+    font-size: 12px;
+}
 </style>
 
 
@@ -567,18 +577,17 @@ codex(cx)</p>
 <h3>安装 opencode</h3>
 <p>详见文档, 这里仅作记录</p>
 <p><a href="https://github.com/anomalyco/opencode">https://github.com/anomalyco/opencode</a></p>
-<pre lang="sh" class="notranslate"><code class="notranslate"># YOLO
-curl -fsSL https://opencode.ai/install | bash
+<div class="highlight highlight-source-shell"><pre class="notranslate"><span class="pl-c"><span class="pl-c">#</span> YOLO</span>
+curl -fsSL https://opencode.ai/install <span class="pl-k">|</span> bash
 
-# Package managers
-npm i -g opencode-ai@latest        # or bun/pnpm/yarn
-scoop bucket add extras; scoop install extras/opencode  # Windows
-choco install opencode             # Windows
-brew install opencode              # macOS and Linux
-paru -S opencode-bin               # Arch Linux
-mise use -g opencode               # Any OS
-nix run nixpkgs#opencode           # or github:anomalyco/opencode for latest dev branch
-</code></pre>
+<span class="pl-c"><span class="pl-c">#</span> Package managers</span>
+npm i -g opencode-ai@latest        <span class="pl-c"><span class="pl-c">#</span> or bun/pnpm/yarn</span>
+scoop bucket add extras<span class="pl-k">;</span> scoop install extras/opencode  <span class="pl-c"><span class="pl-c">#</span> Windows</span>
+choco install opencode             <span class="pl-c"><span class="pl-c">#</span> Windows</span>
+brew install opencode              <span class="pl-c"><span class="pl-c">#</span> macOS and Linux</span>
+paru -S opencode-bin               <span class="pl-c"><span class="pl-c">#</span> Arch Linux</span>
+mise use -g opencode               <span class="pl-c"><span class="pl-c">#</span> Any OS</span>
+nix run nixpkgs#opencode           <span class="pl-c"><span class="pl-c">#</span> or github:anomalyco/opencode for latest dev branch</span></pre></div>
 <p>或者是前往 <a href="https://github.com/anomalyco/opencode/releases">release</a> 直接下载安装包或者免安装的 zip</p>
 <h3>获取 api</h3>
 <blockquote>
@@ -600,10 +609,9 @@ nix run nixpkgs#opencode           # or github:anomalyco/opencode for latest dev
 </li>
 <li>
 <p>修改配置文件 <code class="notranslate">config.example.yaml</code> 并修改成 <code class="notranslate">config.yaml</code></p>
-<pre lang="yaml" class="notranslate"><code class="notranslate">proxy-url: socks5://user:pass@192.168.1.1:1080/  # 你需要改成你的, 这里proxy用于访问google 所以ip需要纯净
-allow-remote: false  # 如果你在服务器上搭建, 则需要允许
-secret-key: 123  # 一定要配置不然进不去
-</code></pre>
+<div class="highlight highlight-source-yaml"><pre class="notranslate"><span class="pl-ent">proxy-url</span>: <span class="pl-s">socks5://user:pass@192.168.1.1:1080/  </span><span class="pl-c"><span class="pl-c">#</span> 你需要改成你的, 这里proxy用于访问google 所以ip需要纯净</span>
+<span class="pl-ent">allow-remote</span>: <span class="pl-s">false  </span><span class="pl-c"><span class="pl-c">#</span> 如果你在服务器上搭建, 则需要允许</span>
+<span class="pl-ent">secret-key</span>: <span class="pl-c1">123</span>  <span class="pl-c"><span class="pl-c">#</span> 一定要配置不然进不去</span></pre></div>
 </li>
 <li>
 <p>启动, 并访问 <a href="http://localhost:8317/management.html" rel="nofollow">webui</a></p>
@@ -639,103 +647,101 @@ gpt-oss-120b-medium
 </blockquote>
 <h3>opencode 配置代理与中转</h3>
 <p>opencode使用环境变量配置代理</p>
-<pre lang="sh" class="notranslate"><code class="notranslate">export HTTPS_PROXY=https://proxy.example.com:8080
-export HTTP_PROXY=http://proxy.example.com:8080
-export NO_PROXY=localhost,127.0.0.1
-# 注意 NO_PROXY 也要
-</code></pre>
+<div class="highlight highlight-source-shell"><pre class="notranslate"><span class="pl-k">export</span> HTTPS_PROXY=https://proxy.example.com:8080
+<span class="pl-k">export</span> HTTP_PROXY=http://proxy.example.com:8080
+<span class="pl-k">export</span> NO_PROXY=localhost,127.0.0.1
+<span class="pl-c"><span class="pl-c">#</span> 注意 NO_PROXY 也要</span></pre></div>
 <p>opencode 需要手动写配置文件 <code class="notranslate">~/config/opencode/opencode.json</code></p>
 <p>参考:</p>
-<pre lang="jsonc" class="notranslate"><code class="notranslate">{
-  "plugin": [
-    "oh-my-opencode",
-    // "opencode-antigravity-auth@1.2.7"  // 自带的反重力插件 这里我们用其他方案代替, 所以不需要
+<div class="highlight highlight-source-json-comments"><pre class="notranslate">{
+  <span class="pl-ent">"plugin"</span>: [
+    <span class="pl-s"><span class="pl-pds">"</span>oh-my-opencode<span class="pl-pds">"</span></span>,
+    <span class="pl-c"><span class="pl-c">//</span> "opencode-antigravity-auth@1.2.7"  // 自带的反重力插件 这里我们用其他方案代替, 所以不需要</span>
   ],
-  "$schema": "https://opencode.ai/config.json",
-  "provider": {
-    "cpa-oai": {
-      "npm": "@ai-sdk/openai",
-      "name": "cpa-oai",
-      "options": { "baseURL": "http://localhost:8317/v1" },
-      "models": {
-        "gpt-5.2": {
-          "name": "gpt-5.2",
-          "thinking": true,
-          "options": {
-            "include": ["reasoning.encrypted_content"],
-            "store": false,
-            "reasoningEffort": "high",
-            "textVerbosity": "high",
-            "reasoningSummary": "auto"
+  <span class="pl-ent">"$schema"</span>: <span class="pl-s"><span class="pl-pds">"</span>https://opencode.ai/config.json<span class="pl-pds">"</span></span>,
+  <span class="pl-ent">"provider"</span>: {
+    <span class="pl-ent">"cpa-oai"</span>: {
+      <span class="pl-ent">"npm"</span>: <span class="pl-s"><span class="pl-pds">"</span>@ai-sdk/openai<span class="pl-pds">"</span></span>,
+      <span class="pl-ent">"name"</span>: <span class="pl-s"><span class="pl-pds">"</span>cpa-oai<span class="pl-pds">"</span></span>,
+      <span class="pl-ent">"options"</span>: { <span class="pl-ent">"baseURL"</span>: <span class="pl-s"><span class="pl-pds">"</span>http://localhost:8317/v1<span class="pl-pds">"</span></span> },
+      <span class="pl-ent">"models"</span>: {
+        <span class="pl-ent">"gpt-5.2"</span>: {
+          <span class="pl-ent">"name"</span>: <span class="pl-s"><span class="pl-pds">"</span>gpt-5.2<span class="pl-pds">"</span></span>,
+          <span class="pl-ent">"thinking"</span>: <span class="pl-c1">true</span>,
+          <span class="pl-ent">"options"</span>: {
+            <span class="pl-ent">"include"</span>: [<span class="pl-s"><span class="pl-pds">"</span>reasoning.encrypted_content<span class="pl-pds">"</span></span>],
+            <span class="pl-ent">"store"</span>: <span class="pl-c1">false</span>,
+            <span class="pl-ent">"reasoningEffort"</span>: <span class="pl-s"><span class="pl-pds">"</span>high<span class="pl-pds">"</span></span>,
+            <span class="pl-ent">"textVerbosity"</span>: <span class="pl-s"><span class="pl-pds">"</span>high<span class="pl-pds">"</span></span>,
+            <span class="pl-ent">"reasoningSummary"</span>: <span class="pl-s"><span class="pl-pds">"</span>auto<span class="pl-pds">"</span></span>
           }
         }
       }
     },
-    "cpa-claude": {
-      "npm": "@ai-sdk/anthropic",
-      "name": "cpa-claude",
-      "options": { "baseURL": "http://localhost:8317/v1" },
-      "models": {
-        "gemini-claude-opus-4-5-thinking": {
-          "name": "claude opus 4.5 thinking",
-          "thinking": true,
-          "attachment": true,
-          "limit": { "context": 200000, "output": 64000 },
-          "modalities": {
-            "input": ["text", "image", "pdf"],
-            "output": ["text"]
+    <span class="pl-ent">"cpa-claude"</span>: {
+      <span class="pl-ent">"npm"</span>: <span class="pl-s"><span class="pl-pds">"</span>@ai-sdk/anthropic<span class="pl-pds">"</span></span>,
+      <span class="pl-ent">"name"</span>: <span class="pl-s"><span class="pl-pds">"</span>cpa-claude<span class="pl-pds">"</span></span>,
+      <span class="pl-ent">"options"</span>: { <span class="pl-ent">"baseURL"</span>: <span class="pl-s"><span class="pl-pds">"</span>http://localhost:8317/v1<span class="pl-pds">"</span></span> },
+      <span class="pl-ent">"models"</span>: {
+        <span class="pl-ent">"gemini-claude-opus-4-5-thinking"</span>: {
+          <span class="pl-ent">"name"</span>: <span class="pl-s"><span class="pl-pds">"</span>claude opus 4.5 thinking<span class="pl-pds">"</span></span>,
+          <span class="pl-ent">"thinking"</span>: <span class="pl-c1">true</span>,
+          <span class="pl-ent">"attachment"</span>: <span class="pl-c1">true</span>,
+          <span class="pl-ent">"limit"</span>: { <span class="pl-ent">"context"</span>: <span class="pl-c1">200000</span>, <span class="pl-ent">"output"</span>: <span class="pl-c1">64000</span> },
+          <span class="pl-ent">"modalities"</span>: {
+            <span class="pl-ent">"input"</span>: [<span class="pl-s"><span class="pl-pds">"</span>text<span class="pl-pds">"</span></span>, <span class="pl-s"><span class="pl-pds">"</span>image<span class="pl-pds">"</span></span>, <span class="pl-s"><span class="pl-pds">"</span>pdf<span class="pl-pds">"</span></span>],
+            <span class="pl-ent">"output"</span>: [<span class="pl-s"><span class="pl-pds">"</span>text<span class="pl-pds">"</span></span>]
           }
         },
-        "claude-opus-4-5-20251101": {
-          "name": "muluo claude opus 4.5",
-          "thinking": true,
-          "attachment": true,
-          "limit": { "context": 200000, "output": 64000 },
-          "modalities": {
-            "input": ["text", "image", "pdf"],
-            "output": ["text"]
+        <span class="pl-ent">"claude-opus-4-5-20251101"</span>: {
+          <span class="pl-ent">"name"</span>: <span class="pl-s"><span class="pl-pds">"</span>muluo claude opus 4.5<span class="pl-pds">"</span></span>,
+          <span class="pl-ent">"thinking"</span>: <span class="pl-c1">true</span>,
+          <span class="pl-ent">"attachment"</span>: <span class="pl-c1">true</span>,
+          <span class="pl-ent">"limit"</span>: { <span class="pl-ent">"context"</span>: <span class="pl-c1">200000</span>, <span class="pl-ent">"output"</span>: <span class="pl-c1">64000</span> },
+          <span class="pl-ent">"modalities"</span>: {
+            <span class="pl-ent">"input"</span>: [<span class="pl-s"><span class="pl-pds">"</span>text<span class="pl-pds">"</span></span>, <span class="pl-s"><span class="pl-pds">"</span>image<span class="pl-pds">"</span></span>, <span class="pl-s"><span class="pl-pds">"</span>pdf<span class="pl-pds">"</span></span>],
+            <span class="pl-ent">"output"</span>: [<span class="pl-s"><span class="pl-pds">"</span>text<span class="pl-pds">"</span></span>]
           }
         }
       }
     },
-    "cpa-gemini": {
-      "npm": "@ai-sdk/google",
-      "name": "cpa-gemini",
-      "options": { "baseURL": "http://localhost:8317/v1beta" },
-      "models": {
-        "gemini-3-pro-preview": {
-          "name": "Gemini 3 Pro preview (Antigravity)",
-          "thinking": true,
-          "attachment": true,
-          "limit": { "context": 1048576, "output": 65535 },
-          "modalities": {
-            "input": ["text", "image", "pdf"],
-            "output": ["text"]
+    <span class="pl-ent">"cpa-gemini"</span>: {
+      <span class="pl-ent">"npm"</span>: <span class="pl-s"><span class="pl-pds">"</span>@ai-sdk/google<span class="pl-pds">"</span></span>,
+      <span class="pl-ent">"name"</span>: <span class="pl-s"><span class="pl-pds">"</span>cpa-gemini<span class="pl-pds">"</span></span>,
+      <span class="pl-ent">"options"</span>: { <span class="pl-ent">"baseURL"</span>: <span class="pl-s"><span class="pl-pds">"</span>http://localhost:8317/v1beta<span class="pl-pds">"</span></span> },
+      <span class="pl-ent">"models"</span>: {
+        <span class="pl-ent">"gemini-3-pro-preview"</span>: {
+          <span class="pl-ent">"name"</span>: <span class="pl-s"><span class="pl-pds">"</span>Gemini 3 Pro preview (Antigravity)<span class="pl-pds">"</span></span>,
+          <span class="pl-ent">"thinking"</span>: <span class="pl-c1">true</span>,
+          <span class="pl-ent">"attachment"</span>: <span class="pl-c1">true</span>,
+          <span class="pl-ent">"limit"</span>: { <span class="pl-ent">"context"</span>: <span class="pl-c1">1048576</span>, <span class="pl-ent">"output"</span>: <span class="pl-c1">65535</span> },
+          <span class="pl-ent">"modalities"</span>: {
+            <span class="pl-ent">"input"</span>: [<span class="pl-s"><span class="pl-pds">"</span>text<span class="pl-pds">"</span></span>, <span class="pl-s"><span class="pl-pds">"</span>image<span class="pl-pds">"</span></span>, <span class="pl-s"><span class="pl-pds">"</span>pdf<span class="pl-pds">"</span></span>],
+            <span class="pl-ent">"output"</span>: [<span class="pl-s"><span class="pl-pds">"</span>text<span class="pl-pds">"</span></span>]
           }
         },
-        "gemini-3-flash-preview": {
-          "name": "Gemini 3 Flash (Antigravity)",
-          "attachment": true,
-          "limit": { "context": 1048576, "output": 65536 },
-          "modalities": {
-            "input": ["text", "image", "pdf"],
-            "output": ["text"]
+        <span class="pl-ent">"gemini-3-flash-preview"</span>: {
+          <span class="pl-ent">"name"</span>: <span class="pl-s"><span class="pl-pds">"</span>Gemini 3 Flash (Antigravity)<span class="pl-pds">"</span></span>,
+          <span class="pl-ent">"attachment"</span>: <span class="pl-c1">true</span>,
+          <span class="pl-ent">"limit"</span>: { <span class="pl-ent">"context"</span>: <span class="pl-c1">1048576</span>, <span class="pl-ent">"output"</span>: <span class="pl-c1">65536</span> },
+          <span class="pl-ent">"modalities"</span>: {
+            <span class="pl-ent">"input"</span>: [<span class="pl-s"><span class="pl-pds">"</span>text<span class="pl-pds">"</span></span>, <span class="pl-s"><span class="pl-pds">"</span>image<span class="pl-pds">"</span></span>, <span class="pl-s"><span class="pl-pds">"</span>pdf<span class="pl-pds">"</span></span>],
+            <span class="pl-ent">"output"</span>: [<span class="pl-s"><span class="pl-pds">"</span>text<span class="pl-pds">"</span></span>]
           }
         },
-        "gemini-2.5-flash-lite": {
-          "name": "Gemini 2.5 Flash Lite (Antigravity)",
-          "attachment": true,
-          "limit": { "context": 1048576, "output": 65536 },
-          "modalities": {
-            "input": ["text", "image", "pdf"],
-            "output": ["text"]
+        <span class="pl-ent">"gemini-2.5-flash-lite"</span>: {
+          <span class="pl-ent">"name"</span>: <span class="pl-s"><span class="pl-pds">"</span>Gemini 2.5 Flash Lite (Antigravity)<span class="pl-pds">"</span></span>,
+          <span class="pl-ent">"attachment"</span>: <span class="pl-c1">true</span>,
+          <span class="pl-ent">"limit"</span>: { <span class="pl-ent">"context"</span>: <span class="pl-c1">1048576</span>, <span class="pl-ent">"output"</span>: <span class="pl-c1">65536</span> },
+          <span class="pl-ent">"modalities"</span>: {
+            <span class="pl-ent">"input"</span>: [<span class="pl-s"><span class="pl-pds">"</span>text<span class="pl-pds">"</span></span>, <span class="pl-s"><span class="pl-pds">"</span>image<span class="pl-pds">"</span></span>, <span class="pl-s"><span class="pl-pds">"</span>pdf<span class="pl-pds">"</span></span>],
+            <span class="pl-ent">"output"</span>: [<span class="pl-s"><span class="pl-pds">"</span>text<span class="pl-pds">"</span></span>]
           }
         }
       }
     }
   }
-}
-</code></pre>
+}</pre></div>
 <blockquote>
 <p>可能有格式上的问题 需要修改左右括号<br>
 反重力是没有 gpt 5.2的 这里仅记录配置<br>
@@ -755,10 +761,9 @@ oh my opencode 也可以用来登录反重力账号, 插件名称是 opencode-an
 </blockquote>
 <h4>手动</h4>
 <p>详见文档, 这里仅作记录</p>
-<pre lang="sh" class="notranslate"><code class="notranslate">bunx oh-my-opencode install
-# or use npx if bunx doesn't work
-npx oh-my-opencode install
-</code></pre>
+<div class="highlight highlight-source-shell"><pre class="notranslate">bunx oh-my-opencode install
+<span class="pl-c"><span class="pl-c">#</span> or use npx if bunx doesn't work</span>
+npx oh-my-opencode install</pre></div>
 <h4>配置文件</h4>
 <p>之前使用我们自己的 opencode 配置文件 这里当然需要自行配置 oh-my-opencode 的配置文件, 当然你也可以让ai来做这件事情 详见文档</p>
 <p>这里摘抄一下每个agent是干什么的</p>
@@ -770,34 +775,33 @@ frontend-ui-ux-engineer (google/gemini-3-pro-preview)：设计师出身的程序
 document-writer (google/gemini-3-pro-preview)：技术写作专家。Gemini 文笔好，写出来的东西读着顺畅。
 multimodal-looker (google/gemini-3-flash)：视觉内容专家。PDF、图片、图表，看一眼就知道里头有啥。
 </code></pre>
-<pre lang="jsonc" class="notranslate"><code class="notranslate">{
-  "$schema": "https://raw.githubusercontent.com/code-yeongyu/oh-my-opencode/master/assets/oh-my-opencode.schema.json",
-  "google_auth": false,
-  "agents": {
-    "Sisyphus": {
-      "model": "cpa-claude/gemini-claude-opus-4-5-thinking"
+<div class="highlight highlight-source-json-comments"><pre class="notranslate">{
+  <span class="pl-ent">"$schema"</span>: <span class="pl-s"><span class="pl-pds">"</span>https://raw.githubusercontent.com/code-yeongyu/oh-my-opencode/master/assets/oh-my-opencode.schema.json<span class="pl-pds">"</span></span>,
+  <span class="pl-ent">"google_auth"</span>: <span class="pl-c1">false</span>,
+  <span class="pl-ent">"agents"</span>: {
+    <span class="pl-ent">"Sisyphus"</span>: {
+      <span class="pl-ent">"model"</span>: <span class="pl-s"><span class="pl-pds">"</span>cpa-claude/gemini-claude-opus-4-5-thinking<span class="pl-pds">"</span></span>
     },
-    "librarian": {
-      "model": "cpa-gemini/gemini-3-flash"
+    <span class="pl-ent">"librarian"</span>: {
+      <span class="pl-ent">"model"</span>: <span class="pl-s"><span class="pl-pds">"</span>cpa-gemini/gemini-3-flash<span class="pl-pds">"</span></span>
     },
-    "explore": {
-      "model": "cpa-gemini/gemini-3-flash"
+    <span class="pl-ent">"explore"</span>: {
+      <span class="pl-ent">"model"</span>: <span class="pl-s"><span class="pl-pds">"</span>cpa-gemini/gemini-3-flash<span class="pl-pds">"</span></span>
     },
-    "oracle": {
-      "model": "cpa-gemini/gemini-3-pro-preview"  // 后期更换成 gpt 5.2
+    <span class="pl-ent">"oracle"</span>: {
+      <span class="pl-ent">"model"</span>: <span class="pl-s"><span class="pl-pds">"</span>cpa-gemini/gemini-3-pro-preview<span class="pl-pds">"</span></span>  <span class="pl-c"><span class="pl-c">//</span> 后期更换成 gpt 5.2</span>
     },
-    "frontend-ui-ux-engineer": {
-      "model": "cpa-gemini/gemini-3-pro-preview"
+    <span class="pl-ent">"frontend-ui-ux-engineer"</span>: {
+      <span class="pl-ent">"model"</span>: <span class="pl-s"><span class="pl-pds">"</span>cpa-gemini/gemini-3-pro-preview<span class="pl-pds">"</span></span>
     },
-    "document-writer": {
-      "model": "cpa-gemini/gemini-3-flash"
+    <span class="pl-ent">"document-writer"</span>: {
+      <span class="pl-ent">"model"</span>: <span class="pl-s"><span class="pl-pds">"</span>cpa-gemini/gemini-3-flash<span class="pl-pds">"</span></span>
     },
-    "multimodal-looker": {
-      "model": "cpa-gemini/gemini-3-flash"
+    <span class="pl-ent">"multimodal-looker"</span>: {
+      <span class="pl-ent">"model"</span>: <span class="pl-s"><span class="pl-pds">"</span>cpa-gemini/gemini-3-flash<span class="pl-pds">"</span></span>
     }
   }
-}
-</code></pre>
+}</pre></div>
 <h4>魔法词语</h4>
 <p><code class="notranslate">oh my opencode</code> 有一些魔法词 这里摘抄一下 在提示词里面出现这些词会激活特殊模式</p>
 <pre lang="text" class="notranslate"><code class="notranslate">关键词检测器：自动检测提示中的关键词并激活专门模式：
@@ -834,7 +838,7 @@ if("11/22/2024"!=""){
 </script></div>
 </body>
 <script>
-var IconList={'sun': 'M8 10.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5zM8 12a4 4 0 100-8 4 4 0 000 8zM8 0a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0V.75A.75.75 0 018 0zm0 13a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0v-1.5A.75.75 0 018 13zM2.343 2.343a.75.75 0 011.061 0l1.06 1.061a.75.75 0 01-1.06 1.06l-1.06-1.06a.75.75 0 010-1.06zm9.193 9.193a.75.75 0 011.06 0l1.061 1.06a.75.75 0 01-1.06 1.061l-1.061-1.06a.75.75 0 010-1.061zM16 8a.75.75 0 01-.75.75h-1.5a.75.75 0 010-1.5h1.5A.75.75 0 0116 8zM3 8a.75.75 0 01-.75.75H.75a.75.75 0 010-1.5h1.5A.75.75 0 013 8zm10.657-5.657a.75.75 0 010 1.061l-1.061 1.06a.75.75 0 11-1.06-1.06l1.06-1.06a.75.75 0 011.06 0zm-9.193 9.193a.75.75 0 010 1.06l-1.06 1.061a.75.75 0 11-1.061-1.06l1.06-1.061a.75.75 0 011.061 0z', 'moon': 'M9.598 1.591a.75.75 0 01.785-.175 7 7 0 11-8.967 8.967.75.75 0 01.961-.96 5.5 5.5 0 007.046-7.046.75.75 0 01.175-.786zm1.616 1.945a7 7 0 01-7.678 7.678 5.5 5.5 0 107.678-7.678z', 'sync': 'M1.705 8.005a.75.75 0 0 1 .834.656 5.5 5.5 0 0 0 9.592 2.97l-1.204-1.204a.25.25 0 0 1 .177-.427h3.646a.25.25 0 0 1 .25.25v3.646a.25.25 0 0 1-.427.177l-1.38-1.38A7.002 7.002 0 0 1 1.05 8.84a.75.75 0 0 1 .656-.834ZM8 2.5a5.487 5.487 0 0 0-4.131 1.869l1.204 1.204A.25.25 0 0 1 4.896 6H1.25A.25.25 0 0 1 1 5.75V2.104a.25.25 0 0 1 .427-.177l1.38 1.38A7.002 7.002 0 0 1 14.95 7.16a.75.75 0 0 1-1.49.178A5.5 5.5 0 0 0 8 2.5Z', 'home': 'M6.906.664a1.749 1.749 0 0 1 2.187 0l5.25 4.2c.415.332.657.835.657 1.367v7.019A1.75 1.75 0 0 1 13.25 15h-3.5a.75.75 0 0 1-.75-.75V9H7v5.25a.75.75 0 0 1-.75.75h-3.5A1.75 1.75 0 0 1 1 13.25V6.23c0-.531.242-1.034.657-1.366l5.25-4.2Zm1.25 1.171a.25.25 0 0 0-.312 0l-5.25 4.2a.25.25 0 0 0-.094.196v7.019c0 .138.112.25.25.25H5.5V8.25a.75.75 0 0 1 .75-.75h3.5a.75.75 0 0 1 .75.75v5.25h2.75a.25.25 0 0 0 .25-.25V6.23a.25.25 0 0 0-.094-.195Z', 'github': 'M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27-.68 0-1.36.09-2 .27-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.31 2.69.94 0 .67.01 1.3.01 1.49 0 .21-.15.45-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8Z'};
+var IconList={'sun': 'M8 10.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5zM8 12a4 4 0 100-8 4 4 0 000 8zM8 0a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0V.75A.75.75 0 018 0zm0 13a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0v-1.5A.75.75 0 018 13zM2.343 2.343a.75.75 0 011.061 0l1.06 1.061a.75.75 0 01-1.06 1.06l-1.06-1.06a.75.75 0 010-1.06zm9.193 9.193a.75.75 0 011.06 0l1.061 1.06a.75.75 0 01-1.06 1.061l-1.061-1.06a.75.75 0 010-1.061zM16 8a.75.75 0 01-.75.75h-1.5a.75.75 0 010-1.5h1.5A.75.75 0 0116 8zM3 8a.75.75 0 01-.75.75H.75a.75.75 0 010-1.5h1.5A.75.75 0 013 8zm10.657-5.657a.75.75 0 010 1.061l-1.061 1.06a.75.75 0 11-1.06-1.06l1.06-1.06a.75.75 0 011.06 0zm-9.193 9.193a.75.75 0 010 1.06l-1.06 1.061a.75.75 0 11-1.061-1.06l1.06-1.061a.75.75 0 011.061 0z', 'moon': 'M9.598 1.591a.75.75 0 01.785-.175 7 7 0 11-8.967 8.967.75.75 0 01.961-.96 5.5 5.5 0 007.046-7.046.75.75 0 01.175-.786zm1.616 1.945a7 7 0 01-7.678 7.678 5.5 5.5 0 107.678-7.678z', 'sync': 'M1.705 8.005a.75.75 0 0 1 .834.656 5.5 5.5 0 0 0 9.592 2.97l-1.204-1.204a.25.25 0 0 1 .177-.427h3.646a.25.25 0 0 1 .25.25v3.646a.25.25 0 0 1-.427.177l-1.38-1.38A7.002 7.002 0 0 1 1.05 8.84a.75.75 0 0 1 .656-.834ZM8 2.5a5.487 5.487 0 0 0-4.131 1.869l1.204 1.204A.25.25 0 0 1 4.896 6H1.25A.25.25 0 0 1 1 5.75V2.104a.25.25 0 0 1 .427-.177l1.38 1.38A7.002 7.002 0 0 1 14.95 7.16a.75.75 0 0 1-1.49.178A5.5 5.5 0 0 0 8 2.5Z', 'home': 'M6.906.664a1.749 1.749 0 0 1 2.187 0l5.25 4.2c.415.332.657.835.657 1.367v7.019A1.75 1.75 0 0 1 13.25 15h-3.5a.75.75 0 0 1-.75-.75V9H7v5.25a.75.75 0 0 1-.75.75h-3.5A1.75 1.75 0 0 1 1 13.25V6.23c0-.531.242-1.034.657-1.366l5.25-4.2Zm1.25 1.171a.25.25 0 0 0-.312 0l-5.25 4.2a.25.25 0 0 0-.094.196v7.019c0 .138.112.25.25.25H5.5V8.25a.75.75 0 0 1 .75-.75h3.5a.75.75 0 0 1 .75.75v5.25h2.75a.25.25 0 0 0 .25-.25V6.23a.25.25 0 0 0-.094-.195Z', 'github': 'M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27-.68 0-1.36.09-2 .27-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.31 2.69.94 0 .67.01 1.3.01 1.49 0 .21-.15.45-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8Z', 'copy': 'M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 0 1 0 1.5h-1.5a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-1.5a.75.75 0 0 1 1.5 0v1.5A1.75 1.75 0 0 1 9.25 16h-7.5A1.75 1.75 0 0 1 0 14.25Z M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0 1 14.25 11h-7.5A1.75 1.75 0 0 1 5 9.25Zm1.75-.25a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-7.5a.25.25 0 0 0-.25-.25Z', 'check': 'M13.78 4.22a.75.75 0 0 1 0 1.06l-7.25 7.25a.75.75 0 0 1-1.06 0L2.22 9.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018L6 10.94l6.72-6.72a.75.75 0 0 1 1.06 0Z'};
 var utterancesLoad=0;
 
 let themeSettings={
@@ -907,7 +911,70 @@ function iFrameLoading(){
     }
 }
 
+document.addEventListener('DOMContentLoaded', () => {
+    const createClipboardHTML = (codeContent, additionalClasses = '') => `
+        <pre class="notranslate"><code class="notranslate">${codeContent}</code></pre>
+        <div class="clipboard-container position-absolute right-0 top-0 ${additionalClasses}">
+            <clipboard-copy class="ClipboardButton btn m-2 p-0" role="button" style="display: inherit;">
+                <svg height="16" width="16" class="octicon octicon-copy m-2"><path d="${IconList["copy"]}"></path></svg>
+                <svg height="16" width="16" class="octicon octicon-check color-fg-success m-2 d-none"><path d="${IconList["check"]}"></path></svg>
+            </clipboard-copy>
+            <div class="copy-feedback">Copied!</div>
+        </div>
+    `;
 
+    const handleCodeElements = (selector = '') => {
+        document.querySelectorAll(selector).forEach(codeElement => {
+            const codeContent = codeElement.innerHTML;
+            const newStructure = document.createElement('div');
+            newStructure.className = 'snippet-clipboard-content position-relative overflow-auto';
+            newStructure.innerHTML = createClipboardHTML(codeContent);
+
+            const parentElement = codeElement.parentElement;
+            if (selector.includes('highlight')) {
+                parentElement.insertBefore(newStructure, codeElement.nextSibling);
+                parentElement.removeChild(codeElement);
+            } else {
+                parentElement.parentElement.replaceChild(newStructure, parentElement);
+            }
+        });
+    };
+
+    handleCodeElements('pre.notranslate > code.notranslate');
+    handleCodeElements('div.highlight > pre.notranslate');
+
+    let currentFeedback = null;
+    document.querySelectorAll('clipboard-copy').forEach(copyButton => {
+        copyButton.addEventListener('click', () => {
+            const codeContent = copyButton.closest('.snippet-clipboard-content').innerText;
+            const tempTextArea = document.createElement('textarea');
+            tempTextArea.value = codeContent;
+            document.body.appendChild(tempTextArea);
+            tempTextArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempTextArea);
+
+            const copyIcon = copyButton.querySelector('.octicon-copy');
+            const checkIcon = copyButton.querySelector('.octicon-check');
+            const copyFeedback = copyButton.nextElementSibling;
+
+            if (currentFeedback && currentFeedback !== copyFeedback) {currentFeedback.style.display = 'none';}
+            currentFeedback = copyFeedback;
+
+            copyIcon.classList.add('d-none');
+            checkIcon.classList.remove('d-none');
+            copyFeedback.style.display = 'block';
+            copyButton.style.borderColor = 'var(--color-success-fg)';
+
+            setTimeout(() => {
+                copyIcon.classList.remove('d-none');
+                checkIcon.classList.add('d-none');
+                copyFeedback.style.display = 'none';
+                copyButton.style.borderColor = '';
+            }, 2000);
+        });
+    });
+});
 
 </script>
 
