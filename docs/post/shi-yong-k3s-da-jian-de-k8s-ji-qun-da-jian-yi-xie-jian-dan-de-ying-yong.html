@@ -723,7 +723,7 @@ harborAdminPassword: 'Harbor12345'
 <meta property="og:url" content="https://FairyOwO.github.io/post/shi-yong-k3s-da-jian-de-k8s-ji-qun-da-jian-yi-xie-jian-dan-de-ying-yong.html">
 <meta property="og:image" content="https://github.githubassets.com/favicons/favicon.svg">
 <title>使用k3s搭建的k8s集群搭建一些简单的应用</title>
-
+<link href="//unpkg.com/@wooorm/starry-night@2.1.1/style/both.css" rel="stylesheet" />
 
 
 </head>
@@ -747,7 +747,17 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
     body {padding: 8px;}
     .postTitle{font-size:24px;}
 }
-
+.copy-feedback {
+    display: none;
+    position: absolute;
+    top: 10px;
+    right: 50px;
+    color: var(--color-fg-on-emphasis);
+    background-color: var(--color-fg-muted);
+    border-radius: 3px;
+    padding: 5px 8px;
+    font-size: 12px;
+}
 </style>
 
 
@@ -800,17 +810,14 @@ admin 的初始化密码在网页登陆后也能改</p>
 </li>
 <li>创建 harbor 专属的 namespace</li>
 </ol>
-<pre lang="sh" class="notranslate"><code class="notranslate">kubectl create namespace harbor
-</code></pre>
+<div class="highlight highlight-source-shell"><pre class="notranslate">kubectl create namespace harbor</pre></div>
 <ol start="4">
 <li>启动</li>
 </ol>
-<pre lang="sh" class="notranslate"><code class="notranslate">cd /path/to/harbor
-helm --namespace harbor install harbor .
-</code></pre>
+<div class="highlight highlight-source-shell"><pre class="notranslate"><span class="pl-c1">cd</span> /path/to/harbor
+helm --namespace harbor install harbor <span class="pl-c1">.</span></pre></div>
 <p>如果对配置项后悔, 使用 以下命令更新</p>
-<pre lang="sh" class="notranslate"><code class="notranslate">helm --namespace harbor upgrade harbor .
-</code></pre>
+<div class="highlight highlight-source-shell"><pre class="notranslate">helm --namespace harbor upgrade harbor <span class="pl-c1">.</span></pre></div>
 <p>到 kubepi 中, 即可看到 harbor 的相关镜像在拉取了, 如果镜像配置正确的话, 过一段时间就会拉取成功</p>
 <blockquote>
 <p>在 kubepi 中他会不断重试拉取, 实际上会缓慢拉取成功<br>
@@ -834,19 +841,17 @@ helm --namespace harbor install harbor .
 <p>你需要自行处理他的json语法</p>
 </blockquote>
 <p>后, 使用</p>
-<pre lang="sh" class="notranslate"><code class="notranslate">systemctl daemon-reload
-systemctl restart docker
-</code></pre>
+<div class="highlight highlight-source-shell"><pre class="notranslate">systemctl daemon-reload
+systemctl restart docker</pre></div>
 <p>重启 docker</p>
 <p>在配置好后, 可以推一个简单的 helloworld镜像</p>
-<pre lang="sh" class="notranslate"><code class="notranslate">docker login harbor_ip:port
-# 这里填入你的账号与密码. 我这里是 admin 与相对于的密码
+<div class="highlight highlight-source-shell"><pre class="notranslate">docker login harbor_ip:port
+<span class="pl-c"><span class="pl-c">#</span> 这里填入你的账号与密码. 我这里是 admin 与相对于的密码</span>
 
 docker run hello-world:latest
-# 修改tag
+<span class="pl-c"><span class="pl-c">#</span> 修改tag</span>
 docker tag hello-world:latest harbor_ip:port/library/hello-world:latest
-docker push harbor_ip:port/library/hello-world:latest
-</code></pre>
+docker push harbor_ip:port/library/hello-world:latest</pre></div>
 <p>登录到 harbor 控制台, 即可看到刚刚推送上来的镜像</p>
 <h2>集群拉取镜像</h2>
 <blockquote>
@@ -855,24 +860,22 @@ docker push harbor_ip:port/library/hello-world:latest
 <p>根据不同的集群搭建方法(这里是k3s), 将 harbor 添加进集群可以拉取的镜像源</p>
 <p>与普通添加镜像一致, 首先需要到 <code class="notranslate">/etc/rancher/k3s</code> 目录下</p>
 <p>向其中的 <code class="notranslate">registries.yaml</code> 添加内容</p>
-<pre lang="yaml" class="notranslate"><code class="notranslate">mirrors:
-  harbor_ip:port:
-    endpoint:
-     - http://harbor_ip:port
+<div class="highlight highlight-source-yaml"><pre class="notranslate"><span class="pl-ent">mirrors</span>:
+  <span class="pl-ent">harbor_ip:port</span>:
+    <span class="pl-ent">endpoint</span>:
+     - <span class="pl-s">http://harbor_ip:port</span>
 
-configs:
-  harbor_ip:port:
-    auth:
-      username: 你的 harbor 账号
-      password: 你的 harbor 密码
-</code></pre>
+<span class="pl-ent">configs</span>:
+  <span class="pl-ent">harbor_ip:port</span>:
+    <span class="pl-ent">auth</span>:
+      <span class="pl-ent">username</span>: <span class="pl-s">你的 harbor 账号</span>
+      <span class="pl-ent">password</span>: <span class="pl-s">你的 harbor 密码</span></pre></div>
 <blockquote>
 <p>这里可能 <code class="notranslate">registries.yaml</code> 已经有内容了(配置过镜像源), 你需要根据 yaml 的语法自行处理他们的关系<br>
 每一台集群都要这么做</p>
 </blockquote>
 <p>之后, 重启即可</p>
-<pre lang="sh" class="notranslate"><code class="notranslate">systemctl restart k3s  # systemctl restart k3s-agent if agent
-</code></pre>
+<div class="highlight highlight-source-shell"><pre class="notranslate">systemctl restart k3s  <span class="pl-c"><span class="pl-c">#</span> systemctl restart k3s-agent if agent</span></pre></div>
 <p>在编写好 kubectl 使用的 yaml 后, 即可从 harbor 拉取镜像</p>
 <blockquote>
 <p>感谢 claude-sonnet 帮我写yaml</p>
@@ -884,112 +887,109 @@ configs:
 </blockquote>
 <h3>docker机子拉取镜像</h3>
 <p>这里使用的是 <a href="https://github.com/HoshinoRei/l4d2server-docker">HoshinoRei/l4d2server-docker</a></p>
-<pre lang="sh" class="notranslate"><code class="notranslate">docker pull hoshinorei/l4d2server:edge
-</code></pre>
+<div class="highlight highlight-source-shell"><pre class="notranslate">docker pull hoshinorei/l4d2server:edge</pre></div>
 <h3>提交镜像</h3>
-<pre lang="sh" class="notranslate"><code class="notranslate">docker tag hoshinorei/l4d2server:edge harbor_ip:port/library/hoshinorei/l4d2server:edge
-docker push harbor_ip:port/library/hoshinorei/l4d2server:edge
-</code></pre>
+<div class="highlight highlight-source-shell"><pre class="notranslate">docker tag hoshinorei/l4d2server:edge harbor_ip:port/library/hoshinorei/l4d2server:edge
+docker push harbor_ip:port/library/hoshinorei/l4d2server:edge</pre></div>
 <h3>编写 kubectl 使用的 yaml</h3>
 <details><summary>Details</summary>
 <p>
-</p><pre lang="yaml" class="notranslate"><code class="notranslate">apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: l4d2server
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: l4d2server
-  template:
-    metadata:
-      labels:
-        app: l4d2server
-    spec:
-      containers:
-      - name: l4d2server
-        image: harbor_ip:port/library/hoshinorei/l4d2server:edge
-        command: ["/home/steam/l4d2server/srcds_run", "-game left4dead2", "-secure", "+exec", "server.cfg", "+map", "c1m1_hotel", "-port", "27015", "-tickrate 60", "+sv_setmax 31"]
-        ports:
-        - containerPort: 27015
-          name: tcp-game
-        - containerPort: 27015
-          protocol: UDP
-          name: udp-game
-        volumeMounts:
-        - name: addons
-          mountPath: /home/steam/l4d2server/left4dead2/addons/
-        - name: server-config
-          mountPath: /home/steam/l4d2server/left4dead2/cfg/server.cfg
-          subPath: server.cfg
-        - name: host-file
-          mountPath: /home/steam/l4d2server/left4dead2/host.txt
-          subPath: host.txt
-        - name: motd-file
-          mountPath: /home/steam/l4d2server/left4dead2/motd.txt
-          subPath: motd.txt
-        - name: cfg
-          mountPath: /home/steam/l4d2server/left4dead2/cfg/
+</p><div class="highlight highlight-source-yaml"><pre class="notranslate"><span class="pl-ent">apiVersion</span>: <span class="pl-s">apps/v1</span>
+<span class="pl-ent">kind</span>: <span class="pl-s">Deployment</span>
+<span class="pl-ent">metadata</span>:
+  <span class="pl-ent">name</span>: <span class="pl-s">l4d2server</span>
+<span class="pl-ent">spec</span>:
+  <span class="pl-ent">replicas</span>: <span class="pl-c1">1</span>
+  <span class="pl-ent">selector</span>:
+    <span class="pl-ent">matchLabels</span>:
+      <span class="pl-ent">app</span>: <span class="pl-s">l4d2server</span>
+  <span class="pl-ent">template</span>:
+    <span class="pl-ent">metadata</span>:
+      <span class="pl-ent">labels</span>:
+        <span class="pl-ent">app</span>: <span class="pl-s">l4d2server</span>
+    <span class="pl-ent">spec</span>:
+      <span class="pl-ent">containers</span>:
+      - <span class="pl-ent">name</span>: <span class="pl-s">l4d2server</span>
+        <span class="pl-ent">image</span>: <span class="pl-s">harbor_ip:port/library/hoshinorei/l4d2server:edge</span>
+        <span class="pl-ent">command</span>: <span class="pl-s">["/home/steam/l4d2server/srcds_run", "-game left4dead2", "-secure", "+exec", "server.cfg", "+map", "c1m1_hotel", "-port", "27015", "-tickrate 60", "+sv_setmax 31"]</span>
+        <span class="pl-ent">ports</span>:
+        - <span class="pl-ent">containerPort</span>: <span class="pl-c1">27015</span>
+          <span class="pl-ent">name</span>: <span class="pl-s">tcp-game</span>
+        - <span class="pl-ent">containerPort</span>: <span class="pl-c1">27015</span>
+          <span class="pl-ent">protocol</span>: <span class="pl-s">UDP</span>
+          <span class="pl-ent">name</span>: <span class="pl-s">udp-game</span>
+        <span class="pl-ent">volumeMounts</span>:
+        - <span class="pl-ent">name</span>: <span class="pl-s">addons</span>
+          <span class="pl-ent">mountPath</span>: <span class="pl-s">/home/steam/l4d2server/left4dead2/addons/</span>
+        - <span class="pl-ent">name</span>: <span class="pl-s">server-config</span>
+          <span class="pl-ent">mountPath</span>: <span class="pl-s">/home/steam/l4d2server/left4dead2/cfg/server.cfg</span>
+          <span class="pl-ent">subPath</span>: <span class="pl-s">server.cfg</span>
+        - <span class="pl-ent">name</span>: <span class="pl-s">host-file</span>
+          <span class="pl-ent">mountPath</span>: <span class="pl-s">/home/steam/l4d2server/left4dead2/host.txt</span>
+          <span class="pl-ent">subPath</span>: <span class="pl-s">host.txt</span>
+        - <span class="pl-ent">name</span>: <span class="pl-s">motd-file</span>
+          <span class="pl-ent">mountPath</span>: <span class="pl-s">/home/steam/l4d2server/left4dead2/motd.txt</span>
+          <span class="pl-ent">subPath</span>: <span class="pl-s">motd.txt</span>
+        - <span class="pl-ent">name</span>: <span class="pl-s">cfg</span>
+          <span class="pl-ent">mountPath</span>: <span class="pl-s">/home/steam/l4d2server/left4dead2/cfg/</span>
         
-      volumes:
-        - name: addons
-          hostPath:
-            path: /root/l4d2/addons/
-            type: Directory
-        - name: server-config
-          hostPath:
-            path: /root/l4d2/cfg/
-        - name: host-file
-          configMap:
-            name: l4d2server-host
-        - name: motd-file
-          configMap:
-            name: l4d2server-motd
-        - name: cfg
-          hostPath:
-            path: /root/l4d2/cfg/
-            type: Directory
+      <span class="pl-ent">volumes</span>:
+        - <span class="pl-ent">name</span>: <span class="pl-s">addons</span>
+          <span class="pl-ent">hostPath</span>:
+            <span class="pl-ent">path</span>: <span class="pl-s">/root/l4d2/addons/</span>
+            <span class="pl-ent">type</span>: <span class="pl-s">Directory</span>
+        - <span class="pl-ent">name</span>: <span class="pl-s">server-config</span>
+          <span class="pl-ent">hostPath</span>:
+            <span class="pl-ent">path</span>: <span class="pl-s">/root/l4d2/cfg/</span>
+        - <span class="pl-ent">name</span>: <span class="pl-s">host-file</span>
+          <span class="pl-ent">configMap</span>:
+            <span class="pl-ent">name</span>: <span class="pl-s">l4d2server-host</span>
+        - <span class="pl-ent">name</span>: <span class="pl-s">motd-file</span>
+          <span class="pl-ent">configMap</span>:
+            <span class="pl-ent">name</span>: <span class="pl-s">l4d2server-motd</span>
+        - <span class="pl-ent">name</span>: <span class="pl-s">cfg</span>
+          <span class="pl-ent">hostPath</span>:
+            <span class="pl-ent">path</span>: <span class="pl-s">/root/l4d2/cfg/</span>
+            <span class="pl-ent">type</span>: <span class="pl-s">Directory</span>
 
 ---
-apiVersion: v1
-kind: Service
-metadata:
-  name: l4d2server
-spec:
-  type: NodePort
-  ports:
-  - name: tcp-game
-    port: 27015
-    targetPort: 27015
-    protocol: TCP
-    nodePort: 30015
-  - name: udp-game
-    port: 27015
-    targetPort: 27015
-    protocol: UDP
-    nodePort: 30016
-  selector:
-    app: l4d2server
+<span class="pl-ent">apiVersion</span>: <span class="pl-c1">v1</span>
+<span class="pl-ent">kind</span>: <span class="pl-s">Service</span>
+<span class="pl-ent">metadata</span>:
+  <span class="pl-ent">name</span>: <span class="pl-s">l4d2server</span>
+<span class="pl-ent">spec</span>:
+  <span class="pl-ent">type</span>: <span class="pl-s">NodePort</span>
+  <span class="pl-ent">ports</span>:
+  - <span class="pl-ent">name</span>: <span class="pl-s">tcp-game</span>
+    <span class="pl-ent">port</span>: <span class="pl-c1">27015</span>
+    <span class="pl-ent">targetPort</span>: <span class="pl-c1">27015</span>
+    <span class="pl-ent">protocol</span>: <span class="pl-s">TCP</span>
+    <span class="pl-ent">nodePort</span>: <span class="pl-c1">30015</span>
+  - <span class="pl-ent">name</span>: <span class="pl-s">udp-game</span>
+    <span class="pl-ent">port</span>: <span class="pl-c1">27015</span>
+    <span class="pl-ent">targetPort</span>: <span class="pl-c1">27015</span>
+    <span class="pl-ent">protocol</span>: <span class="pl-s">UDP</span>
+    <span class="pl-ent">nodePort</span>: <span class="pl-c1">30016</span>
+  <span class="pl-ent">selector</span>:
+    <span class="pl-ent">app</span>: <span class="pl-s">l4d2server</span>
 
 ---
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: l4d2server-host
-data:
-  host.txt: |
-    # 这里放置 host.txt 的内容
-
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: l4d2server-motd
-data:
-  motd.txt: |
-    # 这里放置 motd.txt 的内容
-</code></pre>
+<span class="pl-ent">apiVersion</span>: <span class="pl-c1">v1</span>
+<span class="pl-ent">kind</span>: <span class="pl-s">ConfigMap</span>
+<span class="pl-ent">metadata</span>:
+  <span class="pl-ent">name</span>: <span class="pl-s">l4d2server-host</span>
+<span class="pl-ent">data</span>:
+  <span class="pl-ent">host.txt</span>: <span class="pl-s">|</span>
+<span class="pl-s">    # 这里放置 host.txt 的内容</span>
+<span class="pl-s"></span>
+<span class="pl-s"></span>---
+<span class="pl-ent">apiVersion</span>: <span class="pl-c1">v1</span>
+<span class="pl-ent">kind</span>: <span class="pl-s">ConfigMap</span>
+<span class="pl-ent">metadata</span>:
+  <span class="pl-ent">name</span>: <span class="pl-s">l4d2server-motd</span>
+<span class="pl-ent">data</span>:
+  <span class="pl-ent">motd.txt</span>: <span class="pl-s">|</span>
+<span class="pl-s">    # 这里放置 motd.txt 的内容</span></pre></div>
 <p></p>
 </details> 
 <blockquote>
@@ -997,8 +997,7 @@ data:
 需要在当前目录创建 <code class="notranslate">host.txt</code> 与 <code class="notranslate">motd.txt</code>, 并在里面输入内容, 在服务器进入的时候会显示这些内容</p>
 </blockquote>
 <p>执行</p>
-<pre lang="sh" class="notranslate"><code class="notranslate">kubectl apply -f l4d2server.yaml
-</code></pre>
+<div class="highlight highlight-source-shell"><pre class="notranslate">kubectl apply -f l4d2server.yaml</pre></div>
 <h3>其他</h3>
 <blockquote>
 <p>挂载了宿主机的目录来放置 l4d2 mod</p>
@@ -1010,89 +1009,88 @@ data:
 <p>这里给出常用的 harbor 的 values.yaml 的选项, 复制自 <a href="https://blog.starry-s.moe/posts/2023/harbor-helm-chart/" rel="nofollow">(https://blog.starry-s.moe/posts/2023/harbor-helm-chart/)</a></p>
 <details><summary>修改的选项</summary>
 <p>
-</p><pre lang="yaml" class="notranslate"><code class="notranslate">expose:
-# expose type, 可以设置为 ingress, clusterIP, nodePort, nodeBalancer，区分大小写
-# 默认为 ingress（如果不想使用 80/443 标准端口，可以设置为 nodePort，端口为高位 3000X）
-type: ingress
-tls:
-  # 是否启用 TLS (HTTPS)，建议启用
-  enabled: true
-  # TLS Certificate 的来源，可以为 auto, secret 或 none
-  # 如果为 secret，需要在安装 Chart 之前先创建 TLS Secret
-  # 1) auto: generate the tls certificate automatically
-  # 2) secret: read the tls certificate from the specified secret.
-  # The tls certificate can be generated manually or by cert manager
-  # 3) none: configure no tls certificate for the ingress. If the default
-  # tls certificate is configured in the ingress controller, choose this option
-  certSource: secret
-  secret:
-    # The name of secret which contains keys named:
-    # "tls.crt" - the certificate
-    # "tls.key" - the private key
-    secretName: "harbor-tls"
-    # Only needed when the "expose.type" is "ingress".
-    notarySecretName: "harbor-tls"
-ingress:
-  hosts:
-    # Ingress Host，如果需要允许任意域名/IP 都能访问，将其设置为空字符串（不建议）
-    # 这里填写的域名务必能解析到当前集群
-    core: harbor.example.com
-    notary: notary.example.com
+</p><div class="highlight highlight-source-yaml"><pre class="notranslate"><span class="pl-ent">expose</span>:
+<span class="pl-c"><span class="pl-c">#</span> expose type, 可以设置为 ingress, clusterIP, nodePort, nodeBalancer，区分大小写</span>
+<span class="pl-c"><span class="pl-c">#</span> 默认为 ingress（如果不想使用 80/443 标准端口，可以设置为 nodePort，端口为高位 3000X）</span>
+<span class="pl-ent">type</span>: <span class="pl-s">ingress</span>
+<span class="pl-ent">tls</span>:
+  <span class="pl-c"><span class="pl-c">#</span> 是否启用 TLS (HTTPS)，建议启用</span>
+  <span class="pl-ent">enabled</span>: <span class="pl-c1">true</span>
+  <span class="pl-c"><span class="pl-c">#</span> TLS Certificate 的来源，可以为 auto, secret 或 none</span>
+  <span class="pl-c"><span class="pl-c">#</span> 如果为 secret，需要在安装 Chart 之前先创建 TLS Secret</span>
+  <span class="pl-c"><span class="pl-c">#</span> 1) auto: generate the tls certificate automatically</span>
+  <span class="pl-c"><span class="pl-c">#</span> 2) secret: read the tls certificate from the specified secret.</span>
+  <span class="pl-c"><span class="pl-c">#</span> The tls certificate can be generated manually or by cert manager</span>
+  <span class="pl-c"><span class="pl-c">#</span> 3) none: configure no tls certificate for the ingress. If the default</span>
+  <span class="pl-c"><span class="pl-c">#</span> tls certificate is configured in the ingress controller, choose this option</span>
+  <span class="pl-ent">certSource</span>: <span class="pl-s">secret</span>
+  <span class="pl-ent">secret</span>:
+    <span class="pl-c"><span class="pl-c">#</span> The name of secret which contains keys named:</span>
+    <span class="pl-c"><span class="pl-c">#</span> "tls.crt" - the certificate</span>
+    <span class="pl-c"><span class="pl-c">#</span> "tls.key" - the private key</span>
+    <span class="pl-ent">secretName</span>: <span class="pl-s"><span class="pl-pds">"</span>harbor-tls<span class="pl-pds">"</span></span>
+    <span class="pl-c"><span class="pl-c">#</span> Only needed when the "expose.type" is "ingress".</span>
+    <span class="pl-ent">notarySecretName</span>: <span class="pl-s"><span class="pl-pds">"</span>harbor-tls<span class="pl-pds">"</span></span>
+<span class="pl-ent">ingress</span>:
+  <span class="pl-ent">hosts</span>:
+    <span class="pl-c"><span class="pl-c">#</span> Ingress Host，如果需要允许任意域名/IP 都能访问，将其设置为空字符串（不建议）</span>
+    <span class="pl-c"><span class="pl-c">#</span> 这里填写的域名务必能解析到当前集群</span>
+    <span class="pl-ent">core</span>: <span class="pl-s">harbor.example.com</span>
+    <span class="pl-ent">notary</span>: <span class="pl-s">notary.example.com</span>
 
-# Harbor external URL
-# 与 Ingress Host 相对应，如果启用了 TLS，那就是 https://&lt;domain&gt;
-# 如果没启用 TLS，那就是 http://&lt;domain&gt;
-# 如果 expose type 为 nodePort，则填写 http(s)://&lt;IP_ADDRESS&gt;:3000X (端口号不能丢)
-externalURL: https://harbor.example.com
+<span class="pl-c"><span class="pl-c">#</span> Harbor external URL</span>
+<span class="pl-c"><span class="pl-c">#</span> 与 Ingress Host 相对应，如果启用了 TLS，那就是 https://&lt;domain&gt;</span>
+<span class="pl-c"><span class="pl-c">#</span> 如果没启用 TLS，那就是 http://&lt;domain&gt;</span>
+<span class="pl-c"><span class="pl-c">#</span> 如果 expose type 为 nodePort，则填写 http(s)://&lt;IP_ADDRESS&gt;:3000X (端口号不能丢)</span>
+<span class="pl-ent">externalURL</span>: <span class="pl-s">https://harbor.example.com</span>
 
-# 持久卷配置，默认为 true，如果是测试环境可以设置为 enabled: false (重新安装 Chart 时仓库里所有的数据都会丢失，不建议！)
-# 如果需要启用持久卷，可以在安装 Chart 之前提前创建好 PVC，并配置 subPath
-persistence:
-enabled: true
-resourcePolicy: "keep"
-persistentVolumeClaim:
-  registry:
-    # 填写已经创建好的 PVC
-    existingClaim: "harbor-pvc"
-    storageClass: ""
-    # 如果共用一个 PVC，需要设置子目录
-    subPath: "registry"
-    accessMode: ReadWriteOnce
-    size: 5Gi
-    annotations: {}
-  jobservice:
-    jobLog:
-      existingClaim: "harbor-pvc"
-      storageClass: ""
-      subPath: "jobservice"
-      accessMode: ReadWriteOnce
-      size: 1Gi
-      annotations: {}
-  database:
-    existingClaim: "harbor-pvc"
-    storageClass: ""
-    subPath: "database"
-    accessMode: ReadWriteOnce
-    size: 1Gi
-    annotations: {}
-  redis:
-    existingClaim: "harbor-pvc"
-    storageClass: ""
-    subPath: "redis"
-    accessMode: ReadWriteOnce
-    size: 1Gi
-    annotations: {}
-  trivy:
-    existingClaim: "harbor-pvc"
-    storageClass: ""
-    subPath: "trivy"
-    accessMode: ReadWriteOnce
-    size: 5Gi
-    annotations: {}
+<span class="pl-c"><span class="pl-c">#</span> 持久卷配置，默认为 true，如果是测试环境可以设置为 enabled: false (重新安装 Chart 时仓库里所有的数据都会丢失，不建议！)</span>
+<span class="pl-c"><span class="pl-c">#</span> 如果需要启用持久卷，可以在安装 Chart 之前提前创建好 PVC，并配置 subPath</span>
+<span class="pl-ent">persistence</span>:
+<span class="pl-ent">enabled</span>: <span class="pl-c1">true</span>
+<span class="pl-ent">resourcePolicy</span>: <span class="pl-s"><span class="pl-pds">"</span>keep<span class="pl-pds">"</span></span>
+<span class="pl-ent">persistentVolumeClaim</span>:
+  <span class="pl-ent">registry</span>:
+    <span class="pl-c"><span class="pl-c">#</span> 填写已经创建好的 PVC</span>
+    <span class="pl-ent">existingClaim</span>: <span class="pl-s"><span class="pl-pds">"</span>harbor-pvc<span class="pl-pds">"</span></span>
+    <span class="pl-ent">storageClass</span>: <span class="pl-s"><span class="pl-pds">"</span><span class="pl-pds">"</span></span>
+    <span class="pl-c"><span class="pl-c">#</span> 如果共用一个 PVC，需要设置子目录</span>
+    <span class="pl-ent">subPath</span>: <span class="pl-s"><span class="pl-pds">"</span>registry<span class="pl-pds">"</span></span>
+    <span class="pl-ent">accessMode</span>: <span class="pl-s">ReadWriteOnce</span>
+    <span class="pl-ent">size</span>: <span class="pl-s">5Gi</span>
+    <span class="pl-ent">annotations</span>: <span class="pl-s">{}</span>
+  <span class="pl-ent">jobservice</span>:
+    <span class="pl-ent">jobLog</span>:
+      <span class="pl-ent">existingClaim</span>: <span class="pl-s"><span class="pl-pds">"</span>harbor-pvc<span class="pl-pds">"</span></span>
+      <span class="pl-ent">storageClass</span>: <span class="pl-s"><span class="pl-pds">"</span><span class="pl-pds">"</span></span>
+      <span class="pl-ent">subPath</span>: <span class="pl-s"><span class="pl-pds">"</span>jobservice<span class="pl-pds">"</span></span>
+      <span class="pl-ent">accessMode</span>: <span class="pl-s">ReadWriteOnce</span>
+      <span class="pl-ent">size</span>: <span class="pl-s">1Gi</span>
+      <span class="pl-ent">annotations</span>: <span class="pl-s">{}</span>
+  <span class="pl-ent">database</span>:
+    <span class="pl-ent">existingClaim</span>: <span class="pl-s"><span class="pl-pds">"</span>harbor-pvc<span class="pl-pds">"</span></span>
+    <span class="pl-ent">storageClass</span>: <span class="pl-s"><span class="pl-pds">"</span><span class="pl-pds">"</span></span>
+    <span class="pl-ent">subPath</span>: <span class="pl-s"><span class="pl-pds">"</span>database<span class="pl-pds">"</span></span>
+    <span class="pl-ent">accessMode</span>: <span class="pl-s">ReadWriteOnce</span>
+    <span class="pl-ent">size</span>: <span class="pl-s">1Gi</span>
+    <span class="pl-ent">annotations</span>: <span class="pl-s">{}</span>
+  <span class="pl-ent">redis</span>:
+    <span class="pl-ent">existingClaim</span>: <span class="pl-s"><span class="pl-pds">"</span>harbor-pvc<span class="pl-pds">"</span></span>
+    <span class="pl-ent">storageClass</span>: <span class="pl-s"><span class="pl-pds">"</span><span class="pl-pds">"</span></span>
+    <span class="pl-ent">subPath</span>: <span class="pl-s"><span class="pl-pds">"</span>redis<span class="pl-pds">"</span></span>
+    <span class="pl-ent">accessMode</span>: <span class="pl-s">ReadWriteOnce</span>
+    <span class="pl-ent">size</span>: <span class="pl-s">1Gi</span>
+    <span class="pl-ent">annotations</span>: <span class="pl-s">{}</span>
+  <span class="pl-ent">trivy</span>:
+    <span class="pl-ent">existingClaim</span>: <span class="pl-s"><span class="pl-pds">"</span>harbor-pvc<span class="pl-pds">"</span></span>
+    <span class="pl-ent">storageClass</span>: <span class="pl-s"><span class="pl-pds">"</span><span class="pl-pds">"</span></span>
+    <span class="pl-ent">subPath</span>: <span class="pl-s"><span class="pl-pds">"</span>trivy<span class="pl-pds">"</span></span>
+    <span class="pl-ent">accessMode</span>: <span class="pl-s">ReadWriteOnce</span>
+    <span class="pl-ent">size</span>: <span class="pl-s">5Gi</span>
+    <span class="pl-ent">annotations</span>: <span class="pl-s">{}</span>
 
-# Admin 初始密码
-harborAdminPassword: "Harbor12345"
-</code></pre>
+<span class="pl-c"><span class="pl-c">#</span> Admin 初始密码</span>
+<span class="pl-ent">harborAdminPassword</span>: <span class="pl-s"><span class="pl-pds">"</span>Harbor12345<span class="pl-pds">"</span></span></pre></div>
 <p></p>
 </details> </div>
 <div style="font-size:small;margin-top:8px;float:right;">转载无需注明出处</div>
@@ -1119,7 +1117,7 @@ if("11/22/2024"!=""){
 </script></div>
 </body>
 <script>
-var IconList={'sun': 'M8 10.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5zM8 12a4 4 0 100-8 4 4 0 000 8zM8 0a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0V.75A.75.75 0 018 0zm0 13a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0v-1.5A.75.75 0 018 13zM2.343 2.343a.75.75 0 011.061 0l1.06 1.061a.75.75 0 01-1.06 1.06l-1.06-1.06a.75.75 0 010-1.06zm9.193 9.193a.75.75 0 011.06 0l1.061 1.06a.75.75 0 01-1.06 1.061l-1.061-1.06a.75.75 0 010-1.061zM16 8a.75.75 0 01-.75.75h-1.5a.75.75 0 010-1.5h1.5A.75.75 0 0116 8zM3 8a.75.75 0 01-.75.75H.75a.75.75 0 010-1.5h1.5A.75.75 0 013 8zm10.657-5.657a.75.75 0 010 1.061l-1.061 1.06a.75.75 0 11-1.06-1.06l1.06-1.06a.75.75 0 011.06 0zm-9.193 9.193a.75.75 0 010 1.06l-1.06 1.061a.75.75 0 11-1.061-1.06l1.06-1.061a.75.75 0 011.061 0z', 'moon': 'M9.598 1.591a.75.75 0 01.785-.175 7 7 0 11-8.967 8.967.75.75 0 01.961-.96 5.5 5.5 0 007.046-7.046.75.75 0 01.175-.786zm1.616 1.945a7 7 0 01-7.678 7.678 5.5 5.5 0 107.678-7.678z', 'sync': 'M1.705 8.005a.75.75 0 0 1 .834.656 5.5 5.5 0 0 0 9.592 2.97l-1.204-1.204a.25.25 0 0 1 .177-.427h3.646a.25.25 0 0 1 .25.25v3.646a.25.25 0 0 1-.427.177l-1.38-1.38A7.002 7.002 0 0 1 1.05 8.84a.75.75 0 0 1 .656-.834ZM8 2.5a5.487 5.487 0 0 0-4.131 1.869l1.204 1.204A.25.25 0 0 1 4.896 6H1.25A.25.25 0 0 1 1 5.75V2.104a.25.25 0 0 1 .427-.177l1.38 1.38A7.002 7.002 0 0 1 14.95 7.16a.75.75 0 0 1-1.49.178A5.5 5.5 0 0 0 8 2.5Z', 'home': 'M6.906.664a1.749 1.749 0 0 1 2.187 0l5.25 4.2c.415.332.657.835.657 1.367v7.019A1.75 1.75 0 0 1 13.25 15h-3.5a.75.75 0 0 1-.75-.75V9H7v5.25a.75.75 0 0 1-.75.75h-3.5A1.75 1.75 0 0 1 1 13.25V6.23c0-.531.242-1.034.657-1.366l5.25-4.2Zm1.25 1.171a.25.25 0 0 0-.312 0l-5.25 4.2a.25.25 0 0 0-.094.196v7.019c0 .138.112.25.25.25H5.5V8.25a.75.75 0 0 1 .75-.75h3.5a.75.75 0 0 1 .75.75v5.25h2.75a.25.25 0 0 0 .25-.25V6.23a.25.25 0 0 0-.094-.195Z', 'github': 'M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27-.68 0-1.36.09-2 .27-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.31 2.69.94 0 .67.01 1.3.01 1.49 0 .21-.15.45-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8Z'};
+var IconList={'sun': 'M8 10.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5zM8 12a4 4 0 100-8 4 4 0 000 8zM8 0a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0V.75A.75.75 0 018 0zm0 13a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0v-1.5A.75.75 0 018 13zM2.343 2.343a.75.75 0 011.061 0l1.06 1.061a.75.75 0 01-1.06 1.06l-1.06-1.06a.75.75 0 010-1.06zm9.193 9.193a.75.75 0 011.06 0l1.061 1.06a.75.75 0 01-1.06 1.061l-1.061-1.06a.75.75 0 010-1.061zM16 8a.75.75 0 01-.75.75h-1.5a.75.75 0 010-1.5h1.5A.75.75 0 0116 8zM3 8a.75.75 0 01-.75.75H.75a.75.75 0 010-1.5h1.5A.75.75 0 013 8zm10.657-5.657a.75.75 0 010 1.061l-1.061 1.06a.75.75 0 11-1.06-1.06l1.06-1.06a.75.75 0 011.06 0zm-9.193 9.193a.75.75 0 010 1.06l-1.06 1.061a.75.75 0 11-1.061-1.06l1.06-1.061a.75.75 0 011.061 0z', 'moon': 'M9.598 1.591a.75.75 0 01.785-.175 7 7 0 11-8.967 8.967.75.75 0 01.961-.96 5.5 5.5 0 007.046-7.046.75.75 0 01.175-.786zm1.616 1.945a7 7 0 01-7.678 7.678 5.5 5.5 0 107.678-7.678z', 'sync': 'M1.705 8.005a.75.75 0 0 1 .834.656 5.5 5.5 0 0 0 9.592 2.97l-1.204-1.204a.25.25 0 0 1 .177-.427h3.646a.25.25 0 0 1 .25.25v3.646a.25.25 0 0 1-.427.177l-1.38-1.38A7.002 7.002 0 0 1 1.05 8.84a.75.75 0 0 1 .656-.834ZM8 2.5a5.487 5.487 0 0 0-4.131 1.869l1.204 1.204A.25.25 0 0 1 4.896 6H1.25A.25.25 0 0 1 1 5.75V2.104a.25.25 0 0 1 .427-.177l1.38 1.38A7.002 7.002 0 0 1 14.95 7.16a.75.75 0 0 1-1.49.178A5.5 5.5 0 0 0 8 2.5Z', 'home': 'M6.906.664a1.749 1.749 0 0 1 2.187 0l5.25 4.2c.415.332.657.835.657 1.367v7.019A1.75 1.75 0 0 1 13.25 15h-3.5a.75.75 0 0 1-.75-.75V9H7v5.25a.75.75 0 0 1-.75.75h-3.5A1.75 1.75 0 0 1 1 13.25V6.23c0-.531.242-1.034.657-1.366l5.25-4.2Zm1.25 1.171a.25.25 0 0 0-.312 0l-5.25 4.2a.25.25 0 0 0-.094.196v7.019c0 .138.112.25.25.25H5.5V8.25a.75.75 0 0 1 .75-.75h3.5a.75.75 0 0 1 .75.75v5.25h2.75a.25.25 0 0 0 .25-.25V6.23a.25.25 0 0 0-.094-.195Z', 'github': 'M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27-.68 0-1.36.09-2 .27-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.31 2.69.94 0 .67.01 1.3.01 1.49 0 .21-.15.45-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8Z', 'copy': 'M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 0 1 0 1.5h-1.5a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-1.5a.75.75 0 0 1 1.5 0v1.5A1.75 1.75 0 0 1 9.25 16h-7.5A1.75 1.75 0 0 1 0 14.25Z M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0 1 14.25 11h-7.5A1.75 1.75 0 0 1 5 9.25Zm1.75-.25a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-7.5a.25.25 0 0 0-.25-.25Z', 'check': 'M13.78 4.22a.75.75 0 0 1 0 1.06l-7.25 7.25a.75.75 0 0 1-1.06 0L2.22 9.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018L6 10.94l6.72-6.72a.75.75 0 0 1 1.06 0Z'};
 var utterancesLoad=0;
 
 let themeSettings={
@@ -1192,7 +1190,70 @@ function iFrameLoading(){
     }
 }
 
+document.addEventListener('DOMContentLoaded', () => {
+    const createClipboardHTML = (codeContent, additionalClasses = '') => `
+        <pre class="notranslate"><code class="notranslate">${codeContent}</code></pre>
+        <div class="clipboard-container position-absolute right-0 top-0 ${additionalClasses}">
+            <clipboard-copy class="ClipboardButton btn m-2 p-0" role="button" style="display: inherit;">
+                <svg height="16" width="16" class="octicon octicon-copy m-2"><path d="${IconList["copy"]}"></path></svg>
+                <svg height="16" width="16" class="octicon octicon-check color-fg-success m-2 d-none"><path d="${IconList["check"]}"></path></svg>
+            </clipboard-copy>
+            <div class="copy-feedback">Copied!</div>
+        </div>
+    `;
 
+    const handleCodeElements = (selector = '') => {
+        document.querySelectorAll(selector).forEach(codeElement => {
+            const codeContent = codeElement.innerHTML;
+            const newStructure = document.createElement('div');
+            newStructure.className = 'snippet-clipboard-content position-relative overflow-auto';
+            newStructure.innerHTML = createClipboardHTML(codeContent);
+
+            const parentElement = codeElement.parentElement;
+            if (selector.includes('highlight')) {
+                parentElement.insertBefore(newStructure, codeElement.nextSibling);
+                parentElement.removeChild(codeElement);
+            } else {
+                parentElement.parentElement.replaceChild(newStructure, parentElement);
+            }
+        });
+    };
+
+    handleCodeElements('pre.notranslate > code.notranslate');
+    handleCodeElements('div.highlight > pre.notranslate');
+
+    let currentFeedback = null;
+    document.querySelectorAll('clipboard-copy').forEach(copyButton => {
+        copyButton.addEventListener('click', () => {
+            const codeContent = copyButton.closest('.snippet-clipboard-content').innerText;
+            const tempTextArea = document.createElement('textarea');
+            tempTextArea.value = codeContent;
+            document.body.appendChild(tempTextArea);
+            tempTextArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempTextArea);
+
+            const copyIcon = copyButton.querySelector('.octicon-copy');
+            const checkIcon = copyButton.querySelector('.octicon-check');
+            const copyFeedback = copyButton.nextElementSibling;
+
+            if (currentFeedback && currentFeedback !== copyFeedback) {currentFeedback.style.display = 'none';}
+            currentFeedback = copyFeedback;
+
+            copyIcon.classList.add('d-none');
+            checkIcon.classList.remove('d-none');
+            copyFeedback.style.display = 'block';
+            copyButton.style.borderColor = 'var(--color-success-fg)';
+
+            setTimeout(() => {
+                copyIcon.classList.remove('d-none');
+                checkIcon.classList.add('d-none');
+                copyFeedback.style.display = 'none';
+                copyButton.style.borderColor = '';
+            }, 2000);
+        });
+    });
+});
 
 </script>
 
