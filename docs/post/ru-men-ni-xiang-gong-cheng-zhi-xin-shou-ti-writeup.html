@@ -21,7 +21,7 @@
 <meta property="og:url" content="https://FairyOwO.github.io/post/ru-men-ni-xiang-gong-cheng-zhi-xin-shou-ti-writeup.html">
 <meta property="og:image" content="https://github.githubassets.com/favicons/favicon.svg">
 <title>入门逆向工程之新手题writeup</title>
-
+<link href="//unpkg.com/@wooorm/starry-night@2.1.1/style/both.css" rel="stylesheet" />
 
 
 </head>
@@ -45,7 +45,17 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
     body {padding: 8px;}
     .postTitle{font-size:24px;}
 }
-
+.copy-feedback {
+    display: none;
+    position: absolute;
+    top: 10px;
+    right: 50px;
+    color: var(--color-fg-on-emphasis);
+    background-color: var(--color-fg-muted);
+    border-radius: 3px;
+    padding: 5px 8px;
+    font-size: 12px;
+}
 </style>
 
 
@@ -93,35 +103,34 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
 <h3>反编译与初步分析</h3>
 <p>在 ctf 的逆向过程中首先需要找到入口，也就是 <code class="notranslate">main</code> 函数。<br>
 使用 IDA Pro 加载 jocker.exe 后，首先定位到 <code class="notranslate">main</code> 函数。其就在 IDA 左侧 function 窗口，segment 在 .text 中。其伪代码如下所示：</p>
-<pre lang="c" class="notranslate"><code class="notranslate">int __cdecl main(int argc, const char **argv, const char **envp)
+<div class="highlight highlight-source-c"><pre class="notranslate"><span class="pl-smi">int</span> __cdecl <span class="pl-en">main</span>(<span class="pl-smi">int</span> <span class="pl-s1">argc</span>, <span class="pl-k">const</span> <span class="pl-smi">char</span> <span class="pl-c1">*</span><span class="pl-c1">*</span><span class="pl-s1">argv</span>, <span class="pl-k">const</span> <span class="pl-smi">char</span> <span class="pl-c1">*</span><span class="pl-c1">*</span><span class="pl-s1">envp</span>)
 {
-  char Str[50];      // [esp+12h] [ebp-96h] BYREF
-  char Destination[80]; // [esp+44h] [ebp-64h] BYREF
-  DWORD flOldProtect; // [esp+94h] [ebp-14h] BYREF
-  size_t v7;         // [esp+98h] [ebp-10h]
-  int i;             // [esp+9Ch] [ebp-Ch]
+  <span class="pl-smi">char</span> <span class="pl-s1">Str</span>[<span class="pl-c1">50</span>];      <span class="pl-c">// [esp+12h] [ebp-96h] BYREF</span>
+  <span class="pl-smi">char</span> <span class="pl-s1">Destination</span>[<span class="pl-c1">80</span>]; <span class="pl-c">// [esp+44h] [ebp-64h] BYREF</span>
+  <span class="pl-smi">DWORD</span> <span class="pl-s1">flOldProtect</span>; <span class="pl-c">// [esp+94h] [ebp-14h] BYREF</span>
+  <span class="pl-smi">size_t</span> <span class="pl-s1">v7</span>;         <span class="pl-c">// [esp+98h] [ebp-10h]</span>
+  <span class="pl-smi">int</span> <span class="pl-s1">i</span>;             <span class="pl-c">// [esp+9Ch] [ebp-Ch]</span>
 
-  __main();
-  puts("please input you flag:");
-  if ( !VirtualProtect(encrypt, 0xC8u, 4u, &amp;flOldProtect) )
-    exit(1);
-  scanf("%40s", Str);
-  v7 = strlen(Str);
-  if ( v7 != 24 )
+  <span class="pl-en">__main</span>();
+  <span class="pl-en">puts</span>(<span class="pl-s">"please input you flag:"</span>);
+  <span class="pl-k">if</span> ( !<span class="pl-en">VirtualProtect</span>(<span class="pl-s1">encrypt</span>, <span class="pl-c1">0xC8u</span>, <span class="pl-c1">4u</span>, <span class="pl-c1">&amp;</span><span class="pl-s1">flOldProtect</span>) )
+    <span class="pl-en">exit</span>(<span class="pl-c1">1</span>);
+  <span class="pl-en">scanf</span>(<span class="pl-s">"%40s"</span>, <span class="pl-s1">Str</span>);
+  <span class="pl-s1">v7</span> <span class="pl-c1">=</span> <span class="pl-en">strlen</span>(<span class="pl-s1">Str</span>);
+  <span class="pl-k">if</span> ( <span class="pl-s1">v7</span> <span class="pl-c1">!=</span> <span class="pl-c1">24</span> )
   {
-    puts("Wrong!");
-    exit(0);
+    <span class="pl-en">puts</span>(<span class="pl-s">"Wrong!"</span>);
+    <span class="pl-en">exit</span>(<span class="pl-c1">0</span>);
   }
-  strcpy(Destination, Str);
-  wrong(Str);
-  omg(Str);
-  for ( i = 0; i &lt;= 186; ++i )
-    *((_BYTE *)encrypt + i) ^= 0x41u;
-  if ( encrypt(Destination) )
-    finally(Destination);
-  return 0;
-}
-</code></pre>
+  <span class="pl-en">strcpy</span>(<span class="pl-s1">Destination</span>, <span class="pl-s1">Str</span>);
+  <span class="pl-en">wrong</span>(<span class="pl-s1">Str</span>);
+  <span class="pl-en">omg</span>(<span class="pl-s1">Str</span>);
+  <span class="pl-k">for</span> ( <span class="pl-s1">i</span> <span class="pl-c1">=</span> <span class="pl-c1">0</span>; <span class="pl-s1">i</span> &lt;= <span class="pl-c1">186</span>; <span class="pl-c1">++</span><span class="pl-s1">i</span> )
+    <span class="pl-c1">*</span>((<span class="pl-smi">_BYTE</span> <span class="pl-c1">*</span>)<span class="pl-s1">encrypt</span> <span class="pl-c1">+</span> <span class="pl-s1">i</span>) ^= <span class="pl-c1">0x41u</span>;
+  <span class="pl-k">if</span> ( <span class="pl-en">encrypt</span>(<span class="pl-s1">Destination</span>) )
+    <span class="pl-en">finally</span>(<span class="pl-s1">Destination</span>);
+  <span class="pl-k">return</span> <span class="pl-c1">0</span>;
+}</pre></div>
 <blockquote>
 <p>在跳转到 main 汇编函数段的时候，按下空格会进入图视角，按下 f5 会进入伪代码视角</p>
 </blockquote>
@@ -146,22 +155,21 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
 <ol>
 <li>定位 encrypt 函数地址: 在 main 函数的伪代码中双击 encrypt，可以跳转到其汇编视图，并获取其起始地址。本例中，该地址为 0x401500。</li>
 <li>编写 IDA PYTHON 并运行：
-<pre lang="python" class="notranslate"><code class="notranslate">import idc
+<div class="highlight highlight-source-python"><pre class="notranslate"><span class="pl-k">import</span> <span class="pl-s1">idc</span>
 
-start_addr = 0x401500  # encrypt 函数的起始地址
-length = 187           # 循环长度，0到186，共187个字节
-key = 0x41             # 异或的 Key
+<span class="pl-s1">start_addr</span> <span class="pl-c1">=</span> <span class="pl-c1">0x401500</span>  <span class="pl-c"># encrypt 函数的起始地址</span>
+<span class="pl-s1">length</span> <span class="pl-c1">=</span> <span class="pl-c1">187</span>           <span class="pl-c"># 循环长度，0到186，共187个字节</span>
+<span class="pl-s1">key</span> <span class="pl-c1">=</span> <span class="pl-c1">0x41</span>             <span class="pl-c"># 异或的 Key</span>
 
-print(f"开始修复地址 {hex(start_addr)} 处的代码...")
+<span class="pl-en">print</span>(<span class="pl-s">f"开始修复地址 <span class="pl-s1"><span class="pl-kos">{</span><span class="pl-en">hex</span>(<span class="pl-s1">start_addr</span>)<span class="pl-kos">}</span></span> 处的代码..."</span>)
 
-for i in range(length):
-    current_addr = start_addr + i
-    original_byte = idc.get_wide_byte(current_addr)
-    new_byte = original_byte ^ key
-    idc.patch_byte(current_addr, new_byte)
+<span class="pl-k">for</span> <span class="pl-s1">i</span> <span class="pl-c1">in</span> <span class="pl-en">range</span>(<span class="pl-s1">length</span>):
+    <span class="pl-s1">current_addr</span> <span class="pl-c1">=</span> <span class="pl-s1">start_addr</span> <span class="pl-c1">+</span> <span class="pl-s1">i</span>
+    <span class="pl-s1">original_byte</span> <span class="pl-c1">=</span> <span class="pl-s1">idc</span>.<span class="pl-c1">get_wide_byte</span>(<span class="pl-s1">current_addr</span>)
+    <span class="pl-s1">new_byte</span> <span class="pl-c1">=</span> <span class="pl-s1">original_byte</span> <span class="pl-c1">^</span> <span class="pl-s1">key</span>
+    <span class="pl-s1">idc</span>.<span class="pl-c1">patch_byte</span>(<span class="pl-s1">current_addr</span>, <span class="pl-s1">new_byte</span>)
 
-print("修复完成！请刷新反汇编视图。")
-</code></pre>
+<span class="pl-en">print</span>(<span class="pl-s">"修复完成！请刷新反汇编视图。"</span>)</pre></div>
 <blockquote>
 <p>其位于左上角 file 下拉框中 Script Command 下 选择 python 语言</p>
 </blockquote>
@@ -180,27 +188,26 @@ print("修复完成！请刷新反汇编视图。")
 <p>操作流程</p>
 <ol>
 <li>分析修复好的 <code class="notranslate">encrtpt</code> 函数
-<pre lang="c" class="notranslate"><code class="notranslate">int __cdecl encrypt(char *a1)
+<div class="highlight highlight-source-c"><pre class="notranslate"><span class="pl-smi">int</span> __cdecl <span class="pl-en">encrypt</span>(<span class="pl-smi">char</span> <span class="pl-c1">*</span><span class="pl-s1">a1</span>)
 {
-  _DWORD v2[19]; // [esp+1Ch] [ebp-6Ch] BYREF
-  int v3;        // [esp+68h] [ebp-20h]
-  int i;         // [esp+6Ch] [ebp-1Ch]
+  <span class="pl-smi">_DWORD</span> <span class="pl-s1">v2</span>[<span class="pl-c1">19</span>]; <span class="pl-c">// [esp+1Ch] [ebp-6Ch] BYREF</span>
+  <span class="pl-smi">int</span> <span class="pl-s1">v3</span>;        <span class="pl-c">// [esp+68h] [ebp-20h]</span>
+  <span class="pl-smi">int</span> <span class="pl-s1">i</span>;         <span class="pl-c">// [esp+6Ch] [ebp-1Ch]</span>
 
-  v3 = 1;
-  qmemcpy(v2, &amp;unk_403040, sizeof(v2)); // 将数据从 unk_403040 拷贝到 v2
-  for ( i = 0; i &lt;= 18; ++i )           // 循环 19 次 (0-18)
+  <span class="pl-s1">v3</span> <span class="pl-c1">=</span> <span class="pl-c1">1</span>;
+  <span class="pl-en">qmemcpy</span>(<span class="pl-s1">v2</span>, <span class="pl-c1">&amp;</span><span class="pl-s1">unk_403040</span>, <span class="pl-k">sizeof</span>(<span class="pl-s1">v2</span>)); <span class="pl-c">// 将数据从 unk_403040 拷贝到 v2</span>
+  <span class="pl-k">for</span> ( <span class="pl-s1">i</span> <span class="pl-c1">=</span> <span class="pl-c1">0</span>; <span class="pl-s1">i</span> &lt;= <span class="pl-c1">18</span>; <span class="pl-c1">++</span><span class="pl-s1">i</span> )           <span class="pl-c">// 循环 19 次 (0-18)</span>
   {
-    if ( (char)(a1[i] ^ Buffer[i]) != v2[i] ) // 核心比较逻辑
+    <span class="pl-k">if</span> ( (<span class="pl-smi">char</span>)(<span class="pl-s1">a1</span>[<span class="pl-s1">i</span>] ^ <span class="pl-s1">Buffer</span>[<span class="pl-s1">i</span>]) <span class="pl-c1">!=</span> <span class="pl-s1">v2</span>[<span class="pl-s1">i</span>] ) <span class="pl-c">// 核心比较逻辑</span>
     {
-      puts("wrong ~");
-      v3 = 0;
-      exit(0);
+      <span class="pl-en">puts</span>(<span class="pl-s">"wrong ~"</span>);
+      <span class="pl-s1">v3</span> <span class="pl-c1">=</span> <span class="pl-c1">0</span>;
+      <span class="pl-en">exit</span>(<span class="pl-c1">0</span>);
     }
   }
-  puts("come here");
-  return v3;
-}
-</code></pre>
+  <span class="pl-en">puts</span>(<span class="pl-s">"come here"</span>);
+  <span class="pl-k">return</span> <span class="pl-s1">v3</span>;
+}</pre></div>
 <ol>
 <li>循环 <code class="notranslate">i &lt;= 18</code> 表明 <code class="notranslate">encrypt</code> 函数验证了 Flag 的前 19 个字节。结合 <code class="notranslate">main</code> 函数中 Flag 总长度为 24 字节的判断，可知还有 5 个字节未被 <code class="notranslate">encrypt</code> 验证。</li>
 <li>`(char)(a1[i] ^ Buffer[i]) != v2[i]
@@ -216,51 +223,49 @@ print("修复完成！请刷新反汇编视图。")
 <li>提取密文数据<br>
 <code class="notranslate">v2</code> 数组的密文数据位于 <code class="notranslate">unk_403040</code>。在 IDA Pro 中按 <code class="notranslate">G</code> 键跳转到 <code class="notranslate">0x403040</code> 处。可以看到一系列 4 字节的数值（例如 <code class="notranslate">0E 00 00 00</code> 代表十进制的 14）。</li>
 <li>解密密文数据，编写 IDA PYTHON 并运行
-<pre lang="python" class="notranslate"><code class="notranslate">import idc
+<div class="highlight highlight-source-python"><pre class="notranslate"><span class="pl-k">import</span> <span class="pl-s1">idc</span>
 
-cipher_addr = 0x403040 # 密文数据起始地址
-length = 19            # 验证的 Flag 长度
-key_string = "hahahaha_do_you_find_me?" # Buffer 字符串
+<span class="pl-s1">cipher_addr</span> <span class="pl-c1">=</span> <span class="pl-c1">0x403040</span> <span class="pl-c"># 密文数据起始地址</span>
+<span class="pl-s1">length</span> <span class="pl-c1">=</span> <span class="pl-c1">19</span>            <span class="pl-c"># 验证的 Flag 长度</span>
+<span class="pl-s1">key_string</span> <span class="pl-c1">=</span> <span class="pl-s">"hahahaha_do_you_find_me?"</span> <span class="pl-c"># Buffer 字符串</span>
 
-print("-" * 20)
-print("开始解密第一部分 Flag...")
+<span class="pl-en">print</span>(<span class="pl-s">"-"</span> <span class="pl-c1">*</span> <span class="pl-c1">20</span>)
+<span class="pl-en">print</span>(<span class="pl-s">"开始解密第一部分 Flag..."</span>)
 
-flag_part1 = ""
-for i in range(length):
-    cipher_val = idc.get_wide_dword(cipher_addr + i * 4) # 读取 4 字节的密文值
-    key_val = ord(key_string[i])                         # 获取 Key 字符串对应字符的 ASCII 值
-    flag_char = chr(cipher_val ^ key_val)                # 异或还原
-    flag_part1 += flag_char
+<span class="pl-s1">flag_part1</span> <span class="pl-c1">=</span> <span class="pl-s">""</span>
+<span class="pl-k">for</span> <span class="pl-s1">i</span> <span class="pl-c1">in</span> <span class="pl-en">range</span>(<span class="pl-s1">length</span>):
+    <span class="pl-s1">cipher_val</span> <span class="pl-c1">=</span> <span class="pl-s1">idc</span>.<span class="pl-c1">get_wide_dword</span>(<span class="pl-s1">cipher_addr</span> <span class="pl-c1">+</span> <span class="pl-s1">i</span> <span class="pl-c1">*</span> <span class="pl-c1">4</span>) <span class="pl-c"># 读取 4 字节的密文值</span>
+    <span class="pl-s1">key_val</span> <span class="pl-c1">=</span> <span class="pl-en">ord</span>(<span class="pl-s1">key_string</span>[<span class="pl-s1">i</span>])                         <span class="pl-c"># 获取 Key 字符串对应字符的 ASCII 值</span>
+    <span class="pl-s1">flag_char</span> <span class="pl-c1">=</span> <span class="pl-en">chr</span>(<span class="pl-s1">cipher_val</span> <span class="pl-c1">^</span> <span class="pl-s1">key_val</span>)                <span class="pl-c"># 异或还原</span>
+    <span class="pl-s1">flag_part1</span> <span class="pl-c1">+=</span> <span class="pl-s1">flag_char</span>
 
-print("解密结果(Flag第一部分): " + flag_part1)
-print("-" * 20)
-</code></pre>
+<span class="pl-en">print</span>(<span class="pl-s">"解密结果(Flag第一部分): "</span> <span class="pl-c1">+</span> <span class="pl-s1">flag_part1</span>)
+<span class="pl-en">print</span>(<span class="pl-s">"-"</span> <span class="pl-c1">*</span> <span class="pl-c1">20</span>)</pre></div>
 </li>
 </ol>
 <p>最终获得flag的第一部分：<code class="notranslate">flag{d07abccf8a410c</code>。</p>
 <h3>获取 flag 第二部分</h3>
 <p>程序在 <code class="notranslate">encrypt(Destination)</code> 成功后调用 <code class="notranslate">finally(Destination)</code>。根据程序运行时的提示信息 "I hide the last part, you will not succeed!!!" 和 "最后五位隐藏在finally函数中"，可知 Flag 的剩余 5 字节在此函数中验证。</p>
 <p><code class="notranslate">finally</code> 函数的伪代码如下：</p>
-<pre lang="c" class="notranslate"><code class="notranslate">int __cdecl finally(char *a1)
+<div class="highlight highlight-source-c"><pre class="notranslate"><span class="pl-smi">int</span> __cdecl <span class="pl-en">finally</span>(<span class="pl-smi">char</span> <span class="pl-c1">*</span><span class="pl-s1">a1</span>)
 {
-  __time32_t v1; // eax
-  char v3[7];    // [esp+13h] [ebp-15h] BYREF
-  __int16 v4;    // [esp+1Ah] [ebp-Eh]
-  int v5;        // [esp+1Ch] [ebp-Ch]
+  <span class="pl-smi">__time32_t</span> <span class="pl-s1">v1</span>; <span class="pl-c">// eax</span>
+  <span class="pl-smi">char</span> <span class="pl-s1">v3</span>[<span class="pl-c1">7</span>];    <span class="pl-c">// [esp+13h] [ebp-15h] BYREF</span>
+  <span class="pl-smi">__int16</span> <span class="pl-s1">v4</span>;    <span class="pl-c">// [esp+1Ah] [ebp-Eh]</span>
+  <span class="pl-smi">int</span> <span class="pl-s1">v5</span>;        <span class="pl-c">// [esp+1Ch] [ebp-Ch]</span>
 
-  strcpy(v3, "%tp&amp;:"); // 关键信息：v3 被初始化为 "%tp&amp;:"
-  v1 = time(0);
-  srand(v1);
-  v5 = rand() % 100; // 生成一个随机数
-  v3[6] = 0;         // 填充终止符，实际 v3 长度为 5
-  v4 = 0;
-  // 核心比较逻辑，但被随机数 v5 混淆
-  if ( (v3[(unsigned __int8)v3[5]] != a1[(unsigned __int8)v3[5]]) == v5 )
-    return puts("Really??? Did you find it?OMG!!!");
-  else
-    return puts("I hide the last part, you will not succeed!!!");
-}
-</code></pre>
+  <span class="pl-en">strcpy</span>(<span class="pl-s1">v3</span>, <span class="pl-s">"%tp&amp;:"</span>); <span class="pl-c">// 关键信息：v3 被初始化为 "%tp&amp;:"</span>
+  <span class="pl-s1">v1</span> <span class="pl-c1">=</span> <span class="pl-en">time</span>(<span class="pl-c1">0</span>);
+  <span class="pl-en">srand</span>(<span class="pl-s1">v1</span>);
+  <span class="pl-s1">v5</span> <span class="pl-c1">=</span> <span class="pl-en">rand</span>() % <span class="pl-c1">100</span>; <span class="pl-c">// 生成一个随机数</span>
+  <span class="pl-s1">v3</span>[<span class="pl-c1">6</span>] <span class="pl-c1">=</span> <span class="pl-c1">0</span>;         <span class="pl-c">// 填充终止符，实际 v3 长度为 5</span>
+  <span class="pl-s1">v4</span> <span class="pl-c1">=</span> <span class="pl-c1">0</span>;
+  <span class="pl-c">// 核心比较逻辑，但被随机数 v5 混淆</span>
+  <span class="pl-k">if</span> ( (<span class="pl-s1">v3</span>[(<span class="pl-smi">unsigned <span class="pl-smi">__int8</span></span>)<span class="pl-s1">v3</span>[<span class="pl-c1">5</span>]] <span class="pl-c1">!=</span> <span class="pl-s1">a1</span>[(<span class="pl-smi">unsigned <span class="pl-smi">__int8</span></span>)<span class="pl-s1">v3</span>[<span class="pl-c1">5</span>]]) <span class="pl-c1">==</span> <span class="pl-s1">v5</span> )
+    <span class="pl-k">return</span> <span class="pl-en">puts</span>(<span class="pl-s">"Really??? Did you find it?OMG!!!"</span>);
+  <span class="pl-k">else</span>
+    <span class="pl-k">return</span> <span class="pl-en">puts</span>(<span class="pl-s">"I hide the last part, you will not succeed!!!"</span>);
+}</pre></div>
 <p>关键信息：</p>
 <ol>
 <li>函数中使用了 <code class="notranslate">time(0)</code>、<code class="notranslate">srand(v1)</code> 和 <code class="notranslate">rand() % 100</code> 生成随机数 <code class="notranslate">v5</code>，并将其用于判断条件。</li>
@@ -276,25 +281,24 @@ print("-" * 20)
 通过计算 <code class="notranslate">Key = 0x3A ^ 0x7D = 0x47</code>。</p>
 <p>使用计算出的 Key (<code class="notranslate">0x47</code>) 对 <code class="notranslate">"%tp&amp;:"</code> 的所有字符进行异或解密。</p>
 <p>编写 IDA PYTHON 并运行</p>
-<pre lang="python" class="notranslate"><code class="notranslate">cipher_last = "%tp&amp;:" # finally 函数中隐藏的字符串
-key = 0x47            # 推测出的异或 Key (通过 ':' ^ '}' 计算)
+<div class="highlight highlight-source-python"><pre class="notranslate"><span class="pl-s1">cipher_last</span> <span class="pl-c1">=</span> <span class="pl-s">"%tp&amp;:"</span> <span class="pl-c"># finally 函数中隐藏的字符串</span>
+<span class="pl-s1">key</span> <span class="pl-c1">=</span> <span class="pl-c1">0x47</span>            <span class="pl-c"># 推测出的异或 Key (通过 ':' ^ '}' 计算)</span>
 
-flag_last_part = ""
+<span class="pl-s1">flag_last_part</span> <span class="pl-c1">=</span> <span class="pl-s">""</span>
 
-print("-" * 20)
-print("正在解密最后一部分 Flag...")
+<span class="pl-en">print</span>(<span class="pl-s">"-"</span> <span class="pl-c1">*</span> <span class="pl-c1">20</span>)
+<span class="pl-en">print</span>(<span class="pl-s">"正在解密最后一部分 Flag..."</span>)
 
-for char in cipher_last:
-    decoded_char = chr(ord(char) ^ key) # 异或解密
-    flag_last_part += decoded_char
+<span class="pl-k">for</span> <span class="pl-s1">char</span> <span class="pl-c1">in</span> <span class="pl-s1">cipher_last</span>:
+    <span class="pl-s1">decoded_char</span> <span class="pl-c1">=</span> <span class="pl-en">chr</span>(<span class="pl-en">ord</span>(<span class="pl-s1">char</span>) <span class="pl-c1">^</span> <span class="pl-s1">key</span>) <span class="pl-c"># 异或解密</span>
+    <span class="pl-s1">flag_last_part</span> <span class="pl-c1">+=</span> <span class="pl-s1">decoded_char</span>
 
-print("解密结果: " + flag_last_part)
+<span class="pl-en">print</span>(<span class="pl-s">"解密结果: "</span> <span class="pl-c1">+</span> <span class="pl-s1">flag_last_part</span>)
 
-flag_first_part = "flag{d07abccf8a410c" # 第一部分 Flag
-final_flag = flag_first_part + flag_last_part
-print("\n完整 Flag: " + final_flag)
-print("-" * 20)
-</code></pre>
+<span class="pl-s1">flag_first_part</span> <span class="pl-c1">=</span> <span class="pl-s">"flag{d07abccf8a410c"</span> <span class="pl-c"># 第一部分 Flag</span>
+<span class="pl-s1">final_flag</span> <span class="pl-c1">=</span> <span class="pl-s1">flag_first_part</span> <span class="pl-c1">+</span> <span class="pl-s1">flag_last_part</span>
+<span class="pl-en">print</span>(<span class="pl-s">"<span class="pl-cce">\n</span>完整 Flag: "</span> <span class="pl-c1">+</span> <span class="pl-s1">final_flag</span>)
+<span class="pl-en">print</span>(<span class="pl-s">"-"</span> <span class="pl-c1">*</span> <span class="pl-c1">20</span>)</pre></div>
 <p>运行上述脚本，得到 Flag 的最后 5 字节：<code class="notranslate">b37a}</code>。<br>
 将两部分 Flag 拼接，得到最终的 Flag：<code class="notranslate">flag{d07abccf8a410cb37a}</code>。</p></div>
 <div style="font-size:small;margin-top:8px;float:right;">转载无需注明出处</div>
@@ -321,7 +325,7 @@ if("11/22/2024"!=""){
 </script></div>
 </body>
 <script>
-var IconList={'sun': 'M8 10.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5zM8 12a4 4 0 100-8 4 4 0 000 8zM8 0a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0V.75A.75.75 0 018 0zm0 13a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0v-1.5A.75.75 0 018 13zM2.343 2.343a.75.75 0 011.061 0l1.06 1.061a.75.75 0 01-1.06 1.06l-1.06-1.06a.75.75 0 010-1.06zm9.193 9.193a.75.75 0 011.06 0l1.061 1.06a.75.75 0 01-1.06 1.061l-1.061-1.06a.75.75 0 010-1.061zM16 8a.75.75 0 01-.75.75h-1.5a.75.75 0 010-1.5h1.5A.75.75 0 0116 8zM3 8a.75.75 0 01-.75.75H.75a.75.75 0 010-1.5h1.5A.75.75 0 013 8zm10.657-5.657a.75.75 0 010 1.061l-1.061 1.06a.75.75 0 11-1.06-1.06l1.06-1.06a.75.75 0 011.06 0zm-9.193 9.193a.75.75 0 010 1.06l-1.06 1.061a.75.75 0 11-1.061-1.06l1.06-1.061a.75.75 0 011.061 0z', 'moon': 'M9.598 1.591a.75.75 0 01.785-.175 7 7 0 11-8.967 8.967.75.75 0 01.961-.96 5.5 5.5 0 007.046-7.046.75.75 0 01.175-.786zm1.616 1.945a7 7 0 01-7.678 7.678 5.5 5.5 0 107.678-7.678z', 'sync': 'M1.705 8.005a.75.75 0 0 1 .834.656 5.5 5.5 0 0 0 9.592 2.97l-1.204-1.204a.25.25 0 0 1 .177-.427h3.646a.25.25 0 0 1 .25.25v3.646a.25.25 0 0 1-.427.177l-1.38-1.38A7.002 7.002 0 0 1 1.05 8.84a.75.75 0 0 1 .656-.834ZM8 2.5a5.487 5.487 0 0 0-4.131 1.869l1.204 1.204A.25.25 0 0 1 4.896 6H1.25A.25.25 0 0 1 1 5.75V2.104a.25.25 0 0 1 .427-.177l1.38 1.38A7.002 7.002 0 0 1 14.95 7.16a.75.75 0 0 1-1.49.178A5.5 5.5 0 0 0 8 2.5Z', 'home': 'M6.906.664a1.749 1.749 0 0 1 2.187 0l5.25 4.2c.415.332.657.835.657 1.367v7.019A1.75 1.75 0 0 1 13.25 15h-3.5a.75.75 0 0 1-.75-.75V9H7v5.25a.75.75 0 0 1-.75.75h-3.5A1.75 1.75 0 0 1 1 13.25V6.23c0-.531.242-1.034.657-1.366l5.25-4.2Zm1.25 1.171a.25.25 0 0 0-.312 0l-5.25 4.2a.25.25 0 0 0-.094.196v7.019c0 .138.112.25.25.25H5.5V8.25a.75.75 0 0 1 .75-.75h3.5a.75.75 0 0 1 .75.75v5.25h2.75a.25.25 0 0 0 .25-.25V6.23a.25.25 0 0 0-.094-.195Z', 'github': 'M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27-.68 0-1.36.09-2 .27-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.31 2.69.94 0 .67.01 1.3.01 1.49 0 .21-.15.45-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8Z'};
+var IconList={'sun': 'M8 10.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5zM8 12a4 4 0 100-8 4 4 0 000 8zM8 0a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0V.75A.75.75 0 018 0zm0 13a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0v-1.5A.75.75 0 018 13zM2.343 2.343a.75.75 0 011.061 0l1.06 1.061a.75.75 0 01-1.06 1.06l-1.06-1.06a.75.75 0 010-1.06zm9.193 9.193a.75.75 0 011.06 0l1.061 1.06a.75.75 0 01-1.06 1.061l-1.061-1.06a.75.75 0 010-1.061zM16 8a.75.75 0 01-.75.75h-1.5a.75.75 0 010-1.5h1.5A.75.75 0 0116 8zM3 8a.75.75 0 01-.75.75H.75a.75.75 0 010-1.5h1.5A.75.75 0 013 8zm10.657-5.657a.75.75 0 010 1.061l-1.061 1.06a.75.75 0 11-1.06-1.06l1.06-1.06a.75.75 0 011.06 0zm-9.193 9.193a.75.75 0 010 1.06l-1.06 1.061a.75.75 0 11-1.061-1.06l1.06-1.061a.75.75 0 011.061 0z', 'moon': 'M9.598 1.591a.75.75 0 01.785-.175 7 7 0 11-8.967 8.967.75.75 0 01.961-.96 5.5 5.5 0 007.046-7.046.75.75 0 01.175-.786zm1.616 1.945a7 7 0 01-7.678 7.678 5.5 5.5 0 107.678-7.678z', 'sync': 'M1.705 8.005a.75.75 0 0 1 .834.656 5.5 5.5 0 0 0 9.592 2.97l-1.204-1.204a.25.25 0 0 1 .177-.427h3.646a.25.25 0 0 1 .25.25v3.646a.25.25 0 0 1-.427.177l-1.38-1.38A7.002 7.002 0 0 1 1.05 8.84a.75.75 0 0 1 .656-.834ZM8 2.5a5.487 5.487 0 0 0-4.131 1.869l1.204 1.204A.25.25 0 0 1 4.896 6H1.25A.25.25 0 0 1 1 5.75V2.104a.25.25 0 0 1 .427-.177l1.38 1.38A7.002 7.002 0 0 1 14.95 7.16a.75.75 0 0 1-1.49.178A5.5 5.5 0 0 0 8 2.5Z', 'home': 'M6.906.664a1.749 1.749 0 0 1 2.187 0l5.25 4.2c.415.332.657.835.657 1.367v7.019A1.75 1.75 0 0 1 13.25 15h-3.5a.75.75 0 0 1-.75-.75V9H7v5.25a.75.75 0 0 1-.75.75h-3.5A1.75 1.75 0 0 1 1 13.25V6.23c0-.531.242-1.034.657-1.366l5.25-4.2Zm1.25 1.171a.25.25 0 0 0-.312 0l-5.25 4.2a.25.25 0 0 0-.094.196v7.019c0 .138.112.25.25.25H5.5V8.25a.75.75 0 0 1 .75-.75h3.5a.75.75 0 0 1 .75.75v5.25h2.75a.25.25 0 0 0 .25-.25V6.23a.25.25 0 0 0-.094-.195Z', 'github': 'M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27-.68 0-1.36.09-2 .27-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.31 2.69.94 0 .67.01 1.3.01 1.49 0 .21-.15.45-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8Z', 'copy': 'M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 0 1 0 1.5h-1.5a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-1.5a.75.75 0 0 1 1.5 0v1.5A1.75 1.75 0 0 1 9.25 16h-7.5A1.75 1.75 0 0 1 0 14.25Z M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0 1 14.25 11h-7.5A1.75 1.75 0 0 1 5 9.25Zm1.75-.25a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-7.5a.25.25 0 0 0-.25-.25Z', 'check': 'M13.78 4.22a.75.75 0 0 1 0 1.06l-7.25 7.25a.75.75 0 0 1-1.06 0L2.22 9.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018L6 10.94l6.72-6.72a.75.75 0 0 1 1.06 0Z'};
 var utterancesLoad=0;
 
 let themeSettings={
@@ -394,7 +398,70 @@ function iFrameLoading(){
     }
 }
 
+document.addEventListener('DOMContentLoaded', () => {
+    const createClipboardHTML = (codeContent, additionalClasses = '') => `
+        <pre class="notranslate"><code class="notranslate">${codeContent}</code></pre>
+        <div class="clipboard-container position-absolute right-0 top-0 ${additionalClasses}">
+            <clipboard-copy class="ClipboardButton btn m-2 p-0" role="button" style="display: inherit;">
+                <svg height="16" width="16" class="octicon octicon-copy m-2"><path d="${IconList["copy"]}"></path></svg>
+                <svg height="16" width="16" class="octicon octicon-check color-fg-success m-2 d-none"><path d="${IconList["check"]}"></path></svg>
+            </clipboard-copy>
+            <div class="copy-feedback">Copied!</div>
+        </div>
+    `;
 
+    const handleCodeElements = (selector = '') => {
+        document.querySelectorAll(selector).forEach(codeElement => {
+            const codeContent = codeElement.innerHTML;
+            const newStructure = document.createElement('div');
+            newStructure.className = 'snippet-clipboard-content position-relative overflow-auto';
+            newStructure.innerHTML = createClipboardHTML(codeContent);
+
+            const parentElement = codeElement.parentElement;
+            if (selector.includes('highlight')) {
+                parentElement.insertBefore(newStructure, codeElement.nextSibling);
+                parentElement.removeChild(codeElement);
+            } else {
+                parentElement.parentElement.replaceChild(newStructure, parentElement);
+            }
+        });
+    };
+
+    handleCodeElements('pre.notranslate > code.notranslate');
+    handleCodeElements('div.highlight > pre.notranslate');
+
+    let currentFeedback = null;
+    document.querySelectorAll('clipboard-copy').forEach(copyButton => {
+        copyButton.addEventListener('click', () => {
+            const codeContent = copyButton.closest('.snippet-clipboard-content').innerText;
+            const tempTextArea = document.createElement('textarea');
+            tempTextArea.value = codeContent;
+            document.body.appendChild(tempTextArea);
+            tempTextArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempTextArea);
+
+            const copyIcon = copyButton.querySelector('.octicon-copy');
+            const checkIcon = copyButton.querySelector('.octicon-check');
+            const copyFeedback = copyButton.nextElementSibling;
+
+            if (currentFeedback && currentFeedback !== copyFeedback) {currentFeedback.style.display = 'none';}
+            currentFeedback = copyFeedback;
+
+            copyIcon.classList.add('d-none');
+            checkIcon.classList.remove('d-none');
+            copyFeedback.style.display = 'block';
+            copyButton.style.borderColor = 'var(--color-success-fg)';
+
+            setTimeout(() => {
+                copyIcon.classList.remove('d-none');
+                checkIcon.classList.add('d-none');
+                copyFeedback.style.display = 'none';
+                copyButton.style.borderColor = '';
+            }, 2000);
+        });
+    });
+});
 
 </script>
 
