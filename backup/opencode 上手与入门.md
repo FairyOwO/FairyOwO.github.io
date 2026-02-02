@@ -235,6 +235,24 @@ npx oh-my-opencode install
 这里摘抄一下每个agent是干什么的
 
 ```text
+Sisyphus：默认agent，可以调用其他子agent进行工作
+Sisyphus 的队友（精选智能体）
+Hephaestus：自主深度工作者，目标导向执行（GPT 5.2 Codex Medium）— 合法的工匠
+Oracle：设计、调试 (GPT 5.2 Medium)
+Frontend UI/UX Engineer：前端开发 (Gemini 3 Pro) -- 疑似被移除 放到了Categories 的 visual-engineering 中
+Librarian：官方文档、开源实现、代码库探索 (Claude Sonnet 4.5)
+Explore：极速代码库探索（上下文感知 Grep）(Claude Haiku 4.5)
+Prometheus： plan agent
+Atlas：干活agent 一定要plan后才能干活
+Metis： plan 顾问 agent
+Momus：检查计划有没有问题agent
+multimodal-looker：看图片
+```
+
+<details><summary>已失效内容</summary>
+<p>
+
+```text
 Sisyphus (anthropic/claude-opus-4-5)：默认 Agent。 OpenCode 专属的强力 AI 编排器。指挥专业子 Agent 搞定复杂任务。主打后台任务委派和 Todo 驱动。用 Claude Opus 4.5 加上扩展思考（32k token 预算），智商拉满。
 oracle (openai/gpt-5.2)：架构师、代码审查员、战略家。GPT-5.2 的逻辑推理和深度分析能力不是盖的。致敬 AmpCode。
 librarian (anthropic/claude-sonnet-4-5 或 google/gemini-3-flash)：多仓库分析、查文档、找示例。配置 Antigravity 认证时使用 Gemini 3 Flash，否则使用 Claude Sonnet 4.5 深入理解代码库，GitHub 调研，给出的答案都有据可查。致敬 AmpCode。
@@ -244,31 +262,68 @@ document-writer (google/gemini-3-pro-preview)：技术写作专家。Gemini 文�
 multimodal-looker (google/gemini-3-flash)：视觉内容专家。PDF、图片、图表，看一眼就知道里头有啥。
 ```
 
+</p>
+</details> 
+
+以下是自用配置:
+
 ```jsonc
 {
   "$schema": "https://raw.githubusercontent.com/code-yeongyu/oh-my-opencode/master/assets/oh-my-opencode.schema.json",
   "google_auth": false,
   "agents": {
-    "Sisyphus": {
+    "sisyphus": {
       "model": "cpa-claude/gemini-claude-opus-4-5-thinking"
     },
     "librarian": {
-      "model": "cpa-gemini/gemini-3-flash"
+      "model": "cpa-gemini/gemini-3-flash-preview"
     },
     "explore": {
-      "model": "cpa-gemini/gemini-3-flash"
+      "model": "cpa-gemini/gemini-3-flash-preview"
     },
     "oracle": {
-      "model": "cpa-gemini/gemini-3-pro-preview"  // 后期更换成 gpt 5.2
-    },
-    "frontend-ui-ux-engineer": {
-      "model": "cpa-gemini/gemini-3-pro-preview"
-    },
-    "document-writer": {
-      "model": "cpa-gemini/gemini-3-flash"
+      "model": "openai/gpt-5.2"
     },
     "multimodal-looker": {
-      "model": "cpa-gemini/gemini-3-flash"
+      "model": "cpa-gemini/gemini-3-flash-preview"
+    },
+    "prometheus": {
+      "model": "cpa-claude/gemini-claude-opus-4-5-thinking"
+    },
+    "metis": {
+      "model": "github-copilot/claude-sonnet-4.5"
+    },
+    "momus": {
+      "model": "github-copilot/claude-opus-4.5"
+    },
+    "atlas": {
+      "model": "openai/gpt-5.2"
+    },
+    "Hephaestus": {
+      "model": "openai/gpt-5.2"
+    }
+  },
+  "categories": {
+    "writing": {
+      "model": "cpa-gemini/gemini-3-flash-preview"
+    },
+    "quick": {
+      "model": "github-copilot/claude-haiku-4.5"
+    },
+    "visual-engineering": {
+      "model": "cpa-gemini/gemini-3-pro-preview"
+    },
+    "ultrabrain": {
+      "model": "openai/gpt-5.2"
+    },
+    "artistry": {
+      "model": "cpa-gemini/gemini-3-pro-preview"
+    },
+    "unspecified-low": {
+      "model": "github-copilot/claude-sonnet-4.5"
+    },
+    "unspecified-high": {
+      "model": "github-copilot/claude-opus-4.5"
     }
   }
 }

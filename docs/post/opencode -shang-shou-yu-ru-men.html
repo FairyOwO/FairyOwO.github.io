@@ -247,6 +247,24 @@ npx oh-my-opencode install
 这里摘抄一下每个agent是干什么的
 
 ```text
+Sisyphus：默认agent，可以调用其他子agent进行工作
+Sisyphus 的队友（精选智能体）
+Hephaestus：自主深度工作者，目标导向执行（GPT 5.2 Codex Medium）— 合法的工匠
+Oracle：设计、调试 (GPT 5.2 Medium)
+Frontend UI/UX Engineer：前端开发 (Gemini 3 Pro) -- 疑似被移除 放到了Categories 的 visual-engineering 中
+Librarian：官方文档、开源实现、代码库探索 (Claude Sonnet 4.5)
+Explore：极速代码库探索（上下文感知 Grep）(Claude Haiku 4.5)
+Prometheus： plan agent
+Atlas：干活agent 一定要plan后才能干活
+Metis： plan 顾问 agent
+Momus：检查计划有没有问题agent
+multimodal-looker：看图片
+```
+
+<details><summary>已失效内容</summary>
+<p>
+
+```text
 Sisyphus (anthropic/claude-opus-4-5)：默认 Agent。">
 <meta property="og:title" content="opencode 上手与入门">
 <meta property="og:description" content="## opencode 上手与入门
@@ -484,6 +502,24 @@ npx oh-my-opencode install
 之前使用我们自己的 opencode 配置文件 这里当然需要自行配置 oh-my-opencode 的配置文件, 当然你也可以让ai来做这件事情 详见文档
 
 这里摘抄一下每个agent是干什么的
+
+```text
+Sisyphus：默认agent，可以调用其他子agent进行工作
+Sisyphus 的队友（精选智能体）
+Hephaestus：自主深度工作者，目标导向执行（GPT 5.2 Codex Medium）— 合法的工匠
+Oracle：设计、调试 (GPT 5.2 Medium)
+Frontend UI/UX Engineer：前端开发 (Gemini 3 Pro) -- 疑似被移除 放到了Categories 的 visual-engineering 中
+Librarian：官方文档、开源实现、代码库探索 (Claude Sonnet 4.5)
+Explore：极速代码库探索（上下文感知 Grep）(Claude Haiku 4.5)
+Prometheus： plan agent
+Atlas：干活agent 一定要plan后才能干活
+Metis： plan 顾问 agent
+Momus：检查计划有没有问题agent
+multimodal-looker：看图片
+```
+
+<details><summary>已失效内容</summary>
+<p>
 
 ```text
 Sisyphus (anthropic/claude-opus-4-5)：默认 Agent。">
@@ -767,7 +803,22 @@ npx oh-my-opencode install</pre></div>
 <h4>配置文件</h4>
 <p>之前使用我们自己的 opencode 配置文件 这里当然需要自行配置 oh-my-opencode 的配置文件, 当然你也可以让ai来做这件事情 详见文档</p>
 <p>这里摘抄一下每个agent是干什么的</p>
-<pre lang="text" class="notranslate"><code class="notranslate">Sisyphus (anthropic/claude-opus-4-5)：默认 Agent。 OpenCode 专属的强力 AI 编排器。指挥专业子 Agent 搞定复杂任务。主打后台任务委派和 Todo 驱动。用 Claude Opus 4.5 加上扩展思考（32k token 预算），智商拉满。
+<pre lang="text" class="notranslate"><code class="notranslate">Sisyphus：默认agent，可以调用其他子agent进行工作
+Sisyphus 的队友（精选智能体）
+Hephaestus：自主深度工作者，目标导向执行（GPT 5.2 Codex Medium）— 合法的工匠
+Oracle：设计、调试 (GPT 5.2 Medium)
+Frontend UI/UX Engineer：前端开发 (Gemini 3 Pro) -- 疑似被移除 放到了Categories 的 visual-engineering 中
+Librarian：官方文档、开源实现、代码库探索 (Claude Sonnet 4.5)
+Explore：极速代码库探索（上下文感知 Grep）(Claude Haiku 4.5)
+Prometheus： plan agent
+Atlas：干活agent 一定要plan后才能干活
+Metis： plan 顾问 agent
+Momus：检查计划有没有问题agent
+multimodal-looker：看图片
+</code></pre>
+<details><summary>已失效内容</summary>
+<p>
+</p><pre lang="text" class="notranslate"><code class="notranslate">Sisyphus (anthropic/claude-opus-4-5)：默认 Agent。 OpenCode 专属的强力 AI 编排器。指挥专业子 Agent 搞定复杂任务。主打后台任务委派和 Todo 驱动。用 Claude Opus 4.5 加上扩展思考（32k token 预算），智商拉满。
 oracle (openai/gpt-5.2)：架构师、代码审查员、战略家。GPT-5.2 的逻辑推理和深度分析能力不是盖的。致敬 AmpCode。
 librarian (anthropic/claude-sonnet-4-5 或 google/gemini-3-flash)：多仓库分析、查文档、找示例。配置 Antigravity 认证时使用 Gemini 3 Flash，否则使用 Claude Sonnet 4.5 深入理解代码库，GitHub 调研，给出的答案都有据可查。致敬 AmpCode。
 explore (opencode/grok-code、google/gemini-3-flash 或 anthropic/claude-haiku-4-5)：极速代码库扫描、模式匹配。配置 Antigravity 认证时使用 Gemini 3 Flash，Claude max20 可用时使用 Haiku，否则用 Grok。致敬 Claude Code。
@@ -775,30 +826,65 @@ frontend-ui-ux-engineer (google/gemini-3-pro-preview)：设计师出身的程序
 document-writer (google/gemini-3-pro-preview)：技术写作专家。Gemini 文笔好，写出来的东西读着顺畅。
 multimodal-looker (google/gemini-3-flash)：视觉内容专家。PDF、图片、图表，看一眼就知道里头有啥。
 </code></pre>
+<p></p>
+</details> 
+<p>以下是自用配置:</p>
 <div class="highlight highlight-source-json-comments"><pre class="notranslate">{
   <span class="pl-ent">"$schema"</span>: <span class="pl-s"><span class="pl-pds">"</span>https://raw.githubusercontent.com/code-yeongyu/oh-my-opencode/master/assets/oh-my-opencode.schema.json<span class="pl-pds">"</span></span>,
   <span class="pl-ent">"google_auth"</span>: <span class="pl-c1">false</span>,
   <span class="pl-ent">"agents"</span>: {
-    <span class="pl-ent">"Sisyphus"</span>: {
+    <span class="pl-ent">"sisyphus"</span>: {
       <span class="pl-ent">"model"</span>: <span class="pl-s"><span class="pl-pds">"</span>cpa-claude/gemini-claude-opus-4-5-thinking<span class="pl-pds">"</span></span>
     },
     <span class="pl-ent">"librarian"</span>: {
-      <span class="pl-ent">"model"</span>: <span class="pl-s"><span class="pl-pds">"</span>cpa-gemini/gemini-3-flash<span class="pl-pds">"</span></span>
+      <span class="pl-ent">"model"</span>: <span class="pl-s"><span class="pl-pds">"</span>cpa-gemini/gemini-3-flash-preview<span class="pl-pds">"</span></span>
     },
     <span class="pl-ent">"explore"</span>: {
-      <span class="pl-ent">"model"</span>: <span class="pl-s"><span class="pl-pds">"</span>cpa-gemini/gemini-3-flash<span class="pl-pds">"</span></span>
+      <span class="pl-ent">"model"</span>: <span class="pl-s"><span class="pl-pds">"</span>cpa-gemini/gemini-3-flash-preview<span class="pl-pds">"</span></span>
     },
     <span class="pl-ent">"oracle"</span>: {
-      <span class="pl-ent">"model"</span>: <span class="pl-s"><span class="pl-pds">"</span>cpa-gemini/gemini-3-pro-preview<span class="pl-pds">"</span></span>  <span class="pl-c"><span class="pl-c">//</span> 后期更换成 gpt 5.2</span>
-    },
-    <span class="pl-ent">"frontend-ui-ux-engineer"</span>: {
-      <span class="pl-ent">"model"</span>: <span class="pl-s"><span class="pl-pds">"</span>cpa-gemini/gemini-3-pro-preview<span class="pl-pds">"</span></span>
-    },
-    <span class="pl-ent">"document-writer"</span>: {
-      <span class="pl-ent">"model"</span>: <span class="pl-s"><span class="pl-pds">"</span>cpa-gemini/gemini-3-flash<span class="pl-pds">"</span></span>
+      <span class="pl-ent">"model"</span>: <span class="pl-s"><span class="pl-pds">"</span>openai/gpt-5.2<span class="pl-pds">"</span></span>
     },
     <span class="pl-ent">"multimodal-looker"</span>: {
-      <span class="pl-ent">"model"</span>: <span class="pl-s"><span class="pl-pds">"</span>cpa-gemini/gemini-3-flash<span class="pl-pds">"</span></span>
+      <span class="pl-ent">"model"</span>: <span class="pl-s"><span class="pl-pds">"</span>cpa-gemini/gemini-3-flash-preview<span class="pl-pds">"</span></span>
+    },
+    <span class="pl-ent">"prometheus"</span>: {
+      <span class="pl-ent">"model"</span>: <span class="pl-s"><span class="pl-pds">"</span>cpa-claude/gemini-claude-opus-4-5-thinking<span class="pl-pds">"</span></span>
+    },
+    <span class="pl-ent">"metis"</span>: {
+      <span class="pl-ent">"model"</span>: <span class="pl-s"><span class="pl-pds">"</span>github-copilot/claude-sonnet-4.5<span class="pl-pds">"</span></span>
+    },
+    <span class="pl-ent">"momus"</span>: {
+      <span class="pl-ent">"model"</span>: <span class="pl-s"><span class="pl-pds">"</span>github-copilot/claude-opus-4.5<span class="pl-pds">"</span></span>
+    },
+    <span class="pl-ent">"atlas"</span>: {
+      <span class="pl-ent">"model"</span>: <span class="pl-s"><span class="pl-pds">"</span>openai/gpt-5.2<span class="pl-pds">"</span></span>
+    },
+    <span class="pl-ent">"Hephaestus"</span>: {
+      <span class="pl-ent">"model"</span>: <span class="pl-s"><span class="pl-pds">"</span>openai/gpt-5.2<span class="pl-pds">"</span></span>
+    }
+  },
+  <span class="pl-ent">"categories"</span>: {
+    <span class="pl-ent">"writing"</span>: {
+      <span class="pl-ent">"model"</span>: <span class="pl-s"><span class="pl-pds">"</span>cpa-gemini/gemini-3-flash-preview<span class="pl-pds">"</span></span>
+    },
+    <span class="pl-ent">"quick"</span>: {
+      <span class="pl-ent">"model"</span>: <span class="pl-s"><span class="pl-pds">"</span>github-copilot/claude-haiku-4.5<span class="pl-pds">"</span></span>
+    },
+    <span class="pl-ent">"visual-engineering"</span>: {
+      <span class="pl-ent">"model"</span>: <span class="pl-s"><span class="pl-pds">"</span>cpa-gemini/gemini-3-pro-preview<span class="pl-pds">"</span></span>
+    },
+    <span class="pl-ent">"ultrabrain"</span>: {
+      <span class="pl-ent">"model"</span>: <span class="pl-s"><span class="pl-pds">"</span>openai/gpt-5.2<span class="pl-pds">"</span></span>
+    },
+    <span class="pl-ent">"artistry"</span>: {
+      <span class="pl-ent">"model"</span>: <span class="pl-s"><span class="pl-pds">"</span>cpa-gemini/gemini-3-pro-preview<span class="pl-pds">"</span></span>
+    },
+    <span class="pl-ent">"unspecified-low"</span>: {
+      <span class="pl-ent">"model"</span>: <span class="pl-s"><span class="pl-pds">"</span>github-copilot/claude-sonnet-4.5<span class="pl-pds">"</span></span>
+    },
+    <span class="pl-ent">"unspecified-high"</span>: {
+      <span class="pl-ent">"model"</span>: <span class="pl-s"><span class="pl-pds">"</span>github-copilot/claude-opus-4.5<span class="pl-pds">"</span></span>
     }
   }
 }</pre></div>
