@@ -2957,7 +2957,7 @@ print(f'Predicted class: {predicted_label}')
 <meta property="og:url" content="https://FairyOwO.github.io/post/nailong-shu-ju-ji-%2C%20-jian-ce-nailong-de-mo-xing-%2C%20-xun-lian-yu-tui-li-%20%28-yi-%29.html">
 <meta property="og:image" content="https://github.githubassets.com/favicons/favicon.svg">
 <title>nailong数据集, 检测nailong的模型, 训练与推理 (一)</title>
-
+<link href="//unpkg.com/@wooorm/starry-night@2.1.1/style/both.css" rel="stylesheet" />
 
 
 </head>
@@ -3041,202 +3041,201 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
 <p>具体细节可以搜索相关的模型解析, 这里不再赘述</p>
 <details><summary>model.py</summary>
 <p>
-</p><pre lang="python" class="notranslate"><code class="notranslate"># copy from facebook/ConvNeXt
-import torch
-import torch.nn as nn
-import torch.nn.functional as F
-from timm.models.layers import trunc_normal_, DropPath
-from timm.models.registry import register_model
+</p><div class="highlight highlight-source-python"><pre class="notranslate"><span class="pl-c"># copy from facebook/ConvNeXt</span>
+<span class="pl-k">import</span> <span class="pl-s1">torch</span>
+<span class="pl-k">import</span> <span class="pl-s1">torch</span>.<span class="pl-s1">nn</span> <span class="pl-k">as</span> <span class="pl-s1">nn</span>
+<span class="pl-k">import</span> <span class="pl-s1">torch</span>.<span class="pl-s1">nn</span>.<span class="pl-s1">functional</span> <span class="pl-k">as</span> <span class="pl-c1">F</span>
+<span class="pl-k">from</span> <span class="pl-s1">timm</span>.<span class="pl-s1">models</span>.<span class="pl-s1">layers</span> <span class="pl-k">import</span> <span class="pl-s1">trunc_normal_</span>, <span class="pl-v">DropPath</span>
+<span class="pl-k">from</span> <span class="pl-s1">timm</span>.<span class="pl-s1">models</span>.<span class="pl-s1">registry</span> <span class="pl-k">import</span> <span class="pl-s1">register_model</span>
 
-class Block(nn.Module):
-    r""" ConvNeXt Block. There are two equivalent implementations:
-    (1) DwConv -&gt; LayerNorm (channels_first) -&gt; 1x1 Conv -&gt; GELU -&gt; 1x1 Conv; all in (N, C, H, W)
-    (2) DwConv -&gt; Permute to (N, H, W, C); LayerNorm (channels_last) -&gt; Linear -&gt; GELU -&gt; Linear; Permute back
-    We use (2) as we find it slightly faster in PyTorch
-    
-    Args:
-        dim (int): Number of input channels.
-        drop_path (float): Stochastic depth rate. Default: 0.0
-        layer_scale_init_value (float): Init value for Layer Scale. Default: 1e-6.
-    """
-    def __init__(self, dim, drop_path=0., layer_scale_init_value=1e-6):
-        super().__init__()
-        self.dwconv = nn.Conv2d(dim, dim, kernel_size=7, padding=3, groups=dim) # depthwise conv
-        self.norm = LayerNorm(dim, eps=1e-6)
-        self.pwconv1 = nn.Linear(dim, 4 * dim) # pointwise/1x1 convs, implemented with linear layers
-        self.act = nn.GELU()
-        self.pwconv2 = nn.Linear(4 * dim, dim)
-        self.gamma = nn.Parameter(layer_scale_init_value * torch.ones((dim)), 
-                                    requires_grad=True) if layer_scale_init_value &gt; 0 else None
-        self.drop_path = DropPath(drop_path) if drop_path &gt; 0. else nn.Identity()
+<span class="pl-k">class</span> <span class="pl-v">Block</span>(<span class="pl-s1">nn</span>.<span class="pl-c1">Module</span>):
+    <span class="pl-s">r""" ConvNeXt Block. There are two equivalent implementations:</span>
+<span class="pl-s">    (1) DwConv -&gt; LayerNorm (channels_first) -&gt; 1x1 Conv -&gt; GELU -&gt; 1x1 Conv; all in (N, C, H, W)</span>
+<span class="pl-s">    (2) DwConv -&gt; Permute to (N, H, W, C); LayerNorm (channels_last) -&gt; Linear -&gt; GELU -&gt; Linear; Permute back</span>
+<span class="pl-s">    We use (2) as we find it slightly faster in PyTorch</span>
+<span class="pl-s">    </span>
+<span class="pl-s">    Args:</span>
+<span class="pl-s">        dim (int): Number of input channels.</span>
+<span class="pl-s">        drop_path (float): Stochastic depth rate. Default: 0.0</span>
+<span class="pl-s">        layer_scale_init_value (float): Init value for Layer Scale. Default: 1e-6.</span>
+<span class="pl-s">    """</span>
+    <span class="pl-k">def</span> <span class="pl-en">__init__</span>(<span class="pl-s1">self</span>, <span class="pl-s1">dim</span>, <span class="pl-s1">drop_path</span><span class="pl-c1">=</span><span class="pl-c1">0.</span>, <span class="pl-s1">layer_scale_init_value</span><span class="pl-c1">=</span><span class="pl-c1">1e-6</span>):
+        <span class="pl-en">super</span>().<span class="pl-c1">__init__</span>()
+        <span class="pl-s1">self</span>.<span class="pl-c1">dwconv</span> <span class="pl-c1">=</span> <span class="pl-s1">nn</span>.<span class="pl-c1">Conv2d</span>(<span class="pl-s1">dim</span>, <span class="pl-s1">dim</span>, <span class="pl-s1">kernel_size</span><span class="pl-c1">=</span><span class="pl-c1">7</span>, <span class="pl-s1">padding</span><span class="pl-c1">=</span><span class="pl-c1">3</span>, <span class="pl-s1">groups</span><span class="pl-c1">=</span><span class="pl-s1">dim</span>) <span class="pl-c"># depthwise conv</span>
+        <span class="pl-s1">self</span>.<span class="pl-c1">norm</span> <span class="pl-c1">=</span> <span class="pl-en">LayerNorm</span>(<span class="pl-s1">dim</span>, <span class="pl-s1">eps</span><span class="pl-c1">=</span><span class="pl-c1">1e-6</span>)
+        <span class="pl-s1">self</span>.<span class="pl-c1">pwconv1</span> <span class="pl-c1">=</span> <span class="pl-s1">nn</span>.<span class="pl-c1">Linear</span>(<span class="pl-s1">dim</span>, <span class="pl-c1">4</span> <span class="pl-c1">*</span> <span class="pl-s1">dim</span>) <span class="pl-c"># pointwise/1x1 convs, implemented with linear layers</span>
+        <span class="pl-s1">self</span>.<span class="pl-c1">act</span> <span class="pl-c1">=</span> <span class="pl-s1">nn</span>.<span class="pl-c1">GELU</span>()
+        <span class="pl-s1">self</span>.<span class="pl-c1">pwconv2</span> <span class="pl-c1">=</span> <span class="pl-s1">nn</span>.<span class="pl-c1">Linear</span>(<span class="pl-c1">4</span> <span class="pl-c1">*</span> <span class="pl-s1">dim</span>, <span class="pl-s1">dim</span>)
+        <span class="pl-s1">self</span>.<span class="pl-c1">gamma</span> <span class="pl-c1">=</span> <span class="pl-s1">nn</span>.<span class="pl-c1">Parameter</span>(<span class="pl-s1">layer_scale_init_value</span> <span class="pl-c1">*</span> <span class="pl-s1">torch</span>.<span class="pl-c1">ones</span>((<span class="pl-s1">dim</span>)), 
+                                    <span class="pl-s1">requires_grad</span><span class="pl-c1">=</span><span class="pl-c1">True</span>) <span class="pl-k">if</span> <span class="pl-s1">layer_scale_init_value</span> <span class="pl-c1">&gt;</span> <span class="pl-c1">0</span> <span class="pl-k">else</span> <span class="pl-c1">None</span>
+        <span class="pl-s1">self</span>.<span class="pl-c1">drop_path</span> <span class="pl-c1">=</span> <span class="pl-en">DropPath</span>(<span class="pl-s1">drop_path</span>) <span class="pl-k">if</span> <span class="pl-s1">drop_path</span> <span class="pl-c1">&gt;</span> <span class="pl-c1">0.</span> <span class="pl-k">else</span> <span class="pl-s1">nn</span>.<span class="pl-c1">Identity</span>()
 
-    def forward(self, x):
-        input = x
-        x = self.dwconv(x)
-        x = x.permute(0, 2, 3, 1) # (N, C, H, W) -&gt; (N, H, W, C)
-        x = self.norm(x)
-        x = self.pwconv1(x)
-        x = self.act(x)
-        x = self.pwconv2(x)
-        if self.gamma is not None:
-            x = self.gamma * x
-        x = x.permute(0, 3, 1, 2) # (N, H, W, C) -&gt; (N, C, H, W)
+    <span class="pl-k">def</span> <span class="pl-en">forward</span>(<span class="pl-s1">self</span>, <span class="pl-s1">x</span>):
+        <span class="pl-s1">input</span> <span class="pl-c1">=</span> <span class="pl-s1">x</span>
+        <span class="pl-s1">x</span> <span class="pl-c1">=</span> <span class="pl-s1">self</span>.<span class="pl-c1">dwconv</span>(<span class="pl-s1">x</span>)
+        <span class="pl-s1">x</span> <span class="pl-c1">=</span> <span class="pl-s1">x</span>.<span class="pl-c1">permute</span>(<span class="pl-c1">0</span>, <span class="pl-c1">2</span>, <span class="pl-c1">3</span>, <span class="pl-c1">1</span>) <span class="pl-c"># (N, C, H, W) -&gt; (N, H, W, C)</span>
+        <span class="pl-s1">x</span> <span class="pl-c1">=</span> <span class="pl-s1">self</span>.<span class="pl-c1">norm</span>(<span class="pl-s1">x</span>)
+        <span class="pl-s1">x</span> <span class="pl-c1">=</span> <span class="pl-s1">self</span>.<span class="pl-c1">pwconv1</span>(<span class="pl-s1">x</span>)
+        <span class="pl-s1">x</span> <span class="pl-c1">=</span> <span class="pl-s1">self</span>.<span class="pl-c1">act</span>(<span class="pl-s1">x</span>)
+        <span class="pl-s1">x</span> <span class="pl-c1">=</span> <span class="pl-s1">self</span>.<span class="pl-c1">pwconv2</span>(<span class="pl-s1">x</span>)
+        <span class="pl-k">if</span> <span class="pl-s1">self</span>.<span class="pl-c1">gamma</span> <span class="pl-c1"><span class="pl-c1">is</span> <span class="pl-c1">not</span></span> <span class="pl-c1">None</span>:
+            <span class="pl-s1">x</span> <span class="pl-c1">=</span> <span class="pl-s1">self</span>.<span class="pl-c1">gamma</span> <span class="pl-c1">*</span> <span class="pl-s1">x</span>
+        <span class="pl-s1">x</span> <span class="pl-c1">=</span> <span class="pl-s1">x</span>.<span class="pl-c1">permute</span>(<span class="pl-c1">0</span>, <span class="pl-c1">3</span>, <span class="pl-c1">1</span>, <span class="pl-c1">2</span>) <span class="pl-c"># (N, H, W, C) -&gt; (N, C, H, W)</span>
 
-        x = input + self.drop_path(x)
-        return x
+        <span class="pl-s1">x</span> <span class="pl-c1">=</span> <span class="pl-s1">input</span> <span class="pl-c1">+</span> <span class="pl-s1">self</span>.<span class="pl-c1">drop_path</span>(<span class="pl-s1">x</span>)
+        <span class="pl-k">return</span> <span class="pl-s1">x</span>
 
-class ConvNeXt(nn.Module):
-    r""" ConvNeXt
-        A PyTorch impl of : `A ConvNet for the 2020s`  -
-          https://arxiv.org/pdf/2201.03545.pdf
-
-    Args:
-        in_chans (int): Number of input image channels. Default: 3
-        num_classes (int): Number of classes for classification head. Default: 1000
-        depths (tuple(int)): Number of blocks at each stage. Default: [3, 3, 9, 3]
-        dims (int): Feature dimension at each stage. Default: [96, 192, 384, 768]
-        drop_path_rate (float): Stochastic depth rate. Default: 0.
-        layer_scale_init_value (float): Init value for Layer Scale. Default: 1e-6.
-        head_init_scale (float): Init scaling value for classifier weights and biases. Default: 1.
-    """
-    def __init__(self, in_chans=3, num_classes=1000, 
-                 depths=[3, 3, 9, 3], dims=[96, 192, 384, 768], drop_path_rate=0., 
-                 layer_scale_init_value=1e-6, head_init_scale=1.,
+<span class="pl-k">class</span> <span class="pl-v">ConvNeXt</span>(<span class="pl-s1">nn</span>.<span class="pl-c1">Module</span>):
+    <span class="pl-s">r""" ConvNeXt</span>
+<span class="pl-s">        A PyTorch impl of : `A ConvNet for the 2020s`  -</span>
+<span class="pl-s">          https://arxiv.org/pdf/2201.03545.pdf</span>
+<span class="pl-s"></span>
+<span class="pl-s">    Args:</span>
+<span class="pl-s">        in_chans (int): Number of input image channels. Default: 3</span>
+<span class="pl-s">        num_classes (int): Number of classes for classification head. Default: 1000</span>
+<span class="pl-s">        depths (tuple(int)): Number of blocks at each stage. Default: [3, 3, 9, 3]</span>
+<span class="pl-s">        dims (int): Feature dimension at each stage. Default: [96, 192, 384, 768]</span>
+<span class="pl-s">        drop_path_rate (float): Stochastic depth rate. Default: 0.</span>
+<span class="pl-s">        layer_scale_init_value (float): Init value for Layer Scale. Default: 1e-6.</span>
+<span class="pl-s">        head_init_scale (float): Init scaling value for classifier weights and biases. Default: 1.</span>
+<span class="pl-s">    """</span>
+    <span class="pl-k">def</span> <span class="pl-en">__init__</span>(<span class="pl-s1">self</span>, <span class="pl-s1">in_chans</span><span class="pl-c1">=</span><span class="pl-c1">3</span>, <span class="pl-s1">num_classes</span><span class="pl-c1">=</span><span class="pl-c1">1000</span>, 
+                 <span class="pl-s1">depths</span><span class="pl-c1">=</span>[<span class="pl-c1">3</span>, <span class="pl-c1">3</span>, <span class="pl-c1">9</span>, <span class="pl-c1">3</span>], <span class="pl-s1">dims</span><span class="pl-c1">=</span>[<span class="pl-c1">96</span>, <span class="pl-c1">192</span>, <span class="pl-c1">384</span>, <span class="pl-c1">768</span>], <span class="pl-s1">drop_path_rate</span><span class="pl-c1">=</span><span class="pl-c1">0.</span>, 
+                 <span class="pl-s1">layer_scale_init_value</span><span class="pl-c1">=</span><span class="pl-c1">1e-6</span>, <span class="pl-s1">head_init_scale</span><span class="pl-c1">=</span><span class="pl-c1">1.</span>,
                  ):
-        super().__init__()
+        <span class="pl-en">super</span>().<span class="pl-c1">__init__</span>()
 
-        self.downsample_layers = nn.ModuleList() # stem and 3 intermediate downsampling conv layers
-        stem = nn.Sequential(
-            nn.Conv2d(in_chans, dims[0], kernel_size=4, stride=4),
-            LayerNorm(dims[0], eps=1e-6, data_format="channels_first")
+        <span class="pl-s1">self</span>.<span class="pl-c1">downsample_layers</span> <span class="pl-c1">=</span> <span class="pl-s1">nn</span>.<span class="pl-c1">ModuleList</span>() <span class="pl-c"># stem and 3 intermediate downsampling conv layers</span>
+        <span class="pl-s1">stem</span> <span class="pl-c1">=</span> <span class="pl-s1">nn</span>.<span class="pl-c1">Sequential</span>(
+            <span class="pl-s1">nn</span>.<span class="pl-c1">Conv2d</span>(<span class="pl-s1">in_chans</span>, <span class="pl-s1">dims</span>[<span class="pl-c1">0</span>], <span class="pl-s1">kernel_size</span><span class="pl-c1">=</span><span class="pl-c1">4</span>, <span class="pl-s1">stride</span><span class="pl-c1">=</span><span class="pl-c1">4</span>),
+            <span class="pl-en">LayerNorm</span>(<span class="pl-s1">dims</span>[<span class="pl-c1">0</span>], <span class="pl-s1">eps</span><span class="pl-c1">=</span><span class="pl-c1">1e-6</span>, <span class="pl-s1">data_format</span><span class="pl-c1">=</span><span class="pl-s">"channels_first"</span>)
         )
-        self.downsample_layers.append(stem)
-        for i in range(3):
-            downsample_layer = nn.Sequential(
-                    LayerNorm(dims[i], eps=1e-6, data_format="channels_first"),
-                    nn.Conv2d(dims[i], dims[i+1], kernel_size=2, stride=2),
+        <span class="pl-s1">self</span>.<span class="pl-c1">downsample_layers</span>.<span class="pl-c1">append</span>(<span class="pl-s1">stem</span>)
+        <span class="pl-k">for</span> <span class="pl-s1">i</span> <span class="pl-c1">in</span> <span class="pl-en">range</span>(<span class="pl-c1">3</span>):
+            <span class="pl-s1">downsample_layer</span> <span class="pl-c1">=</span> <span class="pl-s1">nn</span>.<span class="pl-c1">Sequential</span>(
+                    <span class="pl-en">LayerNorm</span>(<span class="pl-s1">dims</span>[<span class="pl-s1">i</span>], <span class="pl-s1">eps</span><span class="pl-c1">=</span><span class="pl-c1">1e-6</span>, <span class="pl-s1">data_format</span><span class="pl-c1">=</span><span class="pl-s">"channels_first"</span>),
+                    <span class="pl-s1">nn</span>.<span class="pl-c1">Conv2d</span>(<span class="pl-s1">dims</span>[<span class="pl-s1">i</span>], <span class="pl-s1">dims</span>[<span class="pl-s1">i</span><span class="pl-c1">+</span><span class="pl-c1">1</span>], <span class="pl-s1">kernel_size</span><span class="pl-c1">=</span><span class="pl-c1">2</span>, <span class="pl-s1">stride</span><span class="pl-c1">=</span><span class="pl-c1">2</span>),
             )
-            self.downsample_layers.append(downsample_layer)
+            <span class="pl-s1">self</span>.<span class="pl-c1">downsample_layers</span>.<span class="pl-c1">append</span>(<span class="pl-s1">downsample_layer</span>)
 
-        self.stages = nn.ModuleList() # 4 feature resolution stages, each consisting of multiple residual blocks
-        dp_rates=[x.item() for x in torch.linspace(0, drop_path_rate, sum(depths))] 
-        cur = 0
-        for i in range(4):
-            stage = nn.Sequential(
-                *[Block(dim=dims[i], drop_path=dp_rates[cur + j], 
-                layer_scale_init_value=layer_scale_init_value) for j in range(depths[i])]
+        <span class="pl-s1">self</span>.<span class="pl-c1">stages</span> <span class="pl-c1">=</span> <span class="pl-s1">nn</span>.<span class="pl-c1">ModuleList</span>() <span class="pl-c"># 4 feature resolution stages, each consisting of multiple residual blocks</span>
+        <span class="pl-s1">dp_rates</span><span class="pl-c1">=</span>[<span class="pl-s1">x</span>.<span class="pl-c1">item</span>() <span class="pl-k">for</span> <span class="pl-s1">x</span> <span class="pl-c1">in</span> <span class="pl-s1">torch</span>.<span class="pl-c1">linspace</span>(<span class="pl-c1">0</span>, <span class="pl-s1">drop_path_rate</span>, <span class="pl-en">sum</span>(<span class="pl-s1">depths</span>))] 
+        <span class="pl-s1">cur</span> <span class="pl-c1">=</span> <span class="pl-c1">0</span>
+        <span class="pl-k">for</span> <span class="pl-s1">i</span> <span class="pl-c1">in</span> <span class="pl-en">range</span>(<span class="pl-c1">4</span>):
+            <span class="pl-s1">stage</span> <span class="pl-c1">=</span> <span class="pl-s1">nn</span>.<span class="pl-c1">Sequential</span>(
+                <span class="pl-c1">*</span>[<span class="pl-en">Block</span>(<span class="pl-s1">dim</span><span class="pl-c1">=</span><span class="pl-s1">dims</span>[<span class="pl-s1">i</span>], <span class="pl-s1">drop_path</span><span class="pl-c1">=</span><span class="pl-s1">dp_rates</span>[<span class="pl-s1">cur</span> <span class="pl-c1">+</span> <span class="pl-s1">j</span>], 
+                <span class="pl-s1">layer_scale_init_value</span><span class="pl-c1">=</span><span class="pl-s1">layer_scale_init_value</span>) <span class="pl-k">for</span> <span class="pl-s1">j</span> <span class="pl-c1">in</span> <span class="pl-en">range</span>(<span class="pl-s1">depths</span>[<span class="pl-s1">i</span>])]
             )
-            self.stages.append(stage)
-            cur += depths[i]
+            <span class="pl-s1">self</span>.<span class="pl-c1">stages</span>.<span class="pl-c1">append</span>(<span class="pl-s1">stage</span>)
+            <span class="pl-s1">cur</span> <span class="pl-c1">+=</span> <span class="pl-s1">depths</span>[<span class="pl-s1">i</span>]
 
-        self.norm = nn.LayerNorm(dims[-1], eps=1e-6) # final norm layer
-        self.head = nn.Linear(dims[-1], num_classes)
+        <span class="pl-s1">self</span>.<span class="pl-c1">norm</span> <span class="pl-c1">=</span> <span class="pl-s1">nn</span>.<span class="pl-c1">LayerNorm</span>(<span class="pl-s1">dims</span>[<span class="pl-c1">-</span><span class="pl-c1">1</span>], <span class="pl-s1">eps</span><span class="pl-c1">=</span><span class="pl-c1">1e-6</span>) <span class="pl-c"># final norm layer</span>
+        <span class="pl-s1">self</span>.<span class="pl-c1">head</span> <span class="pl-c1">=</span> <span class="pl-s1">nn</span>.<span class="pl-c1">Linear</span>(<span class="pl-s1">dims</span>[<span class="pl-c1">-</span><span class="pl-c1">1</span>], <span class="pl-s1">num_classes</span>)
 
-        self.apply(self._init_weights)
-        self.head.weight.data.mul_(head_init_scale)
-        self.head.bias.data.mul_(head_init_scale)
+        <span class="pl-s1">self</span>.<span class="pl-c1">apply</span>(<span class="pl-s1">self</span>.<span class="pl-c1">_init_weights</span>)
+        <span class="pl-s1">self</span>.<span class="pl-c1">head</span>.<span class="pl-c1">weight</span>.<span class="pl-c1">data</span>.<span class="pl-c1">mul_</span>(<span class="pl-s1">head_init_scale</span>)
+        <span class="pl-s1">self</span>.<span class="pl-c1">head</span>.<span class="pl-c1">bias</span>.<span class="pl-c1">data</span>.<span class="pl-c1">mul_</span>(<span class="pl-s1">head_init_scale</span>)
 
-    def _init_weights(self, m):
-        if isinstance(m, (nn.Conv2d, nn.Linear)):
-            trunc_normal_(m.weight, std=.02)
-            nn.init.constant_(m.bias, 0)
+    <span class="pl-k">def</span> <span class="pl-en">_init_weights</span>(<span class="pl-s1">self</span>, <span class="pl-s1">m</span>):
+        <span class="pl-k">if</span> <span class="pl-en">isinstance</span>(<span class="pl-s1">m</span>, (<span class="pl-s1">nn</span>.<span class="pl-c1">Conv2d</span>, <span class="pl-s1">nn</span>.<span class="pl-c1">Linear</span>)):
+            <span class="pl-en">trunc_normal_</span>(<span class="pl-s1">m</span>.<span class="pl-c1">weight</span>, <span class="pl-s1">std</span><span class="pl-c1">=</span><span class="pl-c1">.02</span>)
+            <span class="pl-s1">nn</span>.<span class="pl-c1">init</span>.<span class="pl-c1">constant_</span>(<span class="pl-s1">m</span>.<span class="pl-c1">bias</span>, <span class="pl-c1">0</span>)
 
-    def forward_features(self, x):
-        for i in range(4):
-            x = self.downsample_layers[i](x)
-            x = self.stages[i](x)
-        return self.norm(x.mean([-2, -1])) # global average pooling, (N, C, H, W) -&gt; (N, C)
+    <span class="pl-k">def</span> <span class="pl-en">forward_features</span>(<span class="pl-s1">self</span>, <span class="pl-s1">x</span>):
+        <span class="pl-k">for</span> <span class="pl-s1">i</span> <span class="pl-c1">in</span> <span class="pl-en">range</span>(<span class="pl-c1">4</span>):
+            <span class="pl-s1">x</span> <span class="pl-c1">=</span> <span class="pl-s1">self</span>.<span class="pl-c1">downsample_layers</span>[<span class="pl-s1">i</span>](<span class="pl-s1">x</span>)
+            <span class="pl-s1">x</span> <span class="pl-c1">=</span> <span class="pl-s1">self</span>.<span class="pl-c1">stages</span>[<span class="pl-s1">i</span>](<span class="pl-s1">x</span>)
+        <span class="pl-k">return</span> <span class="pl-s1">self</span>.<span class="pl-c1">norm</span>(<span class="pl-s1">x</span>.<span class="pl-c1">mean</span>([<span class="pl-c1">-</span><span class="pl-c1">2</span>, <span class="pl-c1">-</span><span class="pl-c1">1</span>])) <span class="pl-c"># global average pooling, (N, C, H, W) -&gt; (N, C)</span>
 
-    def forward(self, x):
-        x = self.forward_features(x)
-        x = self.head(x)
-        return x
+    <span class="pl-k">def</span> <span class="pl-en">forward</span>(<span class="pl-s1">self</span>, <span class="pl-s1">x</span>):
+        <span class="pl-s1">x</span> <span class="pl-c1">=</span> <span class="pl-s1">self</span>.<span class="pl-c1">forward_features</span>(<span class="pl-s1">x</span>)
+        <span class="pl-s1">x</span> <span class="pl-c1">=</span> <span class="pl-s1">self</span>.<span class="pl-c1">head</span>(<span class="pl-s1">x</span>)
+        <span class="pl-k">return</span> <span class="pl-s1">x</span>
 
-class LayerNorm(nn.Module):
-    r""" LayerNorm that supports two data formats: channels_last (default) or channels_first. 
-    The ordering of the dimensions in the inputs. channels_last corresponds to inputs with 
-    shape (batch_size, height, width, channels) while channels_first corresponds to inputs 
-    with shape (batch_size, channels, height, width).
-    """
-    def __init__(self, normalized_shape, eps=1e-6, data_format="channels_last"):
-        super().__init__()
-        self.weight = nn.Parameter(torch.ones(normalized_shape))
-        self.bias = nn.Parameter(torch.zeros(normalized_shape))
-        self.eps = eps
-        self.data_format = data_format
-        if self.data_format not in ["channels_last", "channels_first"]:
-            raise NotImplementedError 
-        self.normalized_shape = (normalized_shape, )
+<span class="pl-k">class</span> <span class="pl-v">LayerNorm</span>(<span class="pl-s1">nn</span>.<span class="pl-c1">Module</span>):
+    <span class="pl-s">r""" LayerNorm that supports two data formats: channels_last (default) or channels_first. </span>
+<span class="pl-s">    The ordering of the dimensions in the inputs. channels_last corresponds to inputs with </span>
+<span class="pl-s">    shape (batch_size, height, width, channels) while channels_first corresponds to inputs </span>
+<span class="pl-s">    with shape (batch_size, channels, height, width).</span>
+<span class="pl-s">    """</span>
+    <span class="pl-k">def</span> <span class="pl-en">__init__</span>(<span class="pl-s1">self</span>, <span class="pl-s1">normalized_shape</span>, <span class="pl-s1">eps</span><span class="pl-c1">=</span><span class="pl-c1">1e-6</span>, <span class="pl-s1">data_format</span><span class="pl-c1">=</span><span class="pl-s">"channels_last"</span>):
+        <span class="pl-en">super</span>().<span class="pl-c1">__init__</span>()
+        <span class="pl-s1">self</span>.<span class="pl-c1">weight</span> <span class="pl-c1">=</span> <span class="pl-s1">nn</span>.<span class="pl-c1">Parameter</span>(<span class="pl-s1">torch</span>.<span class="pl-c1">ones</span>(<span class="pl-s1">normalized_shape</span>))
+        <span class="pl-s1">self</span>.<span class="pl-c1">bias</span> <span class="pl-c1">=</span> <span class="pl-s1">nn</span>.<span class="pl-c1">Parameter</span>(<span class="pl-s1">torch</span>.<span class="pl-c1">zeros</span>(<span class="pl-s1">normalized_shape</span>))
+        <span class="pl-s1">self</span>.<span class="pl-c1">eps</span> <span class="pl-c1">=</span> <span class="pl-s1">eps</span>
+        <span class="pl-s1">self</span>.<span class="pl-c1">data_format</span> <span class="pl-c1">=</span> <span class="pl-s1">data_format</span>
+        <span class="pl-k">if</span> <span class="pl-s1">self</span>.<span class="pl-c1">data_format</span> <span class="pl-c1"><span class="pl-c1">not</span> <span class="pl-c1">in</span></span> [<span class="pl-s">"channels_last"</span>, <span class="pl-s">"channels_first"</span>]:
+            <span class="pl-k">raise</span> <span class="pl-v">NotImplementedError</span> 
+        <span class="pl-s1">self</span>.<span class="pl-c1">normalized_shape</span> <span class="pl-c1">=</span> (<span class="pl-s1">normalized_shape</span>, )
     
-    def forward(self, x):
-        if self.data_format == "channels_last":
-            return F.layer_norm(x, self.normalized_shape, self.weight, self.bias, self.eps)
-        elif self.data_format == "channels_first":
-            u = x.mean(1, keepdim=True)
-            s = (x - u).pow(2).mean(1, keepdim=True)
-            x = (x - u) / torch.sqrt(s + self.eps)
-            x = self.weight[:, None, None] * x + self.bias[:, None, None]
-            return x
+    <span class="pl-k">def</span> <span class="pl-en">forward</span>(<span class="pl-s1">self</span>, <span class="pl-s1">x</span>):
+        <span class="pl-k">if</span> <span class="pl-s1">self</span>.<span class="pl-c1">data_format</span> <span class="pl-c1">==</span> <span class="pl-s">"channels_last"</span>:
+            <span class="pl-k">return</span> <span class="pl-c1">F</span>.<span class="pl-c1">layer_norm</span>(<span class="pl-s1">x</span>, <span class="pl-s1">self</span>.<span class="pl-c1">normalized_shape</span>, <span class="pl-s1">self</span>.<span class="pl-c1">weight</span>, <span class="pl-s1">self</span>.<span class="pl-c1">bias</span>, <span class="pl-s1">self</span>.<span class="pl-c1">eps</span>)
+        <span class="pl-k">elif</span> <span class="pl-s1">self</span>.<span class="pl-c1">data_format</span> <span class="pl-c1">==</span> <span class="pl-s">"channels_first"</span>:
+            <span class="pl-s1">u</span> <span class="pl-c1">=</span> <span class="pl-s1">x</span>.<span class="pl-c1">mean</span>(<span class="pl-c1">1</span>, <span class="pl-s1">keepdim</span><span class="pl-c1">=</span><span class="pl-c1">True</span>)
+            <span class="pl-s1">s</span> <span class="pl-c1">=</span> (<span class="pl-s1">x</span> <span class="pl-c1">-</span> <span class="pl-s1">u</span>).<span class="pl-c1">pow</span>(<span class="pl-c1">2</span>).<span class="pl-c1">mean</span>(<span class="pl-c1">1</span>, <span class="pl-s1">keepdim</span><span class="pl-c1">=</span><span class="pl-c1">True</span>)
+            <span class="pl-s1">x</span> <span class="pl-c1">=</span> (<span class="pl-s1">x</span> <span class="pl-c1">-</span> <span class="pl-s1">u</span>) <span class="pl-c1">/</span> <span class="pl-s1">torch</span>.<span class="pl-c1">sqrt</span>(<span class="pl-s1">s</span> <span class="pl-c1">+</span> <span class="pl-s1">self</span>.<span class="pl-c1">eps</span>)
+            <span class="pl-s1">x</span> <span class="pl-c1">=</span> <span class="pl-s1">self</span>.<span class="pl-c1">weight</span>[:, <span class="pl-c1">None</span>, <span class="pl-c1">None</span>] <span class="pl-c1">*</span> <span class="pl-s1">x</span> <span class="pl-c1">+</span> <span class="pl-s1">self</span>.<span class="pl-c1">bias</span>[:, <span class="pl-c1">None</span>, <span class="pl-c1">None</span>]
+            <span class="pl-k">return</span> <span class="pl-s1">x</span>
 
 
-model_urls = {
-    "convnext_tiny_1k": "https://dl.fbaipublicfiles.com/convnext/convnext_tiny_1k_224_ema.pth",
-    "convnext_small_1k": "https://dl.fbaipublicfiles.com/convnext/convnext_small_1k_224_ema.pth",
-    "convnext_base_1k": "https://dl.fbaipublicfiles.com/convnext/convnext_base_1k_224_ema.pth",
-    "convnext_large_1k": "https://dl.fbaipublicfiles.com/convnext/convnext_large_1k_224_ema.pth",
-    "convnext_tiny_22k": "https://dl.fbaipublicfiles.com/convnext/convnext_tiny_22k_224.pth",
-    "convnext_small_22k": "https://dl.fbaipublicfiles.com/convnext/convnext_small_22k_224.pth",
-    "convnext_base_22k": "https://dl.fbaipublicfiles.com/convnext/convnext_base_22k_224.pth",
-    "convnext_large_22k": "https://dl.fbaipublicfiles.com/convnext/convnext_large_22k_224.pth",
-    "convnext_xlarge_22k": "https://dl.fbaipublicfiles.com/convnext/convnext_xlarge_22k_224.pth",
+<span class="pl-s1">model_urls</span> <span class="pl-c1">=</span> {
+    <span class="pl-s">"convnext_tiny_1k"</span>: <span class="pl-s">"https://dl.fbaipublicfiles.com/convnext/convnext_tiny_1k_224_ema.pth"</span>,
+    <span class="pl-s">"convnext_small_1k"</span>: <span class="pl-s">"https://dl.fbaipublicfiles.com/convnext/convnext_small_1k_224_ema.pth"</span>,
+    <span class="pl-s">"convnext_base_1k"</span>: <span class="pl-s">"https://dl.fbaipublicfiles.com/convnext/convnext_base_1k_224_ema.pth"</span>,
+    <span class="pl-s">"convnext_large_1k"</span>: <span class="pl-s">"https://dl.fbaipublicfiles.com/convnext/convnext_large_1k_224_ema.pth"</span>,
+    <span class="pl-s">"convnext_tiny_22k"</span>: <span class="pl-s">"https://dl.fbaipublicfiles.com/convnext/convnext_tiny_22k_224.pth"</span>,
+    <span class="pl-s">"convnext_small_22k"</span>: <span class="pl-s">"https://dl.fbaipublicfiles.com/convnext/convnext_small_22k_224.pth"</span>,
+    <span class="pl-s">"convnext_base_22k"</span>: <span class="pl-s">"https://dl.fbaipublicfiles.com/convnext/convnext_base_22k_224.pth"</span>,
+    <span class="pl-s">"convnext_large_22k"</span>: <span class="pl-s">"https://dl.fbaipublicfiles.com/convnext/convnext_large_22k_224.pth"</span>,
+    <span class="pl-s">"convnext_xlarge_22k"</span>: <span class="pl-s">"https://dl.fbaipublicfiles.com/convnext/convnext_xlarge_22k_224.pth"</span>,
 }
 
-@register_model
-def convnext_tiny(pretrained=False,in_22k=False, **kwargs):
-    model = ConvNeXt(depths=[3, 3, 9, 3], dims=[96, 192, 384, 768], **kwargs)
-    if pretrained:
-        url = model_urls['convnext_tiny_22k'] if in_22k else model_urls['convnext_tiny_1k']
-        checkpoint = torch.hub.load_state_dict_from_url(url=url, map_location="cpu", check_hash=True)
-        model.load_state_dict(checkpoint["model"])
-    return model
+<span class="pl-en">@<span class="pl-s1">register_model</span></span>
+<span class="pl-k">def</span> <span class="pl-en">convnext_tiny</span>(<span class="pl-s1">pretrained</span><span class="pl-c1">=</span><span class="pl-c1">False</span>,<span class="pl-s1">in_22k</span><span class="pl-c1">=</span><span class="pl-c1">False</span>, <span class="pl-c1">**</span><span class="pl-s1">kwargs</span>):
+    <span class="pl-s1">model</span> <span class="pl-c1">=</span> <span class="pl-en">ConvNeXt</span>(<span class="pl-s1">depths</span><span class="pl-c1">=</span>[<span class="pl-c1">3</span>, <span class="pl-c1">3</span>, <span class="pl-c1">9</span>, <span class="pl-c1">3</span>], <span class="pl-s1">dims</span><span class="pl-c1">=</span>[<span class="pl-c1">96</span>, <span class="pl-c1">192</span>, <span class="pl-c1">384</span>, <span class="pl-c1">768</span>], <span class="pl-c1">**</span><span class="pl-s1">kwargs</span>)
+    <span class="pl-k">if</span> <span class="pl-s1">pretrained</span>:
+        <span class="pl-s1">url</span> <span class="pl-c1">=</span> <span class="pl-s1">model_urls</span>[<span class="pl-s">'convnext_tiny_22k'</span>] <span class="pl-k">if</span> <span class="pl-s1">in_22k</span> <span class="pl-k">else</span> <span class="pl-s1">model_urls</span>[<span class="pl-s">'convnext_tiny_1k'</span>]
+        <span class="pl-s1">checkpoint</span> <span class="pl-c1">=</span> <span class="pl-s1">torch</span>.<span class="pl-c1">hub</span>.<span class="pl-c1">load_state_dict_from_url</span>(<span class="pl-s1">url</span><span class="pl-c1">=</span><span class="pl-s1">url</span>, <span class="pl-s1">map_location</span><span class="pl-c1">=</span><span class="pl-s">"cpu"</span>, <span class="pl-s1">check_hash</span><span class="pl-c1">=</span><span class="pl-c1">True</span>)
+        <span class="pl-s1">model</span>.<span class="pl-c1">load_state_dict</span>(<span class="pl-s1">checkpoint</span>[<span class="pl-s">"model"</span>])
+    <span class="pl-k">return</span> <span class="pl-s1">model</span>
 
-@register_model
-def convnext_small(pretrained=False,in_22k=False, **kwargs):
-    model = ConvNeXt(depths=[3, 3, 27, 3], dims=[96, 192, 384, 768], **kwargs)
-    if pretrained:
-        url = model_urls['convnext_small_22k'] if in_22k else model_urls['convnext_small_1k']
-        checkpoint = torch.hub.load_state_dict_from_url(url=url, map_location="cpu")
-        model.load_state_dict(checkpoint["model"])
-    return model
+<span class="pl-en">@<span class="pl-s1">register_model</span></span>
+<span class="pl-k">def</span> <span class="pl-en">convnext_small</span>(<span class="pl-s1">pretrained</span><span class="pl-c1">=</span><span class="pl-c1">False</span>,<span class="pl-s1">in_22k</span><span class="pl-c1">=</span><span class="pl-c1">False</span>, <span class="pl-c1">**</span><span class="pl-s1">kwargs</span>):
+    <span class="pl-s1">model</span> <span class="pl-c1">=</span> <span class="pl-en">ConvNeXt</span>(<span class="pl-s1">depths</span><span class="pl-c1">=</span>[<span class="pl-c1">3</span>, <span class="pl-c1">3</span>, <span class="pl-c1">27</span>, <span class="pl-c1">3</span>], <span class="pl-s1">dims</span><span class="pl-c1">=</span>[<span class="pl-c1">96</span>, <span class="pl-c1">192</span>, <span class="pl-c1">384</span>, <span class="pl-c1">768</span>], <span class="pl-c1">**</span><span class="pl-s1">kwargs</span>)
+    <span class="pl-k">if</span> <span class="pl-s1">pretrained</span>:
+        <span class="pl-s1">url</span> <span class="pl-c1">=</span> <span class="pl-s1">model_urls</span>[<span class="pl-s">'convnext_small_22k'</span>] <span class="pl-k">if</span> <span class="pl-s1">in_22k</span> <span class="pl-k">else</span> <span class="pl-s1">model_urls</span>[<span class="pl-s">'convnext_small_1k'</span>]
+        <span class="pl-s1">checkpoint</span> <span class="pl-c1">=</span> <span class="pl-s1">torch</span>.<span class="pl-c1">hub</span>.<span class="pl-c1">load_state_dict_from_url</span>(<span class="pl-s1">url</span><span class="pl-c1">=</span><span class="pl-s1">url</span>, <span class="pl-s1">map_location</span><span class="pl-c1">=</span><span class="pl-s">"cpu"</span>)
+        <span class="pl-s1">model</span>.<span class="pl-c1">load_state_dict</span>(<span class="pl-s1">checkpoint</span>[<span class="pl-s">"model"</span>])
+    <span class="pl-k">return</span> <span class="pl-s1">model</span>
 
-@register_model
-def convnext_base(pretrained=False, in_22k=False, **kwargs):
-    model = ConvNeXt(depths=[3, 3, 27, 3], dims=[128, 256, 512, 1024], **kwargs)
-    if pretrained:
-        url = model_urls['convnext_base_22k'] if in_22k else model_urls['convnext_base_1k']
-        checkpoint = torch.hub.load_state_dict_from_url(url=url, map_location="cpu")
-        model.load_state_dict(checkpoint["model"])
-    return model
+<span class="pl-en">@<span class="pl-s1">register_model</span></span>
+<span class="pl-k">def</span> <span class="pl-en">convnext_base</span>(<span class="pl-s1">pretrained</span><span class="pl-c1">=</span><span class="pl-c1">False</span>, <span class="pl-s1">in_22k</span><span class="pl-c1">=</span><span class="pl-c1">False</span>, <span class="pl-c1">**</span><span class="pl-s1">kwargs</span>):
+    <span class="pl-s1">model</span> <span class="pl-c1">=</span> <span class="pl-en">ConvNeXt</span>(<span class="pl-s1">depths</span><span class="pl-c1">=</span>[<span class="pl-c1">3</span>, <span class="pl-c1">3</span>, <span class="pl-c1">27</span>, <span class="pl-c1">3</span>], <span class="pl-s1">dims</span><span class="pl-c1">=</span>[<span class="pl-c1">128</span>, <span class="pl-c1">256</span>, <span class="pl-c1">512</span>, <span class="pl-c1">1024</span>], <span class="pl-c1">**</span><span class="pl-s1">kwargs</span>)
+    <span class="pl-k">if</span> <span class="pl-s1">pretrained</span>:
+        <span class="pl-s1">url</span> <span class="pl-c1">=</span> <span class="pl-s1">model_urls</span>[<span class="pl-s">'convnext_base_22k'</span>] <span class="pl-k">if</span> <span class="pl-s1">in_22k</span> <span class="pl-k">else</span> <span class="pl-s1">model_urls</span>[<span class="pl-s">'convnext_base_1k'</span>]
+        <span class="pl-s1">checkpoint</span> <span class="pl-c1">=</span> <span class="pl-s1">torch</span>.<span class="pl-c1">hub</span>.<span class="pl-c1">load_state_dict_from_url</span>(<span class="pl-s1">url</span><span class="pl-c1">=</span><span class="pl-s1">url</span>, <span class="pl-s1">map_location</span><span class="pl-c1">=</span><span class="pl-s">"cpu"</span>)
+        <span class="pl-s1">model</span>.<span class="pl-c1">load_state_dict</span>(<span class="pl-s1">checkpoint</span>[<span class="pl-s">"model"</span>])
+    <span class="pl-k">return</span> <span class="pl-s1">model</span>
 
-@register_model
-def convnext_large(pretrained=False, in_22k=False, **kwargs):
-    model = ConvNeXt(depths=[3, 3, 27, 3], dims=[192, 384, 768, 1536], **kwargs)
-    if pretrained:
-        url = model_urls['convnext_large_22k'] if in_22k else model_urls['convnext_large_1k']
-        checkpoint = torch.hub.load_state_dict_from_url(url=url, map_location="cpu")
-        model.load_state_dict(checkpoint["model"])
-    return model
+<span class="pl-en">@<span class="pl-s1">register_model</span></span>
+<span class="pl-k">def</span> <span class="pl-en">convnext_large</span>(<span class="pl-s1">pretrained</span><span class="pl-c1">=</span><span class="pl-c1">False</span>, <span class="pl-s1">in_22k</span><span class="pl-c1">=</span><span class="pl-c1">False</span>, <span class="pl-c1">**</span><span class="pl-s1">kwargs</span>):
+    <span class="pl-s1">model</span> <span class="pl-c1">=</span> <span class="pl-en">ConvNeXt</span>(<span class="pl-s1">depths</span><span class="pl-c1">=</span>[<span class="pl-c1">3</span>, <span class="pl-c1">3</span>, <span class="pl-c1">27</span>, <span class="pl-c1">3</span>], <span class="pl-s1">dims</span><span class="pl-c1">=</span>[<span class="pl-c1">192</span>, <span class="pl-c1">384</span>, <span class="pl-c1">768</span>, <span class="pl-c1">1536</span>], <span class="pl-c1">**</span><span class="pl-s1">kwargs</span>)
+    <span class="pl-k">if</span> <span class="pl-s1">pretrained</span>:
+        <span class="pl-s1">url</span> <span class="pl-c1">=</span> <span class="pl-s1">model_urls</span>[<span class="pl-s">'convnext_large_22k'</span>] <span class="pl-k">if</span> <span class="pl-s1">in_22k</span> <span class="pl-k">else</span> <span class="pl-s1">model_urls</span>[<span class="pl-s">'convnext_large_1k'</span>]
+        <span class="pl-s1">checkpoint</span> <span class="pl-c1">=</span> <span class="pl-s1">torch</span>.<span class="pl-c1">hub</span>.<span class="pl-c1">load_state_dict_from_url</span>(<span class="pl-s1">url</span><span class="pl-c1">=</span><span class="pl-s1">url</span>, <span class="pl-s1">map_location</span><span class="pl-c1">=</span><span class="pl-s">"cpu"</span>)
+        <span class="pl-s1">model</span>.<span class="pl-c1">load_state_dict</span>(<span class="pl-s1">checkpoint</span>[<span class="pl-s">"model"</span>])
+    <span class="pl-k">return</span> <span class="pl-s1">model</span>
 
-@register_model
-def convnext_xlarge(pretrained=False, in_22k=False, **kwargs):
-    model = ConvNeXt(depths=[3, 3, 27, 3], dims=[256, 512, 1024, 2048], **kwargs)
-    if pretrained:
-        assert in_22k, "only ImageNet-22K pre-trained ConvNeXt-XL is available; please set in_22k=True"
-        url = model_urls['convnext_xlarge_22k']
-        checkpoint = torch.hub.load_state_dict_from_url(url=url, map_location="cpu")
-        model.load_state_dict(checkpoint["model"])
-    return model
-</code></pre>
+<span class="pl-en">@<span class="pl-s1">register_model</span></span>
+<span class="pl-k">def</span> <span class="pl-en">convnext_xlarge</span>(<span class="pl-s1">pretrained</span><span class="pl-c1">=</span><span class="pl-c1">False</span>, <span class="pl-s1">in_22k</span><span class="pl-c1">=</span><span class="pl-c1">False</span>, <span class="pl-c1">**</span><span class="pl-s1">kwargs</span>):
+    <span class="pl-s1">model</span> <span class="pl-c1">=</span> <span class="pl-en">ConvNeXt</span>(<span class="pl-s1">depths</span><span class="pl-c1">=</span>[<span class="pl-c1">3</span>, <span class="pl-c1">3</span>, <span class="pl-c1">27</span>, <span class="pl-c1">3</span>], <span class="pl-s1">dims</span><span class="pl-c1">=</span>[<span class="pl-c1">256</span>, <span class="pl-c1">512</span>, <span class="pl-c1">1024</span>, <span class="pl-c1">2048</span>], <span class="pl-c1">**</span><span class="pl-s1">kwargs</span>)
+    <span class="pl-k">if</span> <span class="pl-s1">pretrained</span>:
+        <span class="pl-k">assert</span> <span class="pl-s1">in_22k</span>, <span class="pl-s">"only ImageNet-22K pre-trained ConvNeXt-XL is available; please set in_22k=True"</span>
+        <span class="pl-s1">url</span> <span class="pl-c1">=</span> <span class="pl-s1">model_urls</span>[<span class="pl-s">'convnext_xlarge_22k'</span>]
+        <span class="pl-s1">checkpoint</span> <span class="pl-c1">=</span> <span class="pl-s1">torch</span>.<span class="pl-c1">hub</span>.<span class="pl-c1">load_state_dict_from_url</span>(<span class="pl-s1">url</span><span class="pl-c1">=</span><span class="pl-s1">url</span>, <span class="pl-s1">map_location</span><span class="pl-c1">=</span><span class="pl-s">"cpu"</span>)
+        <span class="pl-s1">model</span>.<span class="pl-c1">load_state_dict</span>(<span class="pl-s1">checkpoint</span>[<span class="pl-s">"model"</span>])
+    <span class="pl-k">return</span> <span class="pl-s1">model</span></pre></div>
 <p></p>
 </details> 
 <h3>代码</h3>
@@ -3245,300 +3244,299 @@ def convnext_xlarge(pretrained=False, in_22k=False, **kwargs):
 <p>在整理了一些以前代码后, 总结出了覆盖许多训练模型情况的流程, 趁着这个时候测试一下现在ai编码的能力, 将流程发给 claude-sonnet 后, 输出了一版代码, 在我的一些小修小补(补充日志)后, 就可以跑起来了</p>
 <details><summary>trainer.py</summary>
 <p>
-</p><pre lang="python" class="notranslate"><code class="notranslate">import gc
-import json
-import logging
-import os
-import shutil
+</p><div class="highlight highlight-source-python"><pre class="notranslate"><span class="pl-k">import</span> <span class="pl-s1">gc</span>
+<span class="pl-k">import</span> <span class="pl-s1">json</span>
+<span class="pl-k">import</span> <span class="pl-s1">logging</span>
+<span class="pl-k">import</span> <span class="pl-s1">os</span>
+<span class="pl-k">import</span> <span class="pl-s1">shutil</span>
 
-import torch
-from torch import optim
-from torch.amp import GradScaler
-from torch.nn.utils import clip_grad_norm_
-from torch.utils.tensorboard import SummaryWriter
-from tqdm import tqdm
+<span class="pl-k">import</span> <span class="pl-s1">torch</span>
+<span class="pl-k">from</span> <span class="pl-s1">torch</span> <span class="pl-k">import</span> <span class="pl-s1">optim</span>
+<span class="pl-k">from</span> <span class="pl-s1">torch</span>.<span class="pl-s1">amp</span> <span class="pl-k">import</span> <span class="pl-v">GradScaler</span>
+<span class="pl-k">from</span> <span class="pl-s1">torch</span>.<span class="pl-s1">nn</span>.<span class="pl-s1">utils</span> <span class="pl-k">import</span> <span class="pl-s1">clip_grad_norm_</span>
+<span class="pl-k">from</span> <span class="pl-s1">torch</span>.<span class="pl-s1">utils</span>.<span class="pl-s1">tensorboard</span> <span class="pl-k">import</span> <span class="pl-v">SummaryWriter</span>
+<span class="pl-k">from</span> <span class="pl-s1">tqdm</span> <span class="pl-k">import</span> <span class="pl-s1">tqdm</span>
 
-example_config = {
-    "model": "model_name",
-    "checkpoint_dir": "./checkpoints",
-    "tensorboard_dir": "./tensorboard",
-    "device": "cuda",
-    "enable_cudnn_benchmark": True,
-    "enable_amp": False,
-    "learning_rate": 1e-4,
-    "betas": [0.9, 0.999],
-    "eps": 1e-8,
-    "enable_compile": False,
-    "weight_decay": 0.05,
-    "max_steps": 100000,
-    "max_grad_norm": 1.0,
-    "save_every": 10000,
-    "gradient_accumulation_steps": 4
+<span class="pl-s1">example_config</span> <span class="pl-c1">=</span> {
+    <span class="pl-s">"model"</span>: <span class="pl-s">"model_name"</span>,
+    <span class="pl-s">"checkpoint_dir"</span>: <span class="pl-s">"./checkpoints"</span>,
+    <span class="pl-s">"tensorboard_dir"</span>: <span class="pl-s">"./tensorboard"</span>,
+    <span class="pl-s">"device"</span>: <span class="pl-s">"cuda"</span>,
+    <span class="pl-s">"enable_cudnn_benchmark"</span>: <span class="pl-c1">True</span>,
+    <span class="pl-s">"enable_amp"</span>: <span class="pl-c1">False</span>,
+    <span class="pl-s">"learning_rate"</span>: <span class="pl-c1">1e-4</span>,
+    <span class="pl-s">"betas"</span>: [<span class="pl-c1">0.9</span>, <span class="pl-c1">0.999</span>],
+    <span class="pl-s">"eps"</span>: <span class="pl-c1">1e-8</span>,
+    <span class="pl-s">"enable_compile"</span>: <span class="pl-c1">False</span>,
+    <span class="pl-s">"weight_decay"</span>: <span class="pl-c1">0.05</span>,
+    <span class="pl-s">"max_steps"</span>: <span class="pl-c1">100000</span>,
+    <span class="pl-s">"max_grad_norm"</span>: <span class="pl-c1">1.0</span>,
+    <span class="pl-s">"save_every"</span>: <span class="pl-c1">10000</span>,
+    <span class="pl-s">"gradient_accumulation_steps"</span>: <span class="pl-c1">4</span>
 }
 
 
-class Trainer:
-    def __init__(self, config):
-        self.config = config
-        self.setup_logging()
-        self.setup_device()
-        self.setup_model()
-        self.setup_training()
+<span class="pl-k">class</span> <span class="pl-v">Trainer</span>:
+    <span class="pl-k">def</span> <span class="pl-en">__init__</span>(<span class="pl-s1">self</span>, <span class="pl-s1">config</span>):
+        <span class="pl-s1">self</span>.<span class="pl-c1">config</span> <span class="pl-c1">=</span> <span class="pl-s1">config</span>
+        <span class="pl-s1">self</span>.<span class="pl-c1">setup_logging</span>()
+        <span class="pl-s1">self</span>.<span class="pl-c1">setup_device</span>()
+        <span class="pl-s1">self</span>.<span class="pl-c1">setup_model</span>()
+        <span class="pl-s1">self</span>.<span class="pl-c1">setup_training</span>()
         
-    def setup_logging(self):
-        """设置日志"""
-        logging.basicConfig(
-            level=logging.INFO,
-            format='%(asctime)s %(levelname)s %(message)s'
+    <span class="pl-k">def</span> <span class="pl-en">setup_logging</span>(<span class="pl-s1">self</span>):
+        <span class="pl-s">"""设置日志"""</span>
+        <span class="pl-s1">logging</span>.<span class="pl-c1">basicConfig</span>(
+            <span class="pl-s1">level</span><span class="pl-c1">=</span><span class="pl-s1">logging</span>.<span class="pl-c1">INFO</span>,
+            <span class="pl-s1">format</span><span class="pl-c1">=</span><span class="pl-s">'%(asctime)s %(levelname)s %(message)s'</span>
         )
-        self.logger = logging.getLogger(__name__)
-        self.writer = SummaryWriter(self.config['tensorboard_dir'])
+        <span class="pl-s1">self</span>.<span class="pl-c1">logger</span> <span class="pl-c1">=</span> <span class="pl-s1">logging</span>.<span class="pl-c1">getLogger</span>(<span class="pl-s1">__name__</span>)
+        <span class="pl-s1">self</span>.<span class="pl-c1">writer</span> <span class="pl-c1">=</span> <span class="pl-en">SummaryWriter</span>(<span class="pl-s1">self</span>.<span class="pl-c1">config</span>[<span class="pl-s">'tensorboard_dir'</span>])
         
-    def setup_device(self):
-        """设置设备"""
-        self.device = torch.device(self.config['device'])
-        torch.backends.cudnn.benchmark = self.config.get('enable_cudnn_benchmark', True)
-        if self.device.type == 'cuda':
-            self.logger.info(f'Using device: {self.device} ({torch.cuda.get_device_name()})')
-        else:
-            self.logger.info(f'Using device: {self.device}')
+    <span class="pl-k">def</span> <span class="pl-en">setup_device</span>(<span class="pl-s1">self</span>):
+        <span class="pl-s">"""设置设备"""</span>
+        <span class="pl-s1">self</span>.<span class="pl-c1">device</span> <span class="pl-c1">=</span> <span class="pl-s1">torch</span>.<span class="pl-c1">device</span>(<span class="pl-s1">self</span>.<span class="pl-c1">config</span>[<span class="pl-s">'device'</span>])
+        <span class="pl-s1">torch</span>.<span class="pl-c1">backends</span>.<span class="pl-c1">cudnn</span>.<span class="pl-c1">benchmark</span> <span class="pl-c1">=</span> <span class="pl-s1">self</span>.<span class="pl-c1">config</span>.<span class="pl-c1">get</span>(<span class="pl-s">'enable_cudnn_benchmark'</span>, <span class="pl-c1">True</span>)
+        <span class="pl-k">if</span> <span class="pl-s1">self</span>.<span class="pl-c1">device</span>.<span class="pl-c1">type</span> <span class="pl-c1">==</span> <span class="pl-s">'cuda'</span>:
+            <span class="pl-s1">self</span>.<span class="pl-c1">logger</span>.<span class="pl-c1">info</span>(<span class="pl-s">f'Using device: <span class="pl-s1"><span class="pl-kos">{</span><span class="pl-s1">self</span>.<span class="pl-c1">device</span><span class="pl-kos">}</span></span> (<span class="pl-s1"><span class="pl-kos">{</span><span class="pl-s1">torch</span>.<span class="pl-c1">cuda</span>.<span class="pl-c1">get_device_name</span>()<span class="pl-kos">}</span></span>)'</span>)
+        <span class="pl-k">else</span>:
+            <span class="pl-s1">self</span>.<span class="pl-c1">logger</span>.<span class="pl-c1">info</span>(<span class="pl-s">f'Using device: <span class="pl-s1"><span class="pl-kos">{</span><span class="pl-s1">self</span>.<span class="pl-c1">device</span><span class="pl-kos">}</span></span>'</span>)
             
-    def setup_model(self):
-        """设置模型、损失函数等"""
-        self.model = self.build_model().to(self.device)
-        if self.config.get('enable_compile', False):
-            self.model.compile()
-        self.criterion = self.build_criterion()
+    <span class="pl-k">def</span> <span class="pl-en">setup_model</span>(<span class="pl-s1">self</span>):
+        <span class="pl-s">"""设置模型、损失函数等"""</span>
+        <span class="pl-s1">self</span>.<span class="pl-c1">model</span> <span class="pl-c1">=</span> <span class="pl-s1">self</span>.<span class="pl-c1">build_model</span>().<span class="pl-c1">to</span>(<span class="pl-s1">self</span>.<span class="pl-c1">device</span>)
+        <span class="pl-k">if</span> <span class="pl-s1">self</span>.<span class="pl-c1">config</span>.<span class="pl-c1">get</span>(<span class="pl-s">'enable_compile'</span>, <span class="pl-c1">False</span>):
+            <span class="pl-s1">self</span>.<span class="pl-c1">model</span>.<span class="pl-c1">compile</span>()
+        <span class="pl-s1">self</span>.<span class="pl-c1">criterion</span> <span class="pl-c1">=</span> <span class="pl-s1">self</span>.<span class="pl-c1">build_criterion</span>()
         
-        # 打印模型信息
-        n_parameters = sum(p.numel() for p in self.model.parameters())
-        self.logger.info(f'Number of parameters: {n_parameters:,}')
+        <span class="pl-c"># 打印模型信息</span>
+        <span class="pl-s1">n_parameters</span> <span class="pl-c1">=</span> <span class="pl-en">sum</span>(<span class="pl-s1">p</span>.<span class="pl-c1">numel</span>() <span class="pl-k">for</span> <span class="pl-s1">p</span> <span class="pl-c1">in</span> <span class="pl-s1">self</span>.<span class="pl-c1">model</span>.<span class="pl-c1">parameters</span>())
+        <span class="pl-s1">self</span>.<span class="pl-c1">logger</span>.<span class="pl-c1">info</span>(<span class="pl-s">f'Number of parameters: <span class="pl-s1"><span class="pl-kos">{</span><span class="pl-s1">n_parameters</span>:,<span class="pl-kos">}</span></span>'</span>)
         
-    def setup_training(self):
-        """设置训练相关组件"""
-        # 优化器
-        self.optimizer = self.build_optimizer()
+    <span class="pl-k">def</span> <span class="pl-en">setup_training</span>(<span class="pl-s1">self</span>):
+        <span class="pl-s">"""设置训练相关组件"""</span>
+        <span class="pl-c"># 优化器</span>
+        <span class="pl-s1">self</span>.<span class="pl-c1">optimizer</span> <span class="pl-c1">=</span> <span class="pl-s1">self</span>.<span class="pl-c1">build_optimizer</span>()
         
-        # 学习率调度器
-        self.scheduler = self.build_scheduler()
+        <span class="pl-c"># 学习率调度器</span>
+        <span class="pl-s1">self</span>.<span class="pl-c1">scheduler</span> <span class="pl-c1">=</span> <span class="pl-s1">self</span>.<span class="pl-c1">build_scheduler</span>()
         
-        # 梯度缩放器(用于混合精度训练)
-        self.scaler = GradScaler(
-            enabled=self.config.get('enable_amp', False)
+        <span class="pl-c"># 梯度缩放器(用于混合精度训练)</span>
+        <span class="pl-s1">self</span>.<span class="pl-c1">scaler</span> <span class="pl-c1">=</span> <span class="pl-en">GradScaler</span>(
+            <span class="pl-s1">enabled</span><span class="pl-c1">=</span><span class="pl-s1">self</span>.<span class="pl-c1">config</span>.<span class="pl-c1">get</span>(<span class="pl-s">'enable_amp'</span>, <span class="pl-c1">False</span>)
         )
-        self.gradient_accumulation_steps = self.config.get('gradient_accumulation_steps', 1)
+        <span class="pl-s1">self</span>.<span class="pl-c1">gradient_accumulation_steps</span> <span class="pl-c1">=</span> <span class="pl-s1">self</span>.<span class="pl-c1">config</span>.<span class="pl-c1">get</span>(<span class="pl-s">'gradient_accumulation_steps'</span>, <span class="pl-c1">1</span>)
         
-        # 加载检查点
-        self.steps = 0
-        self.best_metric = {}
-        self.load_checkpoint()
+        <span class="pl-c"># 加载检查点</span>
+        <span class="pl-s1">self</span>.<span class="pl-c1">steps</span> <span class="pl-c1">=</span> <span class="pl-c1">0</span>
+        <span class="pl-s1">self</span>.<span class="pl-c1">best_metric</span> <span class="pl-c1">=</span> {}
+        <span class="pl-s1">self</span>.<span class="pl-c1">load_checkpoint</span>()
         
-    def build_model(self):
-        """构建模型(需要子类实现)"""
-        raise NotImplementedError
+    <span class="pl-k">def</span> <span class="pl-en">build_model</span>(<span class="pl-s1">self</span>):
+        <span class="pl-s">"""构建模型(需要子类实现)"""</span>
+        <span class="pl-k">raise</span> <span class="pl-v">NotImplementedError</span>
         
-    def build_criterion(self):
-        """构建损失函数(需要子类实现)"""
-        raise NotImplementedError
+    <span class="pl-k">def</span> <span class="pl-en">build_criterion</span>(<span class="pl-s1">self</span>):
+        <span class="pl-s">"""构建损失函数(需要子类实现)"""</span>
+        <span class="pl-k">raise</span> <span class="pl-v">NotImplementedError</span>
         
-    def build_optimizer(self):
-        """构建优化器"""
-        # 区分需要和不需要weight decay的参数
-        decay_params = []
-        no_decay_params = []
-        for name, param in self.model.named_parameters():
-            if 'bias' in name or 'norm' in name:
-                no_decay_params.append(param)
-            else:
-                decay_params.append(param)
+    <span class="pl-k">def</span> <span class="pl-en">build_optimizer</span>(<span class="pl-s1">self</span>):
+        <span class="pl-s">"""构建优化器"""</span>
+        <span class="pl-c"># 区分需要和不需要weight decay的参数</span>
+        <span class="pl-s1">decay_params</span> <span class="pl-c1">=</span> []
+        <span class="pl-s1">no_decay_params</span> <span class="pl-c1">=</span> []
+        <span class="pl-k">for</span> <span class="pl-s1">name</span>, <span class="pl-s1">param</span> <span class="pl-c1">in</span> <span class="pl-s1">self</span>.<span class="pl-c1">model</span>.<span class="pl-c1">named_parameters</span>():
+            <span class="pl-k">if</span> <span class="pl-s">'bias'</span> <span class="pl-c1">in</span> <span class="pl-s1">name</span> <span class="pl-c1">or</span> <span class="pl-s">'norm'</span> <span class="pl-c1">in</span> <span class="pl-s1">name</span>:
+                <span class="pl-s1">no_decay_params</span>.<span class="pl-c1">append</span>(<span class="pl-s1">param</span>)
+            <span class="pl-k">else</span>:
+                <span class="pl-s1">decay_params</span>.<span class="pl-c1">append</span>(<span class="pl-s1">param</span>)
                 
-        opt_params = [
-            {'params': decay_params, 'weight_decay': self.config['weight_decay']},
-            {'params': no_decay_params, 'weight_decay': 0.0}
+        <span class="pl-s1">opt_params</span> <span class="pl-c1">=</span> [
+            {<span class="pl-s">'params'</span>: <span class="pl-s1">decay_params</span>, <span class="pl-s">'weight_decay'</span>: <span class="pl-s1">self</span>.<span class="pl-c1">config</span>[<span class="pl-s">'weight_decay'</span>]},
+            {<span class="pl-s">'params'</span>: <span class="pl-s1">no_decay_params</span>, <span class="pl-s">'weight_decay'</span>: <span class="pl-c1">0.0</span>}
         ]
         
-        return optim.AdamW(
-            opt_params,
-            lr=self.config['learning_rate'],
-            betas=self.config.get('betas', (0.9, 0.999)),
-            eps=self.config.get('eps', 1e-8)
+        <span class="pl-k">return</span> <span class="pl-s1">optim</span>.<span class="pl-c1">AdamW</span>(
+            <span class="pl-s1">opt_params</span>,
+            <span class="pl-s1">lr</span><span class="pl-c1">=</span><span class="pl-s1">self</span>.<span class="pl-c1">config</span>[<span class="pl-s">'learning_rate'</span>],
+            <span class="pl-s1">betas</span><span class="pl-c1">=</span><span class="pl-s1">self</span>.<span class="pl-c1">config</span>.<span class="pl-c1">get</span>(<span class="pl-s">'betas'</span>, (<span class="pl-c1">0.9</span>, <span class="pl-c1">0.999</span>)),
+            <span class="pl-s1">eps</span><span class="pl-c1">=</span><span class="pl-s1">self</span>.<span class="pl-c1">config</span>.<span class="pl-c1">get</span>(<span class="pl-s">'eps'</span>, <span class="pl-c1">1e-8</span>)
         )
         
-    def build_scheduler(self):
-        """构建学习率调度器(需要子类实现)"""
-        return NotImplementedError
+    <span class="pl-k">def</span> <span class="pl-en">build_scheduler</span>(<span class="pl-s1">self</span>):
+        <span class="pl-s">"""构建学习率调度器(需要子类实现)"""</span>
+        <span class="pl-k">return</span> <span class="pl-v">NotImplementedError</span>
         
-    def build_dataloader(self):
-        """构建数据加载器(需要子类实现)"""
-        raise NotImplementedError
+    <span class="pl-k">def</span> <span class="pl-en">build_dataloader</span>(<span class="pl-s1">self</span>):
+        <span class="pl-s">"""构建数据加载器(需要子类实现)"""</span>
+        <span class="pl-k">raise</span> <span class="pl-v">NotImplementedError</span>
         
-    def train_step(self, batch):
-        """单步训练(需要子类实现)"""
-        raise NotImplementedError
+    <span class="pl-k">def</span> <span class="pl-en">train_step</span>(<span class="pl-s1">self</span>, <span class="pl-s1">batch</span>):
+        <span class="pl-s">"""单步训练(需要子类实现)"""</span>
+        <span class="pl-k">raise</span> <span class="pl-v">NotImplementedError</span>
         
-    def validate(self):
-        """验证(需要子类实现)"""
-        raise NotImplementedError
+    <span class="pl-k">def</span> <span class="pl-en">validate</span>(<span class="pl-s1">self</span>):
+        <span class="pl-s">"""验证(需要子类实现)"""</span>
+        <span class="pl-k">raise</span> <span class="pl-v">NotImplementedError</span>
         
-    def save_checkpoint(self, is_best=False):
-        """保存检查点"""
-        state = {
-            'model': self.model.state_dict(),
-            'optimizer': self.optimizer.state_dict(),
-            'scheduler': self.scheduler.state_dict(),
-            'scaler': self.scaler.state_dict(),
-            'steps': self.steps,
-            'best_metric': self.best_metric,
-            'config': self.config
+    <span class="pl-k">def</span> <span class="pl-en">save_checkpoint</span>(<span class="pl-s1">self</span>, <span class="pl-s1">is_best</span><span class="pl-c1">=</span><span class="pl-c1">False</span>):
+        <span class="pl-s">"""保存检查点"""</span>
+        <span class="pl-s1">state</span> <span class="pl-c1">=</span> {
+            <span class="pl-s">'model'</span>: <span class="pl-s1">self</span>.<span class="pl-c1">model</span>.<span class="pl-c1">state_dict</span>(),
+            <span class="pl-s">'optimizer'</span>: <span class="pl-s1">self</span>.<span class="pl-c1">optimizer</span>.<span class="pl-c1">state_dict</span>(),
+            <span class="pl-s">'scheduler'</span>: <span class="pl-s1">self</span>.<span class="pl-c1">scheduler</span>.<span class="pl-c1">state_dict</span>(),
+            <span class="pl-s">'scaler'</span>: <span class="pl-s1">self</span>.<span class="pl-c1">scaler</span>.<span class="pl-c1">state_dict</span>(),
+            <span class="pl-s">'steps'</span>: <span class="pl-s1">self</span>.<span class="pl-c1">steps</span>,
+            <span class="pl-s">'best_metric'</span>: <span class="pl-s1">self</span>.<span class="pl-c1">best_metric</span>,
+            <span class="pl-s">'config'</span>: <span class="pl-s1">self</span>.<span class="pl-c1">config</span>
         }
         
-        # 保存最新检查点
-        torch.save(
-            state,
-            os.path.join(self.config['checkpoint_dir'], 'latest.pt')
+        <span class="pl-c"># 保存最新检查点</span>
+        <span class="pl-s1">torch</span>.<span class="pl-c1">save</span>(
+            <span class="pl-s1">state</span>,
+            <span class="pl-s1">os</span>.<span class="pl-c1">path</span>.<span class="pl-c1">join</span>(<span class="pl-s1">self</span>.<span class="pl-c1">config</span>[<span class="pl-s">'checkpoint_dir'</span>], <span class="pl-s">'latest.pt'</span>)
         )
         
-        # 保存最佳检查点
-        if is_best:
-            shutil.copy(
-                os.path.join(self.config['checkpoint_dir'], 'latest.pt'),
-                os.path.join(self.config['checkpoint_dir'], 'best.pt')
+        <span class="pl-c"># 保存最佳检查点</span>
+        <span class="pl-k">if</span> <span class="pl-s1">is_best</span>:
+            <span class="pl-s1">shutil</span>.<span class="pl-c1">copy</span>(
+                <span class="pl-s1">os</span>.<span class="pl-c1">path</span>.<span class="pl-c1">join</span>(<span class="pl-s1">self</span>.<span class="pl-c1">config</span>[<span class="pl-s">'checkpoint_dir'</span>], <span class="pl-s">'latest.pt'</span>),
+                <span class="pl-s1">os</span>.<span class="pl-c1">path</span>.<span class="pl-c1">join</span>(<span class="pl-s1">self</span>.<span class="pl-c1">config</span>[<span class="pl-s">'checkpoint_dir'</span>], <span class="pl-s">'best.pt'</span>)
             )
             
-    def load_checkpoint(self):
-        """加载检查点"""
-        checkpoint_path = os.path.join(
-            self.config['checkpoint_dir'],
-            'latest.pt'
+    <span class="pl-k">def</span> <span class="pl-en">load_checkpoint</span>(<span class="pl-s1">self</span>):
+        <span class="pl-s">"""加载检查点"""</span>
+        <span class="pl-s1">checkpoint_path</span> <span class="pl-c1">=</span> <span class="pl-s1">os</span>.<span class="pl-c1">path</span>.<span class="pl-c1">join</span>(
+            <span class="pl-s1">self</span>.<span class="pl-c1">config</span>[<span class="pl-s">'checkpoint_dir'</span>],
+            <span class="pl-s">'latest.pt'</span>
         )
         
-        if os.path.exists(checkpoint_path):
-            checkpoint = torch.load(
-                checkpoint_path,
-                map_location=self.device
+        <span class="pl-k">if</span> <span class="pl-s1">os</span>.<span class="pl-c1">path</span>.<span class="pl-c1">exists</span>(<span class="pl-s1">checkpoint_path</span>):
+            <span class="pl-s1">checkpoint</span> <span class="pl-c1">=</span> <span class="pl-s1">torch</span>.<span class="pl-c1">load</span>(
+                <span class="pl-s1">checkpoint_path</span>,
+                <span class="pl-s1">map_location</span><span class="pl-c1">=</span><span class="pl-s1">self</span>.<span class="pl-c1">device</span>
             )
             
-            self.model.load_state_dict(checkpoint['model'])
-            self.optimizer.load_state_dict(checkpoint['optimizer'])
-            self.scheduler.load_state_dict(checkpoint['scheduler'])
-            self.scaler.load_state_dict(checkpoint['scaler'])
-            self.steps = checkpoint['steps']
-            self.best_metric = checkpoint['best_metric']
+            <span class="pl-s1">self</span>.<span class="pl-c1">model</span>.<span class="pl-c1">load_state_dict</span>(<span class="pl-s1">checkpoint</span>[<span class="pl-s">'model'</span>])
+            <span class="pl-s1">self</span>.<span class="pl-c1">optimizer</span>.<span class="pl-c1">load_state_dict</span>(<span class="pl-s1">checkpoint</span>[<span class="pl-s">'optimizer'</span>])
+            <span class="pl-s1">self</span>.<span class="pl-c1">scheduler</span>.<span class="pl-c1">load_state_dict</span>(<span class="pl-s1">checkpoint</span>[<span class="pl-s">'scheduler'</span>])
+            <span class="pl-s1">self</span>.<span class="pl-c1">scaler</span>.<span class="pl-c1">load_state_dict</span>(<span class="pl-s1">checkpoint</span>[<span class="pl-s">'scaler'</span>])
+            <span class="pl-s1">self</span>.<span class="pl-c1">steps</span> <span class="pl-c1">=</span> <span class="pl-s1">checkpoint</span>[<span class="pl-s">'steps'</span>]
+            <span class="pl-s1">self</span>.<span class="pl-c1">best_metric</span> <span class="pl-c1">=</span> <span class="pl-s1">checkpoint</span>[<span class="pl-s">'best_metric'</span>]
             
-            self.logger.info(f'Loaded checkpoint from {checkpoint_path}')
-            self.logger.info(f'Training will resume from step {self.steps}')
+            <span class="pl-s1">self</span>.<span class="pl-c1">logger</span>.<span class="pl-c1">info</span>(<span class="pl-s">f'Loaded checkpoint from <span class="pl-s1"><span class="pl-kos">{</span><span class="pl-s1">checkpoint_path</span><span class="pl-kos">}</span></span>'</span>)
+            <span class="pl-s1">self</span>.<span class="pl-c1">logger</span>.<span class="pl-c1">info</span>(<span class="pl-s">f'Training will resume from step <span class="pl-s1"><span class="pl-kos">{</span><span class="pl-s1">self</span>.<span class="pl-c1">steps</span><span class="pl-kos">}</span></span>'</span>)
     
-    @staticmethod
-    def is_better_performance(baseline_dict, compare_dict):
-        """
-        判断compare_dict中的指标是否全面超过baseline_dict
+    <span class="pl-en">@<span class="pl-s1">staticmethod</span></span>
+    <span class="pl-k">def</span> <span class="pl-en">is_better_performance</span>(<span class="pl-s1">baseline_dict</span>, <span class="pl-s1">compare_dict</span>):
+        <span class="pl-s">"""</span>
+<span class="pl-s">        判断compare_dict中的指标是否全面超过baseline_dict</span>
+<span class="pl-s">        </span>
+<span class="pl-s">        Args:</span>
+<span class="pl-s">            baseline_dict: 基准字典,格式为 {指标名: 值}</span>
+<span class="pl-s">            compare_dict: 比较字典,格式为 {指标名: 值} </span>
+<span class="pl-s">        </span>
+<span class="pl-s">        Returns:</span>
+<span class="pl-s">            bool: 如果compare_dict中所有指标都严格大于baseline_dict则返回True,否则返回False</span>
+<span class="pl-s">        """</span>
+        <span class="pl-k">if</span> <span class="pl-c1">not</span> <span class="pl-s1">baseline_dict</span>:
+            <span class="pl-k">return</span> <span class="pl-c1">True</span>
         
-        Args:
-            baseline_dict: 基准字典,格式为 {指标名: 值}
-            compare_dict: 比较字典,格式为 {指标名: 值} 
-        
-        Returns:
-            bool: 如果compare_dict中所有指标都严格大于baseline_dict则返回True,否则返回False
-        """
-        if not baseline_dict:
-            return True
-        
-        # 检查两个字典的键是否一致
-        if set(baseline_dict.keys()) != set(compare_dict.keys()):
-            return False
+        <span class="pl-c"># 检查两个字典的键是否一致</span>
+        <span class="pl-k">if</span> <span class="pl-en">set</span>(<span class="pl-s1">baseline_dict</span>.<span class="pl-c1">keys</span>()) <span class="pl-c1">!=</span> <span class="pl-en">set</span>(<span class="pl-s1">compare_dict</span>.<span class="pl-c1">keys</span>()):
+            <span class="pl-k">return</span> <span class="pl-c1">False</span>
             
-        # 检查每个指标是否都有提升
-        for metric in baseline_dict:
-            if compare_dict[metric] &lt;= baseline_dict[metric]:
-                return False
+        <span class="pl-c"># 检查每个指标是否都有提升</span>
+        <span class="pl-k">for</span> <span class="pl-s1">metric</span> <span class="pl-c1">in</span> <span class="pl-s1">baseline_dict</span>:
+            <span class="pl-k">if</span> <span class="pl-s1">compare_dict</span>[<span class="pl-s1">metric</span>] <span class="pl-c1">&lt;=</span> <span class="pl-s1">baseline_dict</span>[<span class="pl-s1">metric</span>]:
+                <span class="pl-k">return</span> <span class="pl-c1">False</span>
                 
-        return True
+        <span class="pl-k">return</span> <span class="pl-c1">True</span>
             
-    def train(self):
-        """训练流程"""
-        train_loader = self.build_dataloader()
-        self.model.train()
+    <span class="pl-k">def</span> <span class="pl-en">train</span>(<span class="pl-s1">self</span>):
+        <span class="pl-s">"""训练流程"""</span>
+        <span class="pl-s1">train_loader</span> <span class="pl-c1">=</span> <span class="pl-s1">self</span>.<span class="pl-c1">build_dataloader</span>()
+        <span class="pl-s1">self</span>.<span class="pl-c1">model</span>.<span class="pl-c1">train</span>()
         
-        self.logger.info('Start training...')
-        pbar = tqdm(total=self.config['max_steps'], initial=self.steps)
+        <span class="pl-s1">self</span>.<span class="pl-c1">logger</span>.<span class="pl-c1">info</span>(<span class="pl-s">'Start training...'</span>)
+        <span class="pl-s1">pbar</span> <span class="pl-c1">=</span> <span class="pl-en">tqdm</span>(<span class="pl-s1">total</span><span class="pl-c1">=</span><span class="pl-s1">self</span>.<span class="pl-c1">config</span>[<span class="pl-s">'max_steps'</span>], <span class="pl-s1">initial</span><span class="pl-c1">=</span><span class="pl-s1">self</span>.<span class="pl-c1">steps</span>)
         
-        while self.steps &lt; self.config['max_steps']:
-            for batch in train_loader:
-                # 训练一步
-                with torch.autocast(device_type=self.config['device'], enabled=self.config.get('enable_amp', False)):
-                    loss = self.train_step(batch)
-                self.scaler.scale(loss / self.gradient_accumulation_steps).backward()
+        <span class="pl-k">while</span> <span class="pl-s1">self</span>.<span class="pl-c1">steps</span> <span class="pl-c1">&lt;</span> <span class="pl-s1">self</span>.<span class="pl-c1">config</span>[<span class="pl-s">'max_steps'</span>]:
+            <span class="pl-k">for</span> <span class="pl-s1">batch</span> <span class="pl-c1">in</span> <span class="pl-s1">train_loader</span>:
+                <span class="pl-c"># 训练一步</span>
+                <span class="pl-k">with</span> <span class="pl-s1">torch</span>.<span class="pl-c1">autocast</span>(<span class="pl-s1">device_type</span><span class="pl-c1">=</span><span class="pl-s1">self</span>.<span class="pl-c1">config</span>[<span class="pl-s">'device'</span>], <span class="pl-s1">enabled</span><span class="pl-c1">=</span><span class="pl-s1">self</span>.<span class="pl-c1">config</span>.<span class="pl-c1">get</span>(<span class="pl-s">'enable_amp'</span>, <span class="pl-c1">False</span>)):
+                    <span class="pl-s1">loss</span> <span class="pl-c1">=</span> <span class="pl-s1">self</span>.<span class="pl-c1">train_step</span>(<span class="pl-s1">batch</span>)
+                <span class="pl-s1">self</span>.<span class="pl-c1">scaler</span>.<span class="pl-c1">scale</span>(<span class="pl-s1">loss</span> <span class="pl-c1">/</span> <span class="pl-s1">self</span>.<span class="pl-c1">gradient_accumulation_steps</span>).<span class="pl-c1">backward</span>()
                 
-                if (self.steps + 1) % self.gradient_accumulation_steps == 0:
-                    # 梯度裁剪
-                    if self.config.get('max_grad_norm', 0) &gt; 0:
-                        self.scaler.unscale_(self.optimizer)
-                        clip_grad_norm_(
-                            self.model.parameters(),
-                            self.config['max_grad_norm']
+                <span class="pl-k">if</span> (<span class="pl-s1">self</span>.<span class="pl-c1">steps</span> <span class="pl-c1">+</span> <span class="pl-c1">1</span>) <span class="pl-c1">%</span> <span class="pl-s1">self</span>.<span class="pl-c1">gradient_accumulation_steps</span> <span class="pl-c1">==</span> <span class="pl-c1">0</span>:
+                    <span class="pl-c"># 梯度裁剪</span>
+                    <span class="pl-k">if</span> <span class="pl-s1">self</span>.<span class="pl-c1">config</span>.<span class="pl-c1">get</span>(<span class="pl-s">'max_grad_norm'</span>, <span class="pl-c1">0</span>) <span class="pl-c1">&gt;</span> <span class="pl-c1">0</span>:
+                        <span class="pl-s1">self</span>.<span class="pl-c1">scaler</span>.<span class="pl-c1">unscale_</span>(<span class="pl-s1">self</span>.<span class="pl-c1">optimizer</span>)
+                        <span class="pl-en">clip_grad_norm_</span>(
+                            <span class="pl-s1">self</span>.<span class="pl-c1">model</span>.<span class="pl-c1">parameters</span>(),
+                            <span class="pl-s1">self</span>.<span class="pl-c1">config</span>[<span class="pl-s">'max_grad_norm'</span>]
                         )
 
-                    # 优化器步进
-                    self.scaler.step(self.optimizer)
-                    self.scaler.update()
-                    self.optimizer.zero_grad(set_to_none=True)
-                self.scheduler.step()
+                    <span class="pl-c"># 优化器步进</span>
+                    <span class="pl-s1">self</span>.<span class="pl-c1">scaler</span>.<span class="pl-c1">step</span>(<span class="pl-s1">self</span>.<span class="pl-c1">optimizer</span>)
+                    <span class="pl-s1">self</span>.<span class="pl-c1">scaler</span>.<span class="pl-c1">update</span>()
+                    <span class="pl-s1">self</span>.<span class="pl-c1">optimizer</span>.<span class="pl-c1">zero_grad</span>(<span class="pl-s1">set_to_none</span><span class="pl-c1">=</span><span class="pl-c1">True</span>)
+                <span class="pl-s1">self</span>.<span class="pl-c1">scheduler</span>.<span class="pl-c1">step</span>()
                 
-                # 记录
-                self.writer.add_scalar('train/loss', loss, self.steps)
-                self.writer.add_scalar(
-                    'train/lr',
-                    self.scheduler.get_last_lr()[0],
-                    self.steps
+                <span class="pl-c"># 记录</span>
+                <span class="pl-s1">self</span>.<span class="pl-c1">writer</span>.<span class="pl-c1">add_scalar</span>(<span class="pl-s">'train/loss'</span>, <span class="pl-s1">loss</span>, <span class="pl-s1">self</span>.<span class="pl-c1">steps</span>)
+                <span class="pl-s1">self</span>.<span class="pl-c1">writer</span>.<span class="pl-c1">add_scalar</span>(
+                    <span class="pl-s">'train/lr'</span>,
+                    <span class="pl-s1">self</span>.<span class="pl-c1">scheduler</span>.<span class="pl-c1">get_last_lr</span>()[<span class="pl-c1">0</span>],
+                    <span class="pl-s1">self</span>.<span class="pl-c1">steps</span>
                 )
                 
-                self.steps += 1
-                pbar.update(1)
+                <span class="pl-s1">self</span>.<span class="pl-c1">steps</span> <span class="pl-c1">+=</span> <span class="pl-c1">1</span>
+                <span class="pl-s1">pbar</span>.<span class="pl-c1">update</span>(<span class="pl-c1">1</span>)
                 
-                # 验证和保存
-                if self.steps % self.config['save_every'] == 0:
-                    metric = self.validate()
-                    for i in metric:
-                        self.logger.info(f'Validation {i}: {metric[i]}')
-                        self.writer.add_scalar(f'val/{i}', metric[i], self.steps)
+                <span class="pl-c"># 验证和保存</span>
+                <span class="pl-k">if</span> <span class="pl-s1">self</span>.<span class="pl-c1">steps</span> <span class="pl-c1">%</span> <span class="pl-s1">self</span>.<span class="pl-c1">config</span>[<span class="pl-s">'save_every'</span>] <span class="pl-c1">==</span> <span class="pl-c1">0</span>:
+                    <span class="pl-s1">metric</span> <span class="pl-c1">=</span> <span class="pl-s1">self</span>.<span class="pl-c1">validate</span>()
+                    <span class="pl-k">for</span> <span class="pl-s1">i</span> <span class="pl-c1">in</span> <span class="pl-s1">metric</span>:
+                        <span class="pl-s1">self</span>.<span class="pl-c1">logger</span>.<span class="pl-c1">info</span>(<span class="pl-s">f'Validation <span class="pl-s1"><span class="pl-kos">{</span><span class="pl-s1">i</span><span class="pl-kos">}</span></span>: <span class="pl-s1"><span class="pl-kos">{</span><span class="pl-s1">metric</span>[<span class="pl-s1">i</span>]<span class="pl-kos">}</span></span>'</span>)
+                        <span class="pl-s1">self</span>.<span class="pl-c1">writer</span>.<span class="pl-c1">add_scalar</span>(<span class="pl-s">f'val/<span class="pl-s1"><span class="pl-kos">{</span><span class="pl-s1">i</span><span class="pl-kos">}</span></span>'</span>, <span class="pl-s1">metric</span>[<span class="pl-s1">i</span>], <span class="pl-s1">self</span>.<span class="pl-c1">steps</span>)
                     
-                    is_best = self.is_better_performance(self.best_metric, metric)
-                    if is_best:
-                        self.best_metric = metric
+                    <span class="pl-s1">is_best</span> <span class="pl-c1">=</span> <span class="pl-s1">self</span>.<span class="pl-c1">is_better_performance</span>(<span class="pl-s1">self</span>.<span class="pl-c1">best_metric</span>, <span class="pl-s1">metric</span>)
+                    <span class="pl-k">if</span> <span class="pl-s1">is_best</span>:
+                        <span class="pl-s1">self</span>.<span class="pl-c1">best_metric</span> <span class="pl-c1">=</span> <span class="pl-s1">metric</span>
 
-                    self.model.train()
-                    self.save_checkpoint(is_best)
+                    <span class="pl-s1">self</span>.<span class="pl-c1">model</span>.<span class="pl-c1">train</span>()
+                    <span class="pl-s1">self</span>.<span class="pl-c1">save_checkpoint</span>(<span class="pl-s1">is_best</span>)
                     
-                if self.steps &gt;= self.config['max_steps']:
-                    break
+                <span class="pl-k">if</span> <span class="pl-s1">self</span>.<span class="pl-c1">steps</span> <span class="pl-c1">&gt;=</span> <span class="pl-s1">self</span>.<span class="pl-c1">config</span>[<span class="pl-s">'max_steps'</span>]:
+                    <span class="pl-k">break</span>
                 
-            gc.collect()
-            torch.cuda.empty_cache()
+            <span class="pl-s1">gc</span>.<span class="pl-c1">collect</span>()
+            <span class="pl-s1">torch</span>.<span class="pl-c1">cuda</span>.<span class="pl-c1">empty_cache</span>()
                     
-        pbar.close()
-        self.logger.info('Training finished!')
+        <span class="pl-s1">pbar</span>.<span class="pl-c1">close</span>()
+        <span class="pl-s1">self</span>.<span class="pl-c1">logger</span>.<span class="pl-c1">info</span>(<span class="pl-s">'Training finished!'</span>)
 
 
-def main():
-    """主函数"""
-    # 加载配置
-    with open('config.json') as f:
-        config = json.load(f)
+<span class="pl-k">def</span> <span class="pl-en">main</span>():
+    <span class="pl-s">"""主函数"""</span>
+    <span class="pl-c"># 加载配置</span>
+    <span class="pl-k">with</span> <span class="pl-en">open</span>(<span class="pl-s">'config.json'</span>) <span class="pl-k">as</span> <span class="pl-s1">f</span>:
+        <span class="pl-s1">config</span> <span class="pl-c1">=</span> <span class="pl-s1">json</span>.<span class="pl-c1">load</span>(<span class="pl-s1">f</span>)
         
-    # 创建输出目录
-    os.makedirs(config['checkpoint_dir'], exist_ok=True)
-    os.makedirs(config['tensorboard_dir'], exist_ok=True)
+    <span class="pl-c"># 创建输出目录</span>
+    <span class="pl-s1">os</span>.<span class="pl-c1">makedirs</span>(<span class="pl-s1">config</span>[<span class="pl-s">'checkpoint_dir'</span>], <span class="pl-s1">exist_ok</span><span class="pl-c1">=</span><span class="pl-c1">True</span>)
+    <span class="pl-s1">os</span>.<span class="pl-c1">makedirs</span>(<span class="pl-s1">config</span>[<span class="pl-s">'tensorboard_dir'</span>], <span class="pl-s1">exist_ok</span><span class="pl-c1">=</span><span class="pl-c1">True</span>)
     
-    # 训练
-    trainer = Trainer(config)
-    trainer.train()
+    <span class="pl-c"># 训练</span>
+    <span class="pl-s1">trainer</span> <span class="pl-c1">=</span> <span class="pl-en">Trainer</span>(<span class="pl-s1">config</span>)
+    <span class="pl-s1">trainer</span>.<span class="pl-c1">train</span>()
     
-if __name__ == '__main__':
-    try:
-        main()
-    except KeyboardInterrupt:
-        pass
-</code></pre>
+<span class="pl-k">if</span> <span class="pl-s1">__name__</span> <span class="pl-c1">==</span> <span class="pl-s">'__main__'</span>:
+    <span class="pl-k">try</span>:
+        <span class="pl-en">main</span>()
+    <span class="pl-k">except</span> <span class="pl-v">KeyboardInterrupt</span>:
+        <span class="pl-k">pass</span></pre></div>
 <p></p>
 </details> 
 <p><code class="notranslate">trainer.py</code> 简单整合了几个常用的训练手段, 比如混合精度训练, 梯度裁剪, 梯度累计, weight_decay(写死了), tensorboard的记录, 断点续训等操作, 需要注意的是, <code class="notranslate">trainer.py</code> 没有使用 epoch 作为训练进度, 而是用了更精细的 step (每次迭代参数即为一个step), 使用的时候需要自行实现模型构建, 损失函数构建 学习率调度器 数据集加载器, 单步训练, 验证的流程的子类实现</p>
@@ -3637,404 +3635,403 @@ pass</p>
 <p>有了流程接下来编写我们的训练代码</p>
 <details><summary>train.py(代码未整理完毕, 非初版代码, 仅供参考)</summary>
 <p>
-</p><pre lang="python" class="notranslate"><code class="notranslate">import os
-import random
+</p><div class="highlight highlight-source-python"><pre class="notranslate"><span class="pl-k">import</span> <span class="pl-s1">os</span>
+<span class="pl-k">import</span> <span class="pl-s1">random</span>
 
-import cv2
-import numpy as np
-from sklearn.metrics import f1_score
-import torch
-from PIL import Image
-from torch.optim.lr_scheduler import LambdaLR
-from torch.utils.data import DataLoader, Dataset
-from datasets import load_dataset
-from torchvision import transforms
+<span class="pl-k">import</span> <span class="pl-s1">cv2</span>
+<span class="pl-k">import</span> <span class="pl-s1">numpy</span> <span class="pl-k">as</span> <span class="pl-s1">np</span>
+<span class="pl-k">from</span> <span class="pl-s1">sklearn</span>.<span class="pl-s1">metrics</span> <span class="pl-k">import</span> <span class="pl-s1">f1_score</span>
+<span class="pl-k">import</span> <span class="pl-s1">torch</span>
+<span class="pl-k">from</span> <span class="pl-c1">PIL</span> <span class="pl-k">import</span> <span class="pl-v">Image</span>
+<span class="pl-k">from</span> <span class="pl-s1">torch</span>.<span class="pl-s1">optim</span>.<span class="pl-s1">lr_scheduler</span> <span class="pl-k">import</span> <span class="pl-v">LambdaLR</span>
+<span class="pl-k">from</span> <span class="pl-s1">torch</span>.<span class="pl-s1">utils</span>.<span class="pl-s1">data</span> <span class="pl-k">import</span> <span class="pl-v">DataLoader</span>, <span class="pl-v">Dataset</span>
+<span class="pl-k">from</span> <span class="pl-s1">datasets</span> <span class="pl-k">import</span> <span class="pl-s1">load_dataset</span>
+<span class="pl-k">from</span> <span class="pl-s1">torchvision</span> <span class="pl-k">import</span> <span class="pl-s1">transforms</span>
 
-# from torchvision.models import resnet18
-from model import convnext_base
-from trainer import Trainer
+<span class="pl-c"># from torchvision.models import resnet18</span>
+<span class="pl-k">from</span> <span class="pl-s1">model</span> <span class="pl-k">import</span> <span class="pl-s1">convnext_base</span>
+<span class="pl-k">from</span> <span class="pl-s1">trainer</span> <span class="pl-k">import</span> <span class="pl-v">Trainer</span>
 
-image_size = 224
-batch_size = 32
-device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
+<span class="pl-s1">image_size</span> <span class="pl-c1">=</span> <span class="pl-c1">224</span>
+<span class="pl-s1">batch_size</span> <span class="pl-c1">=</span> <span class="pl-c1">32</span>
+<span class="pl-s1">device</span> <span class="pl-c1">=</span> <span class="pl-s1">torch</span>.<span class="pl-c1">device</span>(<span class="pl-s">"cuda"</span>) <span class="pl-k">if</span> <span class="pl-s1">torch</span>.<span class="pl-c1">cuda</span>.<span class="pl-c1">is_available</span>() <span class="pl-k">else</span> <span class="pl-s1">torch</span>.<span class="pl-c1">device</span>(<span class="pl-s">"cpu"</span>)
 
 
-# def get_color_from_image(image_path):
-#     """
-#     从纯色图片中获取RGB颜色值
-#     返回: (R, G, B)元组
-#     """
-#     # 读取图片
-#     image = Image.open(image_path).convert('RGB')
-#     # 转换为numpy数组
-#     img_array = np.array(image)
+<span class="pl-c"># def get_color_from_image(image_path):</span>
+<span class="pl-c">#     """</span>
+<span class="pl-c">#     从纯色图片中获取RGB颜色值</span>
+<span class="pl-c">#     返回: (R, G, B)元组</span>
+<span class="pl-c">#     """</span>
+<span class="pl-c">#     # 读取图片</span>
+<span class="pl-c">#     image = Image.open(image_path).convert('RGB')</span>
+<span class="pl-c">#     # 转换为numpy数组</span>
+<span class="pl-c">#     img_array = np.array(image)</span>
     
-#     # 获取图片中心点的颜色值
-#     h, w = img_array.shape[:2]
-#     center_color = img_array[h//2, w//2]
+<span class="pl-c">#     # 获取图片中心点的颜色值</span>
+<span class="pl-c">#     h, w = img_array.shape[:2]</span>
+<span class="pl-c">#     center_color = img_array[h//2, w//2]</span>
     
-#     # 或者计算整个图片的平均颜色
-#     average_color = img_array.mean(axis=(0,1)).astype(int)
+<span class="pl-c">#     # 或者计算整个图片的平均颜色</span>
+<span class="pl-c">#     average_color = img_array.mean(axis=(0,1)).astype(int)</span>
     
-#     return tuple(average_color)  # 或者 tuple(average_color)
+<span class="pl-c">#     return tuple(average_color)  # 或者 tuple(average_color)</span>
 
 
-# class AugmentationUtils:
-#     @staticmethod
-#     def add_color_mask(image, is_positive):
-#         """给图片添加颜色遮罩"""
-#         # 转换为numpy数组并确保类型为uint8
-#         image = np.array(image, dtype=np.uint8)
+<span class="pl-c"># class AugmentationUtils:</span>
+<span class="pl-c">#     @staticmethod</span>
+<span class="pl-c">#     def add_color_mask(image, is_positive):</span>
+<span class="pl-c">#         """给图片添加颜色遮罩"""</span>
+<span class="pl-c">#         # 转换为numpy数组并确保类型为uint8</span>
+<span class="pl-c">#         image = np.array(image, dtype=np.uint8)</span>
         
-#         # 创建与图像相同大小的遮罩
-#         mask = np.ones_like(image, dtype=np.uint8)
+<span class="pl-c">#         # 创建与图像相同大小的遮罩</span>
+<span class="pl-c">#         mask = np.ones_like(image, dtype=np.uint8)</span>
         
-#         # 随机生成颜色
-#         if is_positive:
-#             color = [random.randint(0, 255) for _ in range(3)]
-#         else:
-#             color = get_color_from_image('22.png')
+<span class="pl-c">#         # 随机生成颜色</span>
+<span class="pl-c">#         if is_positive:</span>
+<span class="pl-c">#             color = [random.randint(0, 255) for _ in range(3)]</span>
+<span class="pl-c">#         else:</span>
+<span class="pl-c">#             color = get_color_from_image('22.png')</span>
         
-#         # 为遮罩赋予颜色    
-#         for i in range(3):
-#             mask[:, :, i] = color[i]
+<span class="pl-c">#         # 为遮罩赋予颜色    </span>
+<span class="pl-c">#         for i in range(3):</span>
+<span class="pl-c">#             mask[:, :, i] = color[i]</span>
         
-#         # 确保mask也是uint8类型
-#         mask = mask.astype(np.uint8)
+<span class="pl-c">#         # 确保mask也是uint8类型</span>
+<span class="pl-c">#         mask = mask.astype(np.uint8)</span>
         
-#         # 添加遮罩
-#         alpha = 0.5  # 透明度
-#         image = cv2.addWeighted(image, 1-alpha, mask, alpha, 0)
+<span class="pl-c">#         # 添加遮罩</span>
+<span class="pl-c">#         alpha = 0.5  # 透明度</span>
+<span class="pl-c">#         image = cv2.addWeighted(image, 1-alpha, mask, alpha, 0)</span>
         
-#         return Image.fromarray(image)
+<span class="pl-c">#         return Image.fromarray(image)</span>
 
-#     @staticmethod
-#     def embed_positive_in_negative(positive_img, negative_img):
-#         """在负样本中嵌入正样本"""
-#         # 转换为numpy数组
-#         pos_img = np.array(positive_img)
-#         neg_img = np.array(negative_img)
+<span class="pl-c">#     @staticmethod</span>
+<span class="pl-c">#     def embed_positive_in_negative(positive_img, negative_img):</span>
+<span class="pl-c">#         """在负样本中嵌入正样本"""</span>
+<span class="pl-c">#         # 转换为numpy数组</span>
+<span class="pl-c">#         pos_img = np.array(positive_img)</span>
+<span class="pl-c">#         neg_img = np.array(negative_img)</span>
         
-#         # 确保图像是3通道的
-#         if len(pos_img.shape) == 2:
-#             pos_img = cv2.cvtColor(pos_img, cv2.COLOR_GRAY2BGR)
-#         if len(neg_img.shape) == 2:
-#             neg_img = cv2.cvtColor(neg_img, cv2.COLOR_GRAY2BGR)
+<span class="pl-c">#         # 确保图像是3通道的</span>
+<span class="pl-c">#         if len(pos_img.shape) == 2:</span>
+<span class="pl-c">#             pos_img = cv2.cvtColor(pos_img, cv2.COLOR_GRAY2BGR)</span>
+<span class="pl-c">#         if len(neg_img.shape) == 2:</span>
+<span class="pl-c">#             neg_img = cv2.cvtColor(neg_img, cv2.COLOR_GRAY2BGR)</span>
         
-#         # 获取负样本尺寸
-#         h, w = neg_img.shape[:2]
-#         pos_h, pos_w = pos_img.shape[:2]
+<span class="pl-c">#         # 获取负样本尺寸</span>
+<span class="pl-c">#         h, w = neg_img.shape[:2]</span>
+<span class="pl-c">#         pos_h, pos_w = pos_img.shape[:2]</span>
         
-#         # 计算合适的缩放比例
-#         scale = min(
-#             random.uniform(0.5, 0.8),
-#             (w * 0.8) / pos_w,
-#             (h * 0.8) / pos_h
-#         )
+<span class="pl-c">#         # 计算合适的缩放比例</span>
+<span class="pl-c">#         scale = min(</span>
+<span class="pl-c">#             random.uniform(0.5, 0.8),</span>
+<span class="pl-c">#             (w * 0.8) / pos_w,</span>
+<span class="pl-c">#             (h * 0.8) / pos_h</span>
+<span class="pl-c">#         )</span>
         
-#         # 缩放正样本
-#         new_size = (int(pos_w * scale), int(pos_h * scale))
-#         pos_img_resized = cv2.resize(pos_img, new_size)
+<span class="pl-c">#         # 缩放正样本</span>
+<span class="pl-c">#         new_size = (int(pos_w * scale), int(pos_h * scale))</span>
+<span class="pl-c">#         pos_img_resized = cv2.resize(pos_img, new_size)</span>
         
-#         # 确保有效的随机位置范围
-#         max_x = max(0, w - new_size[0])
-#         max_y = max(0, h - new_size[1])
+<span class="pl-c">#         # 确保有效的随机位置范围</span>
+<span class="pl-c">#         max_x = max(0, w - new_size[0])</span>
+<span class="pl-c">#         max_y = max(0, h - new_size[1])</span>
         
-#         # 随机选择插入位置
-#         x = random.randint(0, max_x) if max_x &gt; 0 else 0
-#         y = random.randint(0, max_y) if max_y &gt; 0 else 0
+<span class="pl-c">#         # 随机选择插入位置</span>
+<span class="pl-c">#         x = random.randint(0, max_x) if max_x &gt; 0 else 0</span>
+<span class="pl-c">#         y = random.randint(0, max_y) if max_y &gt; 0 else 0</span>
         
-#         # 获取ROI区域并确保与缩放后的正样本具有相同的形状
-#         roi = neg_img[y:y+new_size[1], x:x+new_size[0]]
+<span class="pl-c">#         # 获取ROI区域并确保与缩放后的正样本具有相同的形状</span>
+<span class="pl-c">#         roi = neg_img[y:y+new_size[1], x:x+new_size[0]]</span>
         
-#         # 确保ROI和pos_img_resized具有相同的形状和通道数
-#         if roi.shape == pos_img_resized.shape:
-#             # 混合图像
-#             blended = cv2.addWeighted(roi, 0.3, pos_img_resized, 0.7, 0)
-#             neg_img[y:y+new_size[1], x:x+new_size[0]] = blended
+<span class="pl-c">#         # 确保ROI和pos_img_resized具有相同的形状和通道数</span>
+<span class="pl-c">#         if roi.shape == pos_img_resized.shape:</span>
+<span class="pl-c">#             # 混合图像</span>
+<span class="pl-c">#             blended = cv2.addWeighted(roi, 0.3, pos_img_resized, 0.7, 0)</span>
+<span class="pl-c">#             neg_img[y:y+new_size[1], x:x+new_size[0]] = blended</span>
         
-#         return Image.fromarray(neg_img)
+<span class="pl-c">#         return Image.fromarray(neg_img)</span>
     
-#     @staticmethod
-#     def embed_same(positive_img, negative_img):
-#         """在负样本中嵌入正样本"""
-#         # 转换为numpy数组
-#         pos_img = np.array(positive_img)
-#         neg_img = np.array(negative_img)
+<span class="pl-c">#     @staticmethod</span>
+<span class="pl-c">#     def embed_same(positive_img, negative_img):</span>
+<span class="pl-c">#         """在负样本中嵌入正样本"""</span>
+<span class="pl-c">#         # 转换为numpy数组</span>
+<span class="pl-c">#         pos_img = np.array(positive_img)</span>
+<span class="pl-c">#         neg_img = np.array(negative_img)</span>
         
-#         # 确保图像是3通道的
-#         if len(pos_img.shape) == 2:
-#             pos_img = cv2.cvtColor(pos_img, cv2.COLOR_GRAY2BGR)
-#         if len(neg_img.shape) == 2:
-#             neg_img = cv2.cvtColor(neg_img, cv2.COLOR_GRAY2BGR)
+<span class="pl-c">#         # 确保图像是3通道的</span>
+<span class="pl-c">#         if len(pos_img.shape) == 2:</span>
+<span class="pl-c">#             pos_img = cv2.cvtColor(pos_img, cv2.COLOR_GRAY2BGR)</span>
+<span class="pl-c">#         if len(neg_img.shape) == 2:</span>
+<span class="pl-c">#             neg_img = cv2.cvtColor(neg_img, cv2.COLOR_GRAY2BGR)</span>
         
-#         # 获取负样本尺寸
-#         h, w = neg_img.shape[:2]
-#         pos_h, pos_w = pos_img.shape[:2]
+<span class="pl-c">#         # 获取负样本尺寸</span>
+<span class="pl-c">#         h, w = neg_img.shape[:2]</span>
+<span class="pl-c">#         pos_h, pos_w = pos_img.shape[:2]</span>
         
-#         # 计算合适的缩放比例
-#         scale = min(
-#             random.uniform(0.5, 0.8),
-#             (w * 0.8) / pos_w,
-#             (h * 0.8) / pos_h
-#         )
+<span class="pl-c">#         # 计算合适的缩放比例</span>
+<span class="pl-c">#         scale = min(</span>
+<span class="pl-c">#             random.uniform(0.5, 0.8),</span>
+<span class="pl-c">#             (w * 0.8) / pos_w,</span>
+<span class="pl-c">#             (h * 0.8) / pos_h</span>
+<span class="pl-c">#         )</span>
         
-#         # 缩放正样本
-#         new_size = (int(pos_w * scale), int(pos_h * scale))
-#         pos_img_resized = cv2.resize(pos_img, new_size)
+<span class="pl-c">#         # 缩放正样本</span>
+<span class="pl-c">#         new_size = (int(pos_w * scale), int(pos_h * scale))</span>
+<span class="pl-c">#         pos_img_resized = cv2.resize(pos_img, new_size)</span>
         
-#         # 确保有效的随机位置范围
-#         max_x = max(0, w - new_size[0])
-#         max_y = max(0, h - new_size[1])
+<span class="pl-c">#         # 确保有效的随机位置范围</span>
+<span class="pl-c">#         max_x = max(0, w - new_size[0])</span>
+<span class="pl-c">#         max_y = max(0, h - new_size[1])</span>
         
-#         # 随机选择插入位置
-#         x = random.randint(0, max_x) if max_x &gt; 0 else 0
-#         y = random.randint(0, max_y) if max_y &gt; 0 else 0
+<span class="pl-c">#         # 随机选择插入位置</span>
+<span class="pl-c">#         x = random.randint(0, max_x) if max_x &gt; 0 else 0</span>
+<span class="pl-c">#         y = random.randint(0, max_y) if max_y &gt; 0 else 0</span>
         
-#         # 获取ROI区域并确保与缩放后的正样本具有相同的形状
-#         roi = neg_img[y:y+new_size[1], x:x+new_size[0]]
+<span class="pl-c">#         # 获取ROI区域并确保与缩放后的正样本具有相同的形状</span>
+<span class="pl-c">#         roi = neg_img[y:y+new_size[1], x:x+new_size[0]]</span>
         
-#         # 确保ROI和pos_img_resized具有相同的形状和通道数
-#         if roi.shape == pos_img_resized.shape:
-#             # 混合图像
-#             blended = cv2.addWeighted(roi, 0.3, pos_img_resized, 0.7, 0)
-#             neg_img[y:y+new_size[1], x:x+new_size[0]] = blended
+<span class="pl-c">#         # 确保ROI和pos_img_resized具有相同的形状和通道数</span>
+<span class="pl-c">#         if roi.shape == pos_img_resized.shape:</span>
+<span class="pl-c">#             # 混合图像</span>
+<span class="pl-c">#             blended = cv2.addWeighted(roi, 0.3, pos_img_resized, 0.7, 0)</span>
+<span class="pl-c">#             neg_img[y:y+new_size[1], x:x+new_size[0]] = blended</span>
         
-#         return Image.fromarray(neg_img)
+<span class="pl-c">#         return Image.fromarray(neg_img)</span>
 
-#     @staticmethod
-#     def flip_image(image):
-#         """图片轴对称"""
-#         return Image.fromarray(np.array(image)[:, ::-1])
+<span class="pl-c">#     @staticmethod</span>
+<span class="pl-c">#     def flip_image(image):</span>
+<span class="pl-c">#         """图片轴对称"""</span>
+<span class="pl-c">#         return Image.fromarray(np.array(image)[:, ::-1])</span>
     
-#     @staticmethod
-#     def mirror_half_image(image):
-#         img_array = np.array(image)
+<span class="pl-c">#     @staticmethod</span>
+<span class="pl-c">#     def mirror_half_image(image):</span>
+<span class="pl-c">#         img_array = np.array(image)</span>
     
-#         # 获取图片尺寸
-#         h, w = img_array.shape[:2]
+<span class="pl-c">#         # 获取图片尺寸</span>
+<span class="pl-c">#         h, w = img_array.shape[:2]</span>
         
-#         # 取左半边
-#         half_w = w // 2
-#         left_half = img_array[:, :half_w]
+<span class="pl-c">#         # 取左半边</span>
+<span class="pl-c">#         half_w = w // 2</span>
+<span class="pl-c">#         left_half = img_array[:, :half_w]</span>
         
-#         # 水平翻转左半边得到右半边
-#         right_half = left_half[:, ::-1]
+<span class="pl-c">#         # 水平翻转左半边得到右半边</span>
+<span class="pl-c">#         right_half = left_half[:, ::-1]</span>
         
-#         # 拼接两个半边
-#         mirrored = np.concatenate([left_half, right_half], axis=1)
+<span class="pl-c">#         # 拼接两个半边</span>
+<span class="pl-c">#         mirrored = np.concatenate([left_half, right_half], axis=1)</span>
         
-#         return Image.fromarray(mirrored)
+<span class="pl-c">#         return Image.fromarray(mirrored)</span>
     
 
-# def augment_dataset(positive_images, negative_images):
-#     aug_utils = AugmentationUtils()
-#     augmented_data = []
+<span class="pl-c"># def augment_dataset(positive_images, negative_images):</span>
+<span class="pl-c">#     aug_utils = AugmentationUtils()</span>
+<span class="pl-c">#     augmented_data = []</span>
     
-#     # 增强正样本
-#     for pos_img in positive_images:
-#         img = Image.open(pos_img).convert('RGB')
-#         # 原图
-#         augmented_data.append((img, 1))
-#         # 颜色遮罩
-#         augmented_data.append((aug_utils.add_color_mask(img, True), 1))
-#         # 轴对称
-#         augmented_data.append((aug_utils.flip_image(img), 1))
-#         # 镜像一半
-#         augmented_data.append((aug_utils.mirror_half_image(img), 1))
-#         # 嵌入相同
-#         img_id = random.randint(0, len(positive_images)-1)
-#         aaa = Image.open(positive_images[img_id]).convert('RGB')
-#         augmented_data.append((aug_utils.embed_same(aaa, img), 1))
+<span class="pl-c">#     # 增强正样本</span>
+<span class="pl-c">#     for pos_img in positive_images:</span>
+<span class="pl-c">#         img = Image.open(pos_img).convert('RGB')</span>
+<span class="pl-c">#         # 原图</span>
+<span class="pl-c">#         augmented_data.append((img, 1))</span>
+<span class="pl-c">#         # 颜色遮罩</span>
+<span class="pl-c">#         augmented_data.append((aug_utils.add_color_mask(img, True), 1))</span>
+<span class="pl-c">#         # 轴对称</span>
+<span class="pl-c">#         augmented_data.append((aug_utils.flip_image(img), 1))</span>
+<span class="pl-c">#         # 镜像一半</span>
+<span class="pl-c">#         augmented_data.append((aug_utils.mirror_half_image(img), 1))</span>
+<span class="pl-c">#         # 嵌入相同</span>
+<span class="pl-c">#         img_id = random.randint(0, len(positive_images)-1)</span>
+<span class="pl-c">#         aaa = Image.open(positive_images[img_id]).convert('RGB')</span>
+<span class="pl-c">#         augmented_data.append((aug_utils.embed_same(aaa, img), 1))</span>
         
     
-#     # 增强负样本
-#     for i, neg_img in enumerate(negative_images):
-#         img = Image.open(neg_img).convert('RGB')
-#         # 原图
-#         augmented_data.append((img, 0))
-#         # 颜色遮罩
-#         augmented_data.append((aug_utils.add_color_mask(img, False), 0))
-#         # 镜像一半
-#         augmented_data.append((aug_utils.mirror_half_image(img), 0))
-#         # 嵌入正样本
-#         pos_img = Image.open(positive_images[random.randint(0, len(positive_images)-1)]).convert('RGB')
-#         augmented_data.append((aug_utils.embed_positive_in_negative(pos_img, img), 1))
-#         # 嵌入相同
-#         img_id = random.randint(0, len(negative_images)-1)
-#         aaa = Image.open(negative_images[img_id]).convert('RGB')
-#         augmented_data.append((aug_utils.embed_same(aaa, img), 0))
+<span class="pl-c">#     # 增强负样本</span>
+<span class="pl-c">#     for i, neg_img in enumerate(negative_images):</span>
+<span class="pl-c">#         img = Image.open(neg_img).convert('RGB')</span>
+<span class="pl-c">#         # 原图</span>
+<span class="pl-c">#         augmented_data.append((img, 0))</span>
+<span class="pl-c">#         # 颜色遮罩</span>
+<span class="pl-c">#         augmented_data.append((aug_utils.add_color_mask(img, False), 0))</span>
+<span class="pl-c">#         # 镜像一半</span>
+<span class="pl-c">#         augmented_data.append((aug_utils.mirror_half_image(img), 0))</span>
+<span class="pl-c">#         # 嵌入正样本</span>
+<span class="pl-c">#         pos_img = Image.open(positive_images[random.randint(0, len(positive_images)-1)]).convert('RGB')</span>
+<span class="pl-c">#         augmented_data.append((aug_utils.embed_positive_in_negative(pos_img, img), 1))</span>
+<span class="pl-c">#         # 嵌入相同</span>
+<span class="pl-c">#         img_id = random.randint(0, len(negative_images)-1)</span>
+<span class="pl-c">#         aaa = Image.open(negative_images[img_id]).convert('RGB')</span>
+<span class="pl-c">#         augmented_data.append((aug_utils.embed_same(aaa, img), 0))</span>
         
 
         
-#     # # 显示并保存
-#     # for i, (img, label) in enumerate(augmented_data):
-#     #     # img.show()
-#     #     os.makedirs('aug_images', exist_ok=True)
-#     #     img.save(f'aug_images/aug_{i}.jpg')
+<span class="pl-c">#     # # 显示并保存</span>
+<span class="pl-c">#     # for i, (img, label) in enumerate(augmented_data):</span>
+<span class="pl-c">#     #     # img.show()</span>
+<span class="pl-c">#     #     os.makedirs('aug_images', exist_ok=True)</span>
+<span class="pl-c">#     #     img.save(f'aug_images/aug_{i}.jpg')</span>
     
-#     # 统计
-#     print(f"Positive: {len([x for x, y in augmented_data if y == 1])}, Negative: {len([x for x, y in augmented_data if y == 0])}")
-#     return augmented_data
+<span class="pl-c">#     # 统计</span>
+<span class="pl-c">#     print(f"Positive: {len([x for x, y in augmented_data if y == 1])}, Negative: {len([x for x, y in augmented_data if y == 0])}")</span>
+<span class="pl-c">#     return augmented_data</span>
 
 
-class LinearWarmUpCosineAnnealingLR(LambdaLR):
-    def __init__(self, optimizer, *, warmup_iters, max_learning_rate, min_lr, lr_decay_iters, **kwargs):
-        self.warmup_iters = warmup_iters
-        self.max_learning_rate = max_learning_rate
-        self.lr_decay_iters = lr_decay_iters
-        self.min_lr = min_lr
-        kwargs['optimizer'] = optimizer
-        kwargs['lr_lambda'] = self._step_inner
-        super().__init__(**kwargs)
+<span class="pl-k">class</span> <span class="pl-v">LinearWarmUpCosineAnnealingLR</span>(<span class="pl-v">LambdaLR</span>):
+    <span class="pl-k">def</span> <span class="pl-en">__init__</span>(<span class="pl-s1">self</span>, <span class="pl-s1">optimizer</span>, <span class="pl-c1">*</span>, <span class="pl-s1">warmup_iters</span>, <span class="pl-s1">max_learning_rate</span>, <span class="pl-s1">min_lr</span>, <span class="pl-s1">lr_decay_iters</span>, <span class="pl-c1">**</span><span class="pl-s1">kwargs</span>):
+        <span class="pl-s1">self</span>.<span class="pl-c1">warmup_iters</span> <span class="pl-c1">=</span> <span class="pl-s1">warmup_iters</span>
+        <span class="pl-s1">self</span>.<span class="pl-c1">max_learning_rate</span> <span class="pl-c1">=</span> <span class="pl-s1">max_learning_rate</span>
+        <span class="pl-s1">self</span>.<span class="pl-c1">lr_decay_iters</span> <span class="pl-c1">=</span> <span class="pl-s1">lr_decay_iters</span>
+        <span class="pl-s1">self</span>.<span class="pl-c1">min_lr</span> <span class="pl-c1">=</span> <span class="pl-s1">min_lr</span>
+        <span class="pl-s1">kwargs</span>[<span class="pl-s">'optimizer'</span>] <span class="pl-c1">=</span> <span class="pl-s1">optimizer</span>
+        <span class="pl-s1">kwargs</span>[<span class="pl-s">'lr_lambda'</span>] <span class="pl-c1">=</span> <span class="pl-s1">self</span>.<span class="pl-c1">_step_inner</span>
+        <span class="pl-en">super</span>().<span class="pl-c1">__init__</span>(<span class="pl-c1">**</span><span class="pl-s1">kwargs</span>)
 
-    def _step_inner(self, steps):
-        if steps &lt; self.warmup_iters:
-            return self.max_learning_rate * steps / self.warmup_iters
-        elif steps &lt; self.lr_decay_iters:
-            return self.min_lr + 0.5 * (1.0 + np.cos((steps - self.warmup_iters) / (self.lr_decay_iters - self.warmup_iters)*np.pi)) * (self.max_learning_rate - self.min_lr)
-        else:
-            return self.min_lr
-
-
-def transform_img(img):
-    # 处理图片
-    img_np = np.array(img)
-    img_tensor = torch.from_numpy(img_np).permute(2, 0, 1)  # C, H, W
-    img_tensor = torch.nn.functional.interpolate(img_tensor.unsqueeze(0), size=(image_size, image_size), mode='bilinear', align_corners=False).squeeze(0)
-    # normalize
-    normalized_img = img_tensor.float() / 255.0
-    return normalized_img
+    <span class="pl-k">def</span> <span class="pl-en">_step_inner</span>(<span class="pl-s1">self</span>, <span class="pl-s1">steps</span>):
+        <span class="pl-k">if</span> <span class="pl-s1">steps</span> <span class="pl-c1">&lt;</span> <span class="pl-s1">self</span>.<span class="pl-c1">warmup_iters</span>:
+            <span class="pl-k">return</span> <span class="pl-s1">self</span>.<span class="pl-c1">max_learning_rate</span> <span class="pl-c1">*</span> <span class="pl-s1">steps</span> <span class="pl-c1">/</span> <span class="pl-s1">self</span>.<span class="pl-c1">warmup_iters</span>
+        <span class="pl-k">elif</span> <span class="pl-s1">steps</span> <span class="pl-c1">&lt;</span> <span class="pl-s1">self</span>.<span class="pl-c1">lr_decay_iters</span>:
+            <span class="pl-k">return</span> <span class="pl-s1">self</span>.<span class="pl-c1">min_lr</span> <span class="pl-c1">+</span> <span class="pl-c1">0.5</span> <span class="pl-c1">*</span> (<span class="pl-c1">1.0</span> <span class="pl-c1">+</span> <span class="pl-s1">np</span>.<span class="pl-c1">cos</span>((<span class="pl-s1">steps</span> <span class="pl-c1">-</span> <span class="pl-s1">self</span>.<span class="pl-c1">warmup_iters</span>) <span class="pl-c1">/</span> (<span class="pl-s1">self</span>.<span class="pl-c1">lr_decay_iters</span> <span class="pl-c1">-</span> <span class="pl-s1">self</span>.<span class="pl-c1">warmup_iters</span>)<span class="pl-c1">*</span><span class="pl-s1">np</span>.<span class="pl-c1">pi</span>)) <span class="pl-c1">*</span> (<span class="pl-s1">self</span>.<span class="pl-c1">max_learning_rate</span> <span class="pl-c1">-</span> <span class="pl-s1">self</span>.<span class="pl-c1">min_lr</span>)
+        <span class="pl-k">else</span>:
+            <span class="pl-k">return</span> <span class="pl-s1">self</span>.<span class="pl-c1">min_lr</span>
 
 
-transform = transforms.Compose([
-    transforms.Resize((image_size, image_size)),
-    transforms.ToTensor(),
-    transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+<span class="pl-k">def</span> <span class="pl-en">transform_img</span>(<span class="pl-s1">img</span>):
+    <span class="pl-c"># 处理图片</span>
+    <span class="pl-s1">img_np</span> <span class="pl-c1">=</span> <span class="pl-s1">np</span>.<span class="pl-c1">array</span>(<span class="pl-s1">img</span>)
+    <span class="pl-s1">img_tensor</span> <span class="pl-c1">=</span> <span class="pl-s1">torch</span>.<span class="pl-c1">from_numpy</span>(<span class="pl-s1">img_np</span>).<span class="pl-c1">permute</span>(<span class="pl-c1">2</span>, <span class="pl-c1">0</span>, <span class="pl-c1">1</span>)  <span class="pl-c"># C, H, W</span>
+    <span class="pl-s1">img_tensor</span> <span class="pl-c1">=</span> <span class="pl-s1">torch</span>.<span class="pl-c1">nn</span>.<span class="pl-c1">functional</span>.<span class="pl-c1">interpolate</span>(<span class="pl-s1">img_tensor</span>.<span class="pl-c1">unsqueeze</span>(<span class="pl-c1">0</span>), <span class="pl-s1">size</span><span class="pl-c1">=</span>(<span class="pl-s1">image_size</span>, <span class="pl-s1">image_size</span>), <span class="pl-s1">mode</span><span class="pl-c1">=</span><span class="pl-s">'bilinear'</span>, <span class="pl-s1">align_corners</span><span class="pl-c1">=</span><span class="pl-c1">False</span>).<span class="pl-c1">squeeze</span>(<span class="pl-c1">0</span>)
+    <span class="pl-c"># normalize</span>
+    <span class="pl-s1">normalized_img</span> <span class="pl-c1">=</span> <span class="pl-s1">img_tensor</span>.<span class="pl-c1">float</span>() <span class="pl-c1">/</span> <span class="pl-c1">255.0</span>
+    <span class="pl-k">return</span> <span class="pl-s1">normalized_img</span>
+
+
+<span class="pl-s1">transform</span> <span class="pl-c1">=</span> <span class="pl-s1">transforms</span>.<span class="pl-c1">Compose</span>([
+    <span class="pl-s1">transforms</span>.<span class="pl-c1">Resize</span>((<span class="pl-s1">image_size</span>, <span class="pl-s1">image_size</span>)),
+    <span class="pl-s1">transforms</span>.<span class="pl-c1">ToTensor</span>(),
+    <span class="pl-s1">transforms</span>.<span class="pl-c1">Normalize</span>(<span class="pl-s1">mean</span><span class="pl-c1">=</span>[<span class="pl-c1">0.485</span>, <span class="pl-c1">0.456</span>, <span class="pl-c1">0.406</span>], <span class="pl-s1">std</span><span class="pl-c1">=</span>[<span class="pl-c1">0.229</span>, <span class="pl-c1">0.224</span>, <span class="pl-c1">0.225</span>]),
 ])
 
 
-def transform_img_torchvision(data):
-    data['x'] = [transform(img.convert('RGB')) for img in data['image']]
-    return data
+<span class="pl-k">def</span> <span class="pl-en">transform_img_torchvision</span>(<span class="pl-s1">data</span>):
+    <span class="pl-s1">data</span>[<span class="pl-s">'x'</span>] <span class="pl-c1">=</span> [<span class="pl-en">transform</span>(<span class="pl-s1">img</span>.<span class="pl-c1">convert</span>(<span class="pl-s">'RGB'</span>)) <span class="pl-k">for</span> <span class="pl-s1">img</span> <span class="pl-c1">in</span> <span class="pl-s1">data</span>[<span class="pl-s">'image'</span>]]
+    <span class="pl-k">return</span> <span class="pl-s1">data</span>
 
 
-label_mapping = {
-    "nailong": 0,
-    "emoji": 1,
-    "anime": 2,
-    "others": 3,
-    "long": 4
+<span class="pl-s1">label_mapping</span> <span class="pl-c1">=</span> {
+    <span class="pl-s">"nailong"</span>: <span class="pl-c1">0</span>,
+    <span class="pl-s">"emoji"</span>: <span class="pl-c1">1</span>,
+    <span class="pl-s">"anime"</span>: <span class="pl-c1">2</span>,
+    <span class="pl-s">"others"</span>: <span class="pl-c1">3</span>,
+    <span class="pl-s">"long"</span>: <span class="pl-c1">4</span>
 }
 
-def extract_datasets():
-    ds = load_dataset("refoundd/NailongClassification", cache_dir="data", split="train")
-    ds = ds.map(lambda x: {'label': label_mapping[x['label']]})
-    ds = ds.map(transform_img_torchvision, remove_columns=['image'], batched=True)
-    dataset = ds.train_test_split(test_size=0.2)
-    return dataset
+<span class="pl-k">def</span> <span class="pl-en">extract_datasets</span>():
+    <span class="pl-s1">ds</span> <span class="pl-c1">=</span> <span class="pl-en">load_dataset</span>(<span class="pl-s">"refoundd/NailongClassification"</span>, <span class="pl-s1">cache_dir</span><span class="pl-c1">=</span><span class="pl-s">"data"</span>, <span class="pl-s1">split</span><span class="pl-c1">=</span><span class="pl-s">"train"</span>)
+    <span class="pl-s1">ds</span> <span class="pl-c1">=</span> <span class="pl-s1">ds</span>.<span class="pl-c1">map</span>(<span class="pl-k">lambda</span> <span class="pl-s1">x</span>: {<span class="pl-s">'label'</span>: <span class="pl-s1">label_mapping</span>[<span class="pl-s1">x</span>[<span class="pl-s">'label'</span>]]})
+    <span class="pl-s1">ds</span> <span class="pl-c1">=</span> <span class="pl-s1">ds</span>.<span class="pl-c1">map</span>(<span class="pl-s1">transform_img_torchvision</span>, <span class="pl-s1">remove_columns</span><span class="pl-c1">=</span>[<span class="pl-s">'image'</span>], <span class="pl-s1">batched</span><span class="pl-c1">=</span><span class="pl-c1">True</span>)
+    <span class="pl-s1">dataset</span> <span class="pl-c1">=</span> <span class="pl-s1">ds</span>.<span class="pl-c1">train_test_split</span>(<span class="pl-s1">test_size</span><span class="pl-c1">=</span><span class="pl-c1">0.2</span>)
+    <span class="pl-k">return</span> <span class="pl-s1">dataset</span>
 
-dataset = extract_datasets()
-
-
-class NaiLongDataset(Dataset):
-    def __init__(self, mode='train'):
-        assert mode in ['train', 'test']
-        self.dataset = dataset[mode]
-
-    def __len__(self):
-        return len(self.dataset)
-
-    def __getitem__(self, idx):
-        item = self.dataset[idx]['x']
-        label = self.dataset[idx]['label']
-        return torch.tensor(item), torch.tensor(label)
+<span class="pl-s1">dataset</span> <span class="pl-c1">=</span> <span class="pl-en">extract_datasets</span>()
 
 
+<span class="pl-k">class</span> <span class="pl-v">NaiLongDataset</span>(<span class="pl-v">Dataset</span>):
+    <span class="pl-k">def</span> <span class="pl-en">__init__</span>(<span class="pl-s1">self</span>, <span class="pl-s1">mode</span><span class="pl-c1">=</span><span class="pl-s">'train'</span>):
+        <span class="pl-k">assert</span> <span class="pl-s1">mode</span> <span class="pl-c1">in</span> [<span class="pl-s">'train'</span>, <span class="pl-s">'test'</span>]
+        <span class="pl-s1">self</span>.<span class="pl-c1">dataset</span> <span class="pl-c1">=</span> <span class="pl-s1">dataset</span>[<span class="pl-s1">mode</span>]
 
-class NaiLongTrainer(Trainer):
-    def __init__(self, config):
-        super().__init__(config)
+    <span class="pl-k">def</span> <span class="pl-en">__len__</span>(<span class="pl-s1">self</span>):
+        <span class="pl-k">return</span> <span class="pl-en">len</span>(<span class="pl-s1">self</span>.<span class="pl-c1">dataset</span>)
 
-    def build_model(self):
-        # model = resnet18()
-        # model.fc = torch.nn.Linear(model.fc.in_features, 2)
-        # return model
-        return convnext_base(pretrained=False, num_classes=5)
+    <span class="pl-k">def</span> <span class="pl-en">__getitem__</span>(<span class="pl-s1">self</span>, <span class="pl-s1">idx</span>):
+        <span class="pl-s1">item</span> <span class="pl-c1">=</span> <span class="pl-s1">self</span>.<span class="pl-c1">dataset</span>[<span class="pl-s1">idx</span>][<span class="pl-s">'x'</span>]
+        <span class="pl-s1">label</span> <span class="pl-c1">=</span> <span class="pl-s1">self</span>.<span class="pl-c1">dataset</span>[<span class="pl-s1">idx</span>][<span class="pl-s">'label'</span>]
+        <span class="pl-k">return</span> <span class="pl-s1">torch</span>.<span class="pl-c1">tensor</span>(<span class="pl-s1">item</span>), <span class="pl-s1">torch</span>.<span class="pl-c1">tensor</span>(<span class="pl-s1">label</span>)
+
+
+
+<span class="pl-k">class</span> <span class="pl-v">NaiLongTrainer</span>(<span class="pl-v">Trainer</span>):
+    <span class="pl-k">def</span> <span class="pl-en">__init__</span>(<span class="pl-s1">self</span>, <span class="pl-s1">config</span>):
+        <span class="pl-en">super</span>().<span class="pl-c1">__init__</span>(<span class="pl-s1">config</span>)
+
+    <span class="pl-k">def</span> <span class="pl-en">build_model</span>(<span class="pl-s1">self</span>):
+        <span class="pl-c"># model = resnet18()</span>
+        <span class="pl-c"># model.fc = torch.nn.Linear(model.fc.in_features, 2)</span>
+        <span class="pl-c"># return model</span>
+        <span class="pl-k">return</span> <span class="pl-en">convnext_base</span>(<span class="pl-s1">pretrained</span><span class="pl-c1">=</span><span class="pl-c1">False</span>, <span class="pl-s1">num_classes</span><span class="pl-c1">=</span><span class="pl-c1">5</span>)
     
-    def build_criterion(self):
-        return torch.nn.CrossEntropyLoss()
+    <span class="pl-k">def</span> <span class="pl-en">build_criterion</span>(<span class="pl-s1">self</span>):
+        <span class="pl-k">return</span> <span class="pl-s1">torch</span>.<span class="pl-c1">nn</span>.<span class="pl-c1">CrossEntropyLoss</span>()
     
-    def build_scheduler(self):
-        return LinearWarmUpCosineAnnealingLR(self.optimizer, warmup_iters=self.config['warmup_iters'], max_learning_rate=self.config['max_learning_rate'], min_lr=self.config['min_lr'], lr_decay_iters=self.config['lr_decay_iters'])
+    <span class="pl-k">def</span> <span class="pl-en">build_scheduler</span>(<span class="pl-s1">self</span>):
+        <span class="pl-k">return</span> <span class="pl-en">LinearWarmUpCosineAnnealingLR</span>(<span class="pl-s1">self</span>.<span class="pl-c1">optimizer</span>, <span class="pl-s1">warmup_iters</span><span class="pl-c1">=</span><span class="pl-s1">self</span>.<span class="pl-c1">config</span>[<span class="pl-s">'warmup_iters'</span>], <span class="pl-s1">max_learning_rate</span><span class="pl-c1">=</span><span class="pl-s1">self</span>.<span class="pl-c1">config</span>[<span class="pl-s">'max_learning_rate'</span>], <span class="pl-s1">min_lr</span><span class="pl-c1">=</span><span class="pl-s1">self</span>.<span class="pl-c1">config</span>[<span class="pl-s">'min_lr'</span>], <span class="pl-s1">lr_decay_iters</span><span class="pl-c1">=</span><span class="pl-s1">self</span>.<span class="pl-c1">config</span>[<span class="pl-s">'lr_decay_iters'</span>])
     
-    def build_dataloader(self, mode='train'):
-        dataset = NaiLongDataset(mode="train")
-        return DataLoader(dataset, batch_size=batch_size, shuffle=True)
+    <span class="pl-k">def</span> <span class="pl-en">build_dataloader</span>(<span class="pl-s1">self</span>, <span class="pl-s1">mode</span><span class="pl-c1">=</span><span class="pl-s">'train'</span>):
+        <span class="pl-s1">dataset</span> <span class="pl-c1">=</span> <span class="pl-en">NaiLongDataset</span>(<span class="pl-s1">mode</span><span class="pl-c1">=</span><span class="pl-s">"train"</span>)
+        <span class="pl-k">return</span> <span class="pl-en">DataLoader</span>(<span class="pl-s1">dataset</span>, <span class="pl-s1">batch_size</span><span class="pl-c1">=</span><span class="pl-s1">batch_size</span>, <span class="pl-s1">shuffle</span><span class="pl-c1">=</span><span class="pl-c1">True</span>)
     
-    def train_step(self, batch):
-        x, y = batch
-        x, y = x.to(device), y.to(device)
-        return self.criterion(self.model(x), y)
+    <span class="pl-k">def</span> <span class="pl-en">train_step</span>(<span class="pl-s1">self</span>, <span class="pl-s1">batch</span>):
+        <span class="pl-s1">x</span>, <span class="pl-s1">y</span> <span class="pl-c1">=</span> <span class="pl-s1">batch</span>
+        <span class="pl-s1">x</span>, <span class="pl-s1">y</span> <span class="pl-c1">=</span> <span class="pl-s1">x</span>.<span class="pl-c1">to</span>(<span class="pl-s1">device</span>), <span class="pl-s1">y</span>.<span class="pl-c1">to</span>(<span class="pl-s1">device</span>)
+        <span class="pl-k">return</span> <span class="pl-s1">self</span>.<span class="pl-c1">criterion</span>(<span class="pl-s1">self</span>.<span class="pl-c1">model</span>(<span class="pl-s1">x</span>), <span class="pl-s1">y</span>)
     
-    def validate(self):
-        self.logger.info("Validating...")
-        self.model.eval()
-        dataloader = self.build_dataloader(mode='test')
-        acc = []
-        f1 = [[], []]
-        with torch.no_grad(): 
-            for i, (x, y) in enumerate(dataloader):
-                x, y = x.to(device), y.to(device)
-                # print(f"Validation: {i}, {y}")
-                y_hat = self.model(x)
-                acc.append(torch.sum(torch.argmax(y_hat, dim=1) == y).item() / len(y))
-                f1[0].extend(y.cpu().tolist())
-                f1[1].extend(torch.argmax(y_hat, dim=1).cpu().tolist())
-            f1_scores = f1_score(f1[0], f1[1], average='macro')
-        return {'acc': sum(acc) / len(acc), 'f1': f1_scores}
+    <span class="pl-k">def</span> <span class="pl-en">validate</span>(<span class="pl-s1">self</span>):
+        <span class="pl-s1">self</span>.<span class="pl-c1">logger</span>.<span class="pl-c1">info</span>(<span class="pl-s">"Validating..."</span>)
+        <span class="pl-s1">self</span>.<span class="pl-c1">model</span>.<span class="pl-c1">eval</span>()
+        <span class="pl-s1">dataloader</span> <span class="pl-c1">=</span> <span class="pl-s1">self</span>.<span class="pl-c1">build_dataloader</span>(<span class="pl-s1">mode</span><span class="pl-c1">=</span><span class="pl-s">'test'</span>)
+        <span class="pl-s1">acc</span> <span class="pl-c1">=</span> []
+        <span class="pl-s1">f1</span> <span class="pl-c1">=</span> [[], []]
+        <span class="pl-k">with</span> <span class="pl-s1">torch</span>.<span class="pl-c1">no_grad</span>(): 
+            <span class="pl-k">for</span> <span class="pl-s1">i</span>, (<span class="pl-s1">x</span>, <span class="pl-s1">y</span>) <span class="pl-c1">in</span> <span class="pl-en">enumerate</span>(<span class="pl-s1">dataloader</span>):
+                <span class="pl-s1">x</span>, <span class="pl-s1">y</span> <span class="pl-c1">=</span> <span class="pl-s1">x</span>.<span class="pl-c1">to</span>(<span class="pl-s1">device</span>), <span class="pl-s1">y</span>.<span class="pl-c1">to</span>(<span class="pl-s1">device</span>)
+                <span class="pl-c"># print(f"Validation: {i}, {y}")</span>
+                <span class="pl-s1">y_hat</span> <span class="pl-c1">=</span> <span class="pl-s1">self</span>.<span class="pl-c1">model</span>(<span class="pl-s1">x</span>)
+                <span class="pl-s1">acc</span>.<span class="pl-c1">append</span>(<span class="pl-s1">torch</span>.<span class="pl-c1">sum</span>(<span class="pl-s1">torch</span>.<span class="pl-c1">argmax</span>(<span class="pl-s1">y_hat</span>, <span class="pl-s1">dim</span><span class="pl-c1">=</span><span class="pl-c1">1</span>) <span class="pl-c1">==</span> <span class="pl-s1">y</span>).<span class="pl-c1">item</span>() <span class="pl-c1">/</span> <span class="pl-en">len</span>(<span class="pl-s1">y</span>))
+                <span class="pl-s1">f1</span>[<span class="pl-c1">0</span>].<span class="pl-c1">extend</span>(<span class="pl-s1">y</span>.<span class="pl-c1">cpu</span>().<span class="pl-c1">tolist</span>())
+                <span class="pl-s1">f1</span>[<span class="pl-c1">1</span>].<span class="pl-c1">extend</span>(<span class="pl-s1">torch</span>.<span class="pl-c1">argmax</span>(<span class="pl-s1">y_hat</span>, <span class="pl-s1">dim</span><span class="pl-c1">=</span><span class="pl-c1">1</span>).<span class="pl-c1">cpu</span>().<span class="pl-c1">tolist</span>())
+            <span class="pl-s1">f1_scores</span> <span class="pl-c1">=</span> <span class="pl-en">f1_score</span>(<span class="pl-s1">f1</span>[<span class="pl-c1">0</span>], <span class="pl-s1">f1</span>[<span class="pl-c1">1</span>], <span class="pl-s1">average</span><span class="pl-c1">=</span><span class="pl-s">'macro'</span>)
+        <span class="pl-k">return</span> {<span class="pl-s">'acc'</span>: <span class="pl-en">sum</span>(<span class="pl-s1">acc</span>) <span class="pl-c1">/</span> <span class="pl-en">len</span>(<span class="pl-s1">acc</span>), <span class="pl-s">'f1'</span>: <span class="pl-s1">f1_scores</span>}
 
 
-def main():
-    config = {  # test
-        "model": "convnext_tiny",
-        "checkpoint_dir": "./checkpoints",
-        "tensorboard_dir": "./tensorboard",
-        "device": "cuda",
-        "enable_cudnn_benchmark": True,
-        "enable_amp": False,
-        "learning_rate": 1,  # 启动lr_scheduler 这里必须是1
-        "betas": [0.9, 0.999],
-        "eps": 1e-8,
-        "enable_compile": False,
-        "weight_decay": 0.0,
-        "max_steps": 5000,
-        "max_grad_norm": 1.0,
-        "save_every": 500,
-        "gradient_accumulation_steps": 1,
-        "warmup_iters": 500,
-        "max_learning_rate": 1e-3,
-        "min_lr": 1e-4,
-        'lr_decay_iters': 1000
+<span class="pl-k">def</span> <span class="pl-en">main</span>():
+    <span class="pl-s1">config</span> <span class="pl-c1">=</span> {  <span class="pl-c"># test</span>
+        <span class="pl-s">"model"</span>: <span class="pl-s">"convnext_tiny"</span>,
+        <span class="pl-s">"checkpoint_dir"</span>: <span class="pl-s">"./checkpoints"</span>,
+        <span class="pl-s">"tensorboard_dir"</span>: <span class="pl-s">"./tensorboard"</span>,
+        <span class="pl-s">"device"</span>: <span class="pl-s">"cuda"</span>,
+        <span class="pl-s">"enable_cudnn_benchmark"</span>: <span class="pl-c1">True</span>,
+        <span class="pl-s">"enable_amp"</span>: <span class="pl-c1">False</span>,
+        <span class="pl-s">"learning_rate"</span>: <span class="pl-c1">1</span>,  <span class="pl-c"># 启动lr_scheduler 这里必须是1</span>
+        <span class="pl-s">"betas"</span>: [<span class="pl-c1">0.9</span>, <span class="pl-c1">0.999</span>],
+        <span class="pl-s">"eps"</span>: <span class="pl-c1">1e-8</span>,
+        <span class="pl-s">"enable_compile"</span>: <span class="pl-c1">False</span>,
+        <span class="pl-s">"weight_decay"</span>: <span class="pl-c1">0.0</span>,
+        <span class="pl-s">"max_steps"</span>: <span class="pl-c1">5000</span>,
+        <span class="pl-s">"max_grad_norm"</span>: <span class="pl-c1">1.0</span>,
+        <span class="pl-s">"save_every"</span>: <span class="pl-c1">500</span>,
+        <span class="pl-s">"gradient_accumulation_steps"</span>: <span class="pl-c1">1</span>,
+        <span class="pl-s">"warmup_iters"</span>: <span class="pl-c1">500</span>,
+        <span class="pl-s">"max_learning_rate"</span>: <span class="pl-c1">1e-3</span>,
+        <span class="pl-s">"min_lr"</span>: <span class="pl-c1">1e-4</span>,
+        <span class="pl-s">'lr_decay_iters'</span>: <span class="pl-c1">1000</span>
     }
-    os.makedirs(config['checkpoint_dir'], exist_ok=True)
-    os.makedirs(config['tensorboard_dir'], exist_ok=True)
-    trainer = NaiLongTrainer(config)
-    trainer.train()
+    <span class="pl-s1">os</span>.<span class="pl-c1">makedirs</span>(<span class="pl-s1">config</span>[<span class="pl-s">'checkpoint_dir'</span>], <span class="pl-s1">exist_ok</span><span class="pl-c1">=</span><span class="pl-c1">True</span>)
+    <span class="pl-s1">os</span>.<span class="pl-c1">makedirs</span>(<span class="pl-s1">config</span>[<span class="pl-s">'tensorboard_dir'</span>], <span class="pl-s1">exist_ok</span><span class="pl-c1">=</span><span class="pl-c1">True</span>)
+    <span class="pl-s1">trainer</span> <span class="pl-c1">=</span> <span class="pl-en">NaiLongTrainer</span>(<span class="pl-s1">config</span>)
+    <span class="pl-s1">trainer</span>.<span class="pl-c1">train</span>()
 
-if __name__ == "__main__":
-    # 删除tensorboard下的文件, 但不删除文件夹
-    for i in os.listdir('./tensorboard'):
-        os.remove(os.path.join('./tensorboard', i))
-    # 删除checkpoints下的文件
-    for i in os.listdir('./checkpoints'):
-        os.remove(os.path.join('./checkpoints', i))
-    try:
-        main()
-    except KeyboardInterrupt:
-        print("KeyboardInterrupt")
-        
-</code></pre>
+<span class="pl-k">if</span> <span class="pl-s1">__name__</span> <span class="pl-c1">==</span> <span class="pl-s">"__main__"</span>:
+    <span class="pl-c"># 删除tensorboard下的文件, 但不删除文件夹</span>
+    <span class="pl-k">for</span> <span class="pl-s1">i</span> <span class="pl-c1">in</span> <span class="pl-s1">os</span>.<span class="pl-c1">listdir</span>(<span class="pl-s">'./tensorboard'</span>):
+        <span class="pl-s1">os</span>.<span class="pl-c1">remove</span>(<span class="pl-s1">os</span>.<span class="pl-c1">path</span>.<span class="pl-c1">join</span>(<span class="pl-s">'./tensorboard'</span>, <span class="pl-s1">i</span>))
+    <span class="pl-c"># 删除checkpoints下的文件</span>
+    <span class="pl-k">for</span> <span class="pl-s1">i</span> <span class="pl-c1">in</span> <span class="pl-s1">os</span>.<span class="pl-c1">listdir</span>(<span class="pl-s">'./checkpoints'</span>):
+        <span class="pl-s1">os</span>.<span class="pl-c1">remove</span>(<span class="pl-s1">os</span>.<span class="pl-c1">path</span>.<span class="pl-c1">join</span>(<span class="pl-s">'./checkpoints'</span>, <span class="pl-s1">i</span>))
+    <span class="pl-k">try</span>:
+        <span class="pl-en">main</span>()
+    <span class="pl-k">except</span> <span class="pl-v">KeyboardInterrupt</span>:
+        <span class="pl-en">print</span>(<span class="pl-s">"KeyboardInterrupt"</span>)
+        </pre></div>
 <p></p>
 </details> 
 <h3>数据增广</h3>
@@ -4052,102 +4049,101 @@ if __name__ == "__main__":
 <p>虽然是个人小项目, 简单的参数搜索不能少, 继续上面写的 <code class="notranslate">trainer.py</code>, 我也写了一个简单的 <code class="notranslate">hyperparameter_seacher.py</code> 来搜索超参</p>
 <details><summary>hyperparameter_seacher.py</summary>
 <p>
-</p><pre lang="python" class="notranslate"><code class="notranslate">from trainer import Trainer
-import optuna
+</p><div class="highlight highlight-source-python"><pre class="notranslate"><span class="pl-k">from</span> <span class="pl-s1">trainer</span> <span class="pl-k">import</span> <span class="pl-v">Trainer</span>
+<span class="pl-k">import</span> <span class="pl-s1">optuna</span>
 
 
-example_config = {
-    "model": "convnext_tiny",
-    "checkpoint_dir": "./checkpoints",
-    "tensorboard_dir": "./tensorboard",
-    "device": "cuda",
-    "enable_cudnn_benchmark": True,
-    "enable_amp": False,
-    "learning_rate": 1e-4,
-    "betas": [0.9, 0.999],
-    "eps": 1e-8,
-    "enable_compile": False,
-    "weight_decay": 0.05,
-    "max_steps": 100,
-    "max_grad_norm": 1.0,
-    "save_every": 1000000,  # 不保存
-    "gradient_accumulation_steps": 4
+<span class="pl-s1">example_config</span> <span class="pl-c1">=</span> {
+    <span class="pl-s">"model"</span>: <span class="pl-s">"convnext_tiny"</span>,
+    <span class="pl-s">"checkpoint_dir"</span>: <span class="pl-s">"./checkpoints"</span>,
+    <span class="pl-s">"tensorboard_dir"</span>: <span class="pl-s">"./tensorboard"</span>,
+    <span class="pl-s">"device"</span>: <span class="pl-s">"cuda"</span>,
+    <span class="pl-s">"enable_cudnn_benchmark"</span>: <span class="pl-c1">True</span>,
+    <span class="pl-s">"enable_amp"</span>: <span class="pl-c1">False</span>,
+    <span class="pl-s">"learning_rate"</span>: <span class="pl-c1">1e-4</span>,
+    <span class="pl-s">"betas"</span>: [<span class="pl-c1">0.9</span>, <span class="pl-c1">0.999</span>],
+    <span class="pl-s">"eps"</span>: <span class="pl-c1">1e-8</span>,
+    <span class="pl-s">"enable_compile"</span>: <span class="pl-c1">False</span>,
+    <span class="pl-s">"weight_decay"</span>: <span class="pl-c1">0.05</span>,
+    <span class="pl-s">"max_steps"</span>: <span class="pl-c1">100</span>,
+    <span class="pl-s">"max_grad_norm"</span>: <span class="pl-c1">1.0</span>,
+    <span class="pl-s">"save_every"</span>: <span class="pl-c1">1000000</span>,  <span class="pl-c"># 不保存</span>
+    <span class="pl-s">"gradient_accumulation_steps"</span>: <span class="pl-c1">4</span>
 }
 
-example_search_config = {
-    'params': {
-        "learning_rate": {
-            "type": "float",
-            "range": [1e-5, 1e-2],
-            "log": True
+<span class="pl-s1">example_search_config</span> <span class="pl-c1">=</span> {
+    <span class="pl-s">'params'</span>: {
+        <span class="pl-s">"learning_rate"</span>: {
+            <span class="pl-s">"type"</span>: <span class="pl-s">"float"</span>,
+            <span class="pl-s">"range"</span>: [<span class="pl-c1">1e-5</span>, <span class="pl-c1">1e-2</span>],
+            <span class="pl-s">"log"</span>: <span class="pl-c1">True</span>
         },
-        "gradient_accumulation_steps": {
-            "type": "int",
-            "range": [1, 8],
-            "log": False
+        <span class="pl-s">"gradient_accumulation_steps"</span>: {
+            <span class="pl-s">"type"</span>: <span class="pl-s">"int"</span>,
+            <span class="pl-s">"range"</span>: [<span class="pl-c1">1</span>, <span class="pl-c1">8</span>],
+            <span class="pl-s">"log"</span>: <span class="pl-c1">False</span>
         }
     },
-    "if_save_info": False,
-    "n_trials": 10
+    <span class="pl-s">"if_save_info"</span>: <span class="pl-c1">False</span>,
+    <span class="pl-s">"n_trials"</span>: <span class="pl-c1">10</span>
 }
 
-class HyperparameterSearcher:
-    def __init__(self, config, trainer):
-        assert isinstance(trainer, Trainer), "trainer must be an instance of Trainer"
-        self.config = config
-        self.trainer = trainer
+<span class="pl-k">class</span> <span class="pl-v">HyperparameterSearcher</span>:
+    <span class="pl-k">def</span> <span class="pl-en">__init__</span>(<span class="pl-s1">self</span>, <span class="pl-s1">config</span>, <span class="pl-s1">trainer</span>):
+        <span class="pl-k">assert</span> <span class="pl-en">isinstance</span>(<span class="pl-s1">trainer</span>, <span class="pl-v">Trainer</span>), <span class="pl-s">"trainer must be an instance of Trainer"</span>
+        <span class="pl-s1">self</span>.<span class="pl-c1">config</span> <span class="pl-c1">=</span> <span class="pl-s1">config</span>
+        <span class="pl-s1">self</span>.<span class="pl-c1">trainer</span> <span class="pl-c1">=</span> <span class="pl-s1">trainer</span>
         
-    def objective(self, trial):
-        search_params = self.config['params']
+    <span class="pl-k">def</span> <span class="pl-en">objective</span>(<span class="pl-s1">self</span>, <span class="pl-s1">trial</span>):
+        <span class="pl-s1">search_params</span> <span class="pl-c1">=</span> <span class="pl-s1">self</span>.<span class="pl-c1">config</span>[<span class="pl-s">'params'</span>]
         
-        for param_name, param_config in search_params.items():
-            if param_config["type"] == "float":
-                self.trainer.config[param_name] = trial.suggest_float(
-                    param_name,
-                    param_config["range"][0],
-                    param_config["range"][1],
-                    log=param_config.get("log", False)
+        <span class="pl-k">for</span> <span class="pl-s1">param_name</span>, <span class="pl-s1">param_config</span> <span class="pl-c1">in</span> <span class="pl-s1">search_params</span>.<span class="pl-c1">items</span>():
+            <span class="pl-k">if</span> <span class="pl-s1">param_config</span>[<span class="pl-s">"type"</span>] <span class="pl-c1">==</span> <span class="pl-s">"float"</span>:
+                <span class="pl-s1">self</span>.<span class="pl-c1">trainer</span>.<span class="pl-c1">config</span>[<span class="pl-s1">param_name</span>] <span class="pl-c1">=</span> <span class="pl-s1">trial</span>.<span class="pl-c1">suggest_float</span>(
+                    <span class="pl-s1">param_name</span>,
+                    <span class="pl-s1">param_config</span>[<span class="pl-s">"range"</span>][<span class="pl-c1">0</span>],
+                    <span class="pl-s1">param_config</span>[<span class="pl-s">"range"</span>][<span class="pl-c1">1</span>],
+                    <span class="pl-s1">log</span><span class="pl-c1">=</span><span class="pl-s1">param_config</span>.<span class="pl-c1">get</span>(<span class="pl-s">"log"</span>, <span class="pl-c1">False</span>)
                 )
-            elif param_config["type"] == "int":
-                self.trainer.config[param_name] = trial.suggest_int(
-                    param_name,
-                    param_config["range"][0],
-                    param_config["range"][1]
+            <span class="pl-k">elif</span> <span class="pl-s1">param_config</span>[<span class="pl-s">"type"</span>] <span class="pl-c1">==</span> <span class="pl-s">"int"</span>:
+                <span class="pl-s1">self</span>.<span class="pl-c1">trainer</span>.<span class="pl-c1">config</span>[<span class="pl-s1">param_name</span>] <span class="pl-c1">=</span> <span class="pl-s1">trial</span>.<span class="pl-c1">suggest_int</span>(
+                    <span class="pl-s1">param_name</span>,
+                    <span class="pl-s1">param_config</span>[<span class="pl-s">"range"</span>][<span class="pl-c1">0</span>],
+                    <span class="pl-s1">param_config</span>[<span class="pl-s">"range"</span>][<span class="pl-c1">1</span>]
                 )
-            elif param_config['type'] == 'list':
-                self.trainer.config[param_name] = trial.suggest_categorical(
-                    param_name,
-                    param_config['range']
+            <span class="pl-k">elif</span> <span class="pl-s1">param_config</span>[<span class="pl-s">'type'</span>] <span class="pl-c1">==</span> <span class="pl-s">'list'</span>:
+                <span class="pl-s1">self</span>.<span class="pl-c1">trainer</span>.<span class="pl-c1">config</span>[<span class="pl-s1">param_name</span>] <span class="pl-c1">=</span> <span class="pl-s1">trial</span>.<span class="pl-c1">suggest_categorical</span>(
+                    <span class="pl-s1">param_name</span>,
+                    <span class="pl-s1">param_config</span>[<span class="pl-s">'range'</span>]
                 )
-            else:
-                raise ValueError(f"Unsupported parameter type: {param_config['type']}, only support float and int")
+            <span class="pl-k">else</span>:
+                <span class="pl-k">raise</span> <span class="pl-en">ValueError</span>(<span class="pl-s">f"Unsupported parameter type: <span class="pl-s1"><span class="pl-kos">{</span><span class="pl-s1">param_config</span>[<span class="pl-s">'type'</span>]<span class="pl-kos">}</span></span>, only support float and int"</span>)
         
-        self.trainer.setup_training()
-        self.trainer.train()
-        metric = self.trainer.validate()
-        if 'acc' not in metric:
-            raise ValueError("metric must contain 'acc'")
-        return -metric['acc']  # only support maximizing acc
+        <span class="pl-s1">self</span>.<span class="pl-c1">trainer</span>.<span class="pl-c1">setup_training</span>()
+        <span class="pl-s1">self</span>.<span class="pl-c1">trainer</span>.<span class="pl-c1">train</span>()
+        <span class="pl-s1">metric</span> <span class="pl-c1">=</span> <span class="pl-s1">self</span>.<span class="pl-c1">trainer</span>.<span class="pl-c1">validate</span>()
+        <span class="pl-k">if</span> <span class="pl-s">'acc'</span> <span class="pl-c1"><span class="pl-c1">not</span> <span class="pl-c1">in</span></span> <span class="pl-s1">metric</span>:
+            <span class="pl-k">raise</span> <span class="pl-en">ValueError</span>(<span class="pl-s">"metric must contain 'acc'"</span>)
+        <span class="pl-k">return</span> <span class="pl-c1">-</span><span class="pl-s1">metric</span>[<span class="pl-s">'acc'</span>]  <span class="pl-c"># only support maximizing acc</span>
     
-    def search(self):
-        study = optuna.create_study(direction="maximize")
-        study.optimize(self.objective, n_trials=self.config['n_trials'])
-        print("Best params:", study.best_params)
-        print("Best value:", -study.best_value)
-        if self.config['if_save_info']:
-            study.trials_dataframe().to_csv("./output/optuna_results.csv")
-        return study.best_params
+    <span class="pl-k">def</span> <span class="pl-en">search</span>(<span class="pl-s1">self</span>):
+        <span class="pl-s1">study</span> <span class="pl-c1">=</span> <span class="pl-s1">optuna</span>.<span class="pl-c1">create_study</span>(<span class="pl-s1">direction</span><span class="pl-c1">=</span><span class="pl-s">"maximize"</span>)
+        <span class="pl-s1">study</span>.<span class="pl-c1">optimize</span>(<span class="pl-s1">self</span>.<span class="pl-c1">objective</span>, <span class="pl-s1">n_trials</span><span class="pl-c1">=</span><span class="pl-s1">self</span>.<span class="pl-c1">config</span>[<span class="pl-s">'n_trials'</span>])
+        <span class="pl-en">print</span>(<span class="pl-s">"Best params:"</span>, <span class="pl-s1">study</span>.<span class="pl-c1">best_params</span>)
+        <span class="pl-en">print</span>(<span class="pl-s">"Best value:"</span>, <span class="pl-c1">-</span><span class="pl-s1">study</span>.<span class="pl-c1">best_value</span>)
+        <span class="pl-k">if</span> <span class="pl-s1">self</span>.<span class="pl-c1">config</span>[<span class="pl-s">'if_save_info'</span>]:
+            <span class="pl-s1">study</span>.<span class="pl-c1">trials_dataframe</span>().<span class="pl-c1">to_csv</span>(<span class="pl-s">"./output/optuna_results.csv"</span>)
+        <span class="pl-k">return</span> <span class="pl-s1">study</span>.<span class="pl-c1">best_params</span>
     
-def main():
+<span class="pl-k">def</span> <span class="pl-en">main</span>():
     
-    pass
+    <span class="pl-k">pass</span>
 
-if __name__ == '__main__':
-    try:
-        main()
-    except KeyboardInterrupt:
-        pass
-</code></pre>
+<span class="pl-k">if</span> <span class="pl-s1">__name__</span> <span class="pl-c1">==</span> <span class="pl-s">'__main__'</span>:
+    <span class="pl-k">try</span>:
+        <span class="pl-en">main</span>()
+    <span class="pl-k">except</span> <span class="pl-v">KeyboardInterrupt</span>:
+        <span class="pl-k">pass</span></pre></div>
 <p></p>
 </details> 
 <p>超参搜索需要 trainer 的配合, 使用了与模型无关的 optuna 来跑给定范围的超参值, 这个时候可以给trainer一个比较容易训练的超参设置(短的epoch等), 同时关闭保存模式</p>
@@ -4222,83 +4218,82 @@ main()</p>
 <p>编写测试代码:</p>
 <details><summary>test.py(非初版代码, 仅供参考)</summary>
 <p>
-</p><pre lang="python" class="notranslate"><code class="notranslate">from sklearn.metrics import f1_score
-import torch
+</p><div class="highlight highlight-source-python"><pre class="notranslate"><span class="pl-k">from</span> <span class="pl-s1">sklearn</span>.<span class="pl-s1">metrics</span> <span class="pl-k">import</span> <span class="pl-s1">f1_score</span>
+<span class="pl-k">import</span> <span class="pl-s1">torch</span>
 
-from model import convnext_base
-from PIL import Image
-import numpy as np
-from glob import glob
-from torchvision import transforms
+<span class="pl-k">from</span> <span class="pl-s1">model</span> <span class="pl-k">import</span> <span class="pl-s1">convnext_base</span>
+<span class="pl-k">from</span> <span class="pl-c1">PIL</span> <span class="pl-k">import</span> <span class="pl-v">Image</span>
+<span class="pl-k">import</span> <span class="pl-s1">numpy</span> <span class="pl-k">as</span> <span class="pl-s1">np</span>
+<span class="pl-k">from</span> <span class="pl-s1">glob</span> <span class="pl-k">import</span> <span class="pl-s1">glob</span>
+<span class="pl-k">from</span> <span class="pl-s1">torchvision</span> <span class="pl-k">import</span> <span class="pl-s1">transforms</span>
 
-device = "cuda"
-image_size = 224
+<span class="pl-s1">device</span> <span class="pl-c1">=</span> <span class="pl-s">"cuda"</span>
+<span class="pl-s1">image_size</span> <span class="pl-c1">=</span> <span class="pl-c1">224</span>
 
-model = convnext_base(pretrained=False, num_classes=5).to(device)
-# model = resnet18()
-# model.fc = torch.nn.Linear(model.fc.in_features, 2)
-checkpoint = torch.load('./checkpoints/best.pt', map_location=device)
-model.load_state_dict(checkpoint['model'])
+<span class="pl-s1">model</span> <span class="pl-c1">=</span> <span class="pl-en">convnext_base</span>(<span class="pl-s1">pretrained</span><span class="pl-c1">=</span><span class="pl-c1">False</span>, <span class="pl-s1">num_classes</span><span class="pl-c1">=</span><span class="pl-c1">5</span>).<span class="pl-c1">to</span>(<span class="pl-s1">device</span>)
+<span class="pl-c"># model = resnet18()</span>
+<span class="pl-c"># model.fc = torch.nn.Linear(model.fc.in_features, 2)</span>
+<span class="pl-s1">checkpoint</span> <span class="pl-c1">=</span> <span class="pl-s1">torch</span>.<span class="pl-c1">load</span>(<span class="pl-s">'./checkpoints/best.pt'</span>, <span class="pl-s1">map_location</span><span class="pl-c1">=</span><span class="pl-s1">device</span>)
+<span class="pl-s1">model</span>.<span class="pl-c1">load_state_dict</span>(<span class="pl-s1">checkpoint</span>[<span class="pl-s">'model'</span>])
 
-transform = transforms.Compose([
-    transforms.Resize((image_size, image_size)),
-    transforms.ToTensor(),
-    transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+<span class="pl-s1">transform</span> <span class="pl-c1">=</span> <span class="pl-s1">transforms</span>.<span class="pl-c1">Compose</span>([
+    <span class="pl-s1">transforms</span>.<span class="pl-c1">Resize</span>((<span class="pl-s1">image_size</span>, <span class="pl-s1">image_size</span>)),
+    <span class="pl-s1">transforms</span>.<span class="pl-c1">ToTensor</span>(),
+    <span class="pl-s1">transforms</span>.<span class="pl-c1">Normalize</span>(<span class="pl-s1">mean</span><span class="pl-c1">=</span>[<span class="pl-c1">0.485</span>, <span class="pl-c1">0.456</span>, <span class="pl-c1">0.406</span>], <span class="pl-s1">std</span><span class="pl-c1">=</span>[<span class="pl-c1">0.229</span>, <span class="pl-c1">0.224</span>, <span class="pl-c1">0.225</span>]),
 ])
 
-def transform_img(img):
-    # 处理图片
-    img_np = np.array(img)
-    img_tensor = torch.from_numpy(img_np).permute(2, 0, 1)  # C, H, W
-    img_tensor = torch.nn.functional.interpolate(img_tensor.unsqueeze(0), size=(image_size, image_size), mode='bilinear', align_corners=False).squeeze(0)
-    # normalize
-    normalized_img = img_tensor.float() / 255.0
-    return normalized_img
+<span class="pl-k">def</span> <span class="pl-en">transform_img</span>(<span class="pl-s1">img</span>):
+    <span class="pl-c"># 处理图片</span>
+    <span class="pl-s1">img_np</span> <span class="pl-c1">=</span> <span class="pl-s1">np</span>.<span class="pl-c1">array</span>(<span class="pl-s1">img</span>)
+    <span class="pl-s1">img_tensor</span> <span class="pl-c1">=</span> <span class="pl-s1">torch</span>.<span class="pl-c1">from_numpy</span>(<span class="pl-s1">img_np</span>).<span class="pl-c1">permute</span>(<span class="pl-c1">2</span>, <span class="pl-c1">0</span>, <span class="pl-c1">1</span>)  <span class="pl-c"># C, H, W</span>
+    <span class="pl-s1">img_tensor</span> <span class="pl-c1">=</span> <span class="pl-s1">torch</span>.<span class="pl-c1">nn</span>.<span class="pl-c1">functional</span>.<span class="pl-c1">interpolate</span>(<span class="pl-s1">img_tensor</span>.<span class="pl-c1">unsqueeze</span>(<span class="pl-c1">0</span>), <span class="pl-s1">size</span><span class="pl-c1">=</span>(<span class="pl-s1">image_size</span>, <span class="pl-s1">image_size</span>), <span class="pl-s1">mode</span><span class="pl-c1">=</span><span class="pl-s">'bilinear'</span>, <span class="pl-s1">align_corners</span><span class="pl-c1">=</span><span class="pl-c1">False</span>).<span class="pl-c1">squeeze</span>(<span class="pl-c1">0</span>)
+    <span class="pl-c"># normalize</span>
+    <span class="pl-s1">normalized_img</span> <span class="pl-c1">=</span> <span class="pl-s1">img_tensor</span>.<span class="pl-c1">float</span>() <span class="pl-c1">/</span> <span class="pl-c1">255.0</span>
+    <span class="pl-k">return</span> <span class="pl-s1">normalized_img</span>
 
 
-def get_input_images(image_path):
-    img = Image.open(image_path).convert("RGB")
-    img = transform(img)
-    return torch.tensor(img).to(device).unsqueeze(0)
+<span class="pl-k">def</span> <span class="pl-en">get_input_images</span>(<span class="pl-s1">image_path</span>):
+    <span class="pl-s1">img</span> <span class="pl-c1">=</span> <span class="pl-v">Image</span>.<span class="pl-c1">open</span>(<span class="pl-s1">image_path</span>).<span class="pl-c1">convert</span>(<span class="pl-s">"RGB"</span>)
+    <span class="pl-s1">img</span> <span class="pl-c1">=</span> <span class="pl-en">transform</span>(<span class="pl-s1">img</span>)
+    <span class="pl-k">return</span> <span class="pl-s1">torch</span>.<span class="pl-c1">tensor</span>(<span class="pl-s1">img</span>).<span class="pl-c1">to</span>(<span class="pl-s1">device</span>).<span class="pl-c1">unsqueeze</span>(<span class="pl-c1">0</span>)
 
-model.eval()
+<span class="pl-s1">model</span>.<span class="pl-c1">eval</span>()
 
-# 导出onnx
-input_names = ["input"]
-output_names = ["output"]
-dynamic_axes = {
-    "input": {0: "batch_size"},  # 输入的第一个维度是动态的
-    "output": {0: "batch_size"}  # 输出的第一个维度是动态的
+<span class="pl-c"># 导出onnx</span>
+<span class="pl-s1">input_names</span> <span class="pl-c1">=</span> [<span class="pl-s">"input"</span>]
+<span class="pl-s1">output_names</span> <span class="pl-c1">=</span> [<span class="pl-s">"output"</span>]
+<span class="pl-s1">dynamic_axes</span> <span class="pl-c1">=</span> {
+    <span class="pl-s">"input"</span>: {<span class="pl-c1">0</span>: <span class="pl-s">"batch_size"</span>},  <span class="pl-c"># 输入的第一个维度是动态的</span>
+    <span class="pl-s">"output"</span>: {<span class="pl-c1">0</span>: <span class="pl-s">"batch_size"</span>}  <span class="pl-c"># 输出的第一个维度是动态的</span>
 }
-torch.onnx.export(model, torch.randn(1, 3, 224, 224).to(device), "model.onnx", input_names=input_names, output_names=output_names, dynamic_axes=dynamic_axes, opset_version=11)
+<span class="pl-s1">torch</span>.<span class="pl-c1">onnx</span>.<span class="pl-c1">export</span>(<span class="pl-s1">model</span>, <span class="pl-s1">torch</span>.<span class="pl-c1">randn</span>(<span class="pl-c1">1</span>, <span class="pl-c1">3</span>, <span class="pl-c1">224</span>, <span class="pl-c1">224</span>).<span class="pl-c1">to</span>(<span class="pl-s1">device</span>), <span class="pl-s">"model.onnx"</span>, <span class="pl-s1">input_names</span><span class="pl-c1">=</span><span class="pl-s1">input_names</span>, <span class="pl-s1">output_names</span><span class="pl-c1">=</span><span class="pl-s1">output_names</span>, <span class="pl-s1">dynamic_axes</span><span class="pl-c1">=</span><span class="pl-s1">dynamic_axes</span>, <span class="pl-s1">opset_version</span><span class="pl-c1">=</span><span class="pl-c1">11</span>)
 
-with torch.no_grad():
-    # image = torch.randn(1, 3, 256, 256)
-    print(torch.softmax(model(get_input_images('1.jpg')), dim=1))
-    input()
-    print(torch.softmax(model(get_input_images('3.jpg')), dim=1))
-    input()
-    acc = []
-    f1 = [[], []]
+<span class="pl-k">with</span> <span class="pl-s1">torch</span>.<span class="pl-c1">no_grad</span>():
+    <span class="pl-c"># image = torch.randn(1, 3, 256, 256)</span>
+    <span class="pl-en">print</span>(<span class="pl-s1">torch</span>.<span class="pl-c1">softmax</span>(<span class="pl-en">model</span>(<span class="pl-en">get_input_images</span>(<span class="pl-s">'1.jpg'</span>)), <span class="pl-s1">dim</span><span class="pl-c1">=</span><span class="pl-c1">1</span>))
+    <span class="pl-en">input</span>()
+    <span class="pl-en">print</span>(<span class="pl-s1">torch</span>.<span class="pl-c1">softmax</span>(<span class="pl-en">model</span>(<span class="pl-en">get_input_images</span>(<span class="pl-s">'3.jpg'</span>)), <span class="pl-s1">dim</span><span class="pl-c1">=</span><span class="pl-c1">1</span>))
+    <span class="pl-en">input</span>()
+    <span class="pl-s1">acc</span> <span class="pl-c1">=</span> []
+    <span class="pl-s1">f1</span> <span class="pl-c1">=</span> [[], []]
     
     
-    for file in glob('./datasets/nailong/*'):
-        y_hat, y = model(get_input_images(file)), torch.tensor([0]).to(device)
-        acc.append(torch.sum(torch.argmax(y_hat, dim=1) == y).item() / len(y))
-        f1[0].append(y.cpu().tolist()[0])
-        f1[1].append(torch.argmax(y_hat, dim=1).cpu().tolist()[0])
+    <span class="pl-k">for</span> <span class="pl-s1">file</span> <span class="pl-c1">in</span> <span class="pl-en">glob</span>(<span class="pl-s">'./datasets/nailong/*'</span>):
+        <span class="pl-s1">y_hat</span>, <span class="pl-s1">y</span> <span class="pl-c1">=</span> <span class="pl-en">model</span>(<span class="pl-en">get_input_images</span>(<span class="pl-s1">file</span>)), <span class="pl-s1">torch</span>.<span class="pl-c1">tensor</span>([<span class="pl-c1">0</span>]).<span class="pl-c1">to</span>(<span class="pl-s1">device</span>)
+        <span class="pl-s1">acc</span>.<span class="pl-c1">append</span>(<span class="pl-s1">torch</span>.<span class="pl-c1">sum</span>(<span class="pl-s1">torch</span>.<span class="pl-c1">argmax</span>(<span class="pl-s1">y_hat</span>, <span class="pl-s1">dim</span><span class="pl-c1">=</span><span class="pl-c1">1</span>) <span class="pl-c1">==</span> <span class="pl-s1">y</span>).<span class="pl-c1">item</span>() <span class="pl-c1">/</span> <span class="pl-en">len</span>(<span class="pl-s1">y</span>))
+        <span class="pl-s1">f1</span>[<span class="pl-c1">0</span>].<span class="pl-c1">append</span>(<span class="pl-s1">y</span>.<span class="pl-c1">cpu</span>().<span class="pl-c1">tolist</span>()[<span class="pl-c1">0</span>])
+        <span class="pl-s1">f1</span>[<span class="pl-c1">1</span>].<span class="pl-c1">append</span>(<span class="pl-s1">torch</span>.<span class="pl-c1">argmax</span>(<span class="pl-s1">y_hat</span>, <span class="pl-s1">dim</span><span class="pl-c1">=</span><span class="pl-c1">1</span>).<span class="pl-c1">cpu</span>().<span class="pl-c1">tolist</span>()[<span class="pl-c1">0</span>])
         
 
-    # for file in glob('./datasets/cifer10/*'):
-    #     y_hat, y = model(get_input_images(file)), torch.tensor([3]).to(device)
-    #     acc.append(torch.sum(torch.argmax(y_hat, dim=1) == y).item() / len(y))
-    #     f1[0].append(y.cpu().tolist()[0])
-    #     f1[1].append(torch.argmax(y_hat, dim=1).cpu().tolist()[0])
+    <span class="pl-c"># for file in glob('./datasets/cifer10/*'):</span>
+    <span class="pl-c">#     y_hat, y = model(get_input_images(file)), torch.tensor([3]).to(device)</span>
+    <span class="pl-c">#     acc.append(torch.sum(torch.argmax(y_hat, dim=1) == y).item() / len(y))</span>
+    <span class="pl-c">#     f1[0].append(y.cpu().tolist()[0])</span>
+    <span class="pl-c">#     f1[1].append(torch.argmax(y_hat, dim=1).cpu().tolist()[0])</span>
 
-print(sum(acc) / len(acc))
-f1_scores = f1_score(f1[0], f1[1], average='macro')
-print(f1_scores)
-</code></pre>
+<span class="pl-en">print</span>(<span class="pl-en">sum</span>(<span class="pl-s1">acc</span>) <span class="pl-c1">/</span> <span class="pl-en">len</span>(<span class="pl-s1">acc</span>))
+<span class="pl-s1">f1_scores</span> <span class="pl-c1">=</span> <span class="pl-en">f1_score</span>(<span class="pl-s1">f1</span>[<span class="pl-c1">0</span>], <span class="pl-s1">f1</span>[<span class="pl-c1">1</span>], <span class="pl-s1">average</span><span class="pl-c1">=</span><span class="pl-s">'macro'</span>)
+<span class="pl-en">print</span>(<span class="pl-s1">f1_scores</span>)</pre></div>
 <p></p>
 </details> 
 <p>发现 acc 与 f1 的值非常低(百分之10到百分之20附近)</p>
@@ -4344,59 +4339,57 @@ print(f1_scores)
 <p>简单编写onnx推理代码</p>
 <details><summary>onnx_inference.py</summary>
 <p>
-</p><pre lang="python" class="notranslate"><code class="notranslate"># from torchvision import transforms
-import onnxruntime as ort
-from PIL import Image
-import numpy as np
+</p><div class="highlight highlight-source-python"><pre class="notranslate"><span class="pl-c"># from torchvision import transforms</span>
+<span class="pl-k">import</span> <span class="pl-s1">onnxruntime</span> <span class="pl-k">as</span> <span class="pl-s1">ort</span>
+<span class="pl-k">from</span> <span class="pl-c1">PIL</span> <span class="pl-k">import</span> <span class="pl-v">Image</span>
+<span class="pl-k">import</span> <span class="pl-s1">numpy</span> <span class="pl-k">as</span> <span class="pl-s1">np</span>
 
-img_size = 224
+<span class="pl-s1">img_size</span> <span class="pl-c1">=</span> <span class="pl-c1">224</span>
 
-# transform = transforms.Compose([
-#     transforms.Resize((img_size, img_size)),
-#     transforms.ToTensor(),
-#     transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
-# ])
+<span class="pl-c"># transform = transforms.Compose([</span>
+<span class="pl-c">#     transforms.Resize((img_size, img_size)),</span>
+<span class="pl-c">#     transforms.ToTensor(),</span>
+<span class="pl-c">#     transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),</span>
+<span class="pl-c"># ])</span>
 
-def transform_img(img: Image, image_size=224, mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]):
-    img = img.convert("RGB").resize((image_size, image_size), Image.Resampling.LANCZOS)
-    img = np.array(img)
-    img = (img / 255 - mean) / std
-    img = img.transpose((2, 0, 1))
-    img = np.expand_dims(img, axis=0)
-    return img.astype(np.float32)
+<span class="pl-k">def</span> <span class="pl-en">transform_img</span>(<span class="pl-s1">img</span>: <span class="pl-smi">Image</span>, <span class="pl-s1">image_size</span><span class="pl-c1">=</span><span class="pl-c1">224</span>, <span class="pl-s1">mean</span><span class="pl-c1">=</span>[<span class="pl-c1">0.485</span>, <span class="pl-c1">0.456</span>, <span class="pl-c1">0.406</span>], <span class="pl-s1">std</span><span class="pl-c1">=</span>[<span class="pl-c1">0.229</span>, <span class="pl-c1">0.224</span>, <span class="pl-c1">0.225</span>]):
+    <span class="pl-s1">img</span> <span class="pl-c1">=</span> <span class="pl-s1">img</span>.<span class="pl-c1">convert</span>(<span class="pl-s">"RGB"</span>).<span class="pl-c1">resize</span>((<span class="pl-s1">image_size</span>, <span class="pl-s1">image_size</span>), <span class="pl-v">Image</span>.<span class="pl-c1">Resampling</span>.<span class="pl-c1">LANCZOS</span>)
+    <span class="pl-s1">img</span> <span class="pl-c1">=</span> <span class="pl-s1">np</span>.<span class="pl-c1">array</span>(<span class="pl-s1">img</span>)
+    <span class="pl-s1">img</span> <span class="pl-c1">=</span> (<span class="pl-s1">img</span> <span class="pl-c1">/</span> <span class="pl-c1">255</span> <span class="pl-c1">-</span> <span class="pl-s1">mean</span>) <span class="pl-c1">/</span> <span class="pl-s1">std</span>
+    <span class="pl-s1">img</span> <span class="pl-c1">=</span> <span class="pl-s1">img</span>.<span class="pl-c1">transpose</span>((<span class="pl-c1">2</span>, <span class="pl-c1">0</span>, <span class="pl-c1">1</span>))
+    <span class="pl-s1">img</span> <span class="pl-c1">=</span> <span class="pl-s1">np</span>.<span class="pl-c1">expand_dims</span>(<span class="pl-s1">img</span>, <span class="pl-s1">axis</span><span class="pl-c1">=</span><span class="pl-c1">0</span>)
+    <span class="pl-k">return</span> <span class="pl-s1">img</span>.<span class="pl-c1">astype</span>(<span class="pl-s1">np</span>.<span class="pl-c1">float32</span>)
 
 
-label_mapping = {
-    "nailong": 0,
-    "emoji": 1,
-    "anime": 2,
-    "others": 3,
-    "long": 4
+<span class="pl-s1">label_mapping</span> <span class="pl-c1">=</span> {
+    <span class="pl-s">"nailong"</span>: <span class="pl-c1">0</span>,
+    <span class="pl-s">"emoji"</span>: <span class="pl-c1">1</span>,
+    <span class="pl-s">"anime"</span>: <span class="pl-c1">2</span>,
+    <span class="pl-s">"others"</span>: <span class="pl-c1">3</span>,
+    <span class="pl-s">"long"</span>: <span class="pl-c1">4</span>
 }
 
-reverse_label_mapping = {v: k for k, v in label_mapping.items()}
+<span class="pl-s1">reverse_label_mapping</span> <span class="pl-c1">=</span> {<span class="pl-s1">v</span>: <span class="pl-s1">k</span> <span class="pl-k">for</span> <span class="pl-s1">k</span>, <span class="pl-s1">v</span> <span class="pl-c1">in</span> <span class="pl-s1">label_mapping</span>.<span class="pl-c1">items</span>()}
 
-model_path = 'model.onnx'
-session = ort.InferenceSession(model_path)
+<span class="pl-s1">model_path</span> <span class="pl-c1">=</span> <span class="pl-s">'model.onnx'</span>
+<span class="pl-s1">session</span> <span class="pl-c1">=</span> <span class="pl-s1">ort</span>.<span class="pl-c1">InferenceSession</span>(<span class="pl-s1">model_path</span>)
 
-image_path = '3.jpg'
-image = Image.open(image_path).convert("RGB")
-# image = transform(image).unsqueeze(0).numpy()
-image = transform_img(image)
+<span class="pl-s1">image_path</span> <span class="pl-c1">=</span> <span class="pl-s">'3.jpg'</span>
+<span class="pl-s1">image</span> <span class="pl-c1">=</span> <span class="pl-v">Image</span>.<span class="pl-c1">open</span>(<span class="pl-s1">image_path</span>).<span class="pl-c1">convert</span>(<span class="pl-s">"RGB"</span>)
+<span class="pl-c"># image = transform(image).unsqueeze(0).numpy()</span>
+<span class="pl-s1">image</span> <span class="pl-c1">=</span> <span class="pl-en">transform_img</span>(<span class="pl-s1">image</span>)
 
-# 运行推理
-input_name = session.get_inputs()[0].name
-output_name = session.get_outputs()[0].name
-outputs = session.run([output_name], {input_name: image})
+<span class="pl-c"># 运行推理</span>
+<span class="pl-s1">input_name</span> <span class="pl-c1">=</span> <span class="pl-s1">session</span>.<span class="pl-c1">get_inputs</span>()[<span class="pl-c1">0</span>].<span class="pl-c1">name</span>
+<span class="pl-s1">output_name</span> <span class="pl-c1">=</span> <span class="pl-s1">session</span>.<span class="pl-c1">get_outputs</span>()[<span class="pl-c1">0</span>].<span class="pl-c1">name</span>
+<span class="pl-s1">outputs</span> <span class="pl-c1">=</span> <span class="pl-s1">session</span>.<span class="pl-c1">run</span>([<span class="pl-s1">output_name</span>], {<span class="pl-s1">input_name</span>: <span class="pl-s1">image</span>})
 
-# 获取分类结果
-output = outputs[0]
-predicted_class = np.argmax(output, axis=1)
-predicted_label = reverse_label_mapping[predicted_class[0]]
+<span class="pl-c"># 获取分类结果</span>
+<span class="pl-s1">output</span> <span class="pl-c1">=</span> <span class="pl-s1">outputs</span>[<span class="pl-c1">0</span>]
+<span class="pl-s1">predicted_class</span> <span class="pl-c1">=</span> <span class="pl-s1">np</span>.<span class="pl-c1">argmax</span>(<span class="pl-s1">output</span>, <span class="pl-s1">axis</span><span class="pl-c1">=</span><span class="pl-c1">1</span>)
+<span class="pl-s1">predicted_label</span> <span class="pl-c1">=</span> <span class="pl-s1">reverse_label_mapping</span>[<span class="pl-s1">predicted_class</span>[<span class="pl-c1">0</span>]]
 
-print(f"Predicted class: {predicted_label}")
-
-</code></pre>
+<span class="pl-en">print</span>(<span class="pl-s">f"Predicted class: <span class="pl-s1"><span class="pl-kos">{</span><span class="pl-s1">predicted_label</span><span class="pl-kos">}</span></span>"</span>)</pre></div>
 <p></p>
 </details> 
 <blockquote>

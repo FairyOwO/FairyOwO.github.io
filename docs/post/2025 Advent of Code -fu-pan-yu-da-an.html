@@ -2121,7 +2121,7 @@ print(ans)
 <meta property="og:url" content="https://FairyOwO.github.io/post/2025%20Advent%20of%20Code%20-fu-pan-yu-da-an.html">
 <meta property="og:image" content="https://github.githubassets.com/favicons/favicon.svg">
 <title>2025 Advent of Code 复盘与答案</title>
-<link href="//unpkg.com/@wooorm/starry-night@2.1.1/style/both.css" rel="stylesheet" />
+
 
 
 </head>
@@ -2145,17 +2145,7 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
     body {padding: 8px;}
     .postTitle{font-size:24px;}
 }
-.copy-feedback {
-    display: none;
-    position: absolute;
-    top: 10px;
-    right: 50px;
-    color: var(--color-fg-on-emphasis);
-    background-color: var(--color-fg-muted);
-    border-radius: 3px;
-    padding: 5px 8px;
-    font-size: 12px;
-}
+
 </style>
 
 
@@ -2207,21 +2197,22 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
 模拟即可</p>
 <details><summary>Details</summary>
 <p>
-</p><div class="highlight highlight-source-python"><pre class="notranslate"><span class="pl-s1">counts</span> <span class="pl-c1">=</span> <span class="pl-c1">0</span>
-<span class="pl-s1">now</span> <span class="pl-c1">=</span> <span class="pl-c1">50</span>
-<span class="pl-k">for</span> <span class="pl-s1">line</span> <span class="pl-c1">in</span> <span class="pl-s1">aaa</span>.<span class="pl-c1">splitlines</span>():
-    <span class="pl-s1">direction</span> <span class="pl-c1">=</span> <span class="pl-s1">line</span>[<span class="pl-c1">0</span>]
-    <span class="pl-s1">steps</span> <span class="pl-c1">=</span> <span class="pl-en">int</span>(<span class="pl-s1">line</span>[<span class="pl-c1">1</span>:])
-    <span class="pl-k">if</span> <span class="pl-s1">direction</span> <span class="pl-c1">==</span> <span class="pl-s">'L'</span>:
-        <span class="pl-s1">now</span> <span class="pl-c1">-=</span> <span class="pl-s1">steps</span>
-    <span class="pl-k">elif</span> <span class="pl-s1">direction</span> <span class="pl-c1">==</span> <span class="pl-s">'R'</span>:
-        <span class="pl-s1">now</span> <span class="pl-c1">+=</span> <span class="pl-s1">steps</span>
+</p><pre lang="python" class="notranslate"><code class="notranslate">counts = 0
+now = 50
+for line in aaa.splitlines():
+    direction = line[0]
+    steps = int(line[1:])
+    if direction == 'L':
+        now -= steps
+    elif direction == 'R':
+        now += steps
     
-    <span class="pl-s1">now</span> <span class="pl-c1">=</span> (<span class="pl-s1">now</span> <span class="pl-c1">+</span> <span class="pl-c1">100</span>) <span class="pl-c1">%</span> <span class="pl-c1">100</span>
-    <span class="pl-k">if</span> <span class="pl-s1">now</span> <span class="pl-c1">==</span> <span class="pl-c1">0</span>:
-        <span class="pl-s1">counts</span> <span class="pl-c1">+=</span> <span class="pl-c1">1</span>
+    now = (now + 100) % 100
+    if now == 0:
+        counts += 1
 
-<span class="pl-en">print</span>(<span class="pl-s1">counts</span>)</pre></div>
+print(counts)
+</code></pre>
 <p></p>
 </details> 
 <h3>2题</h3>
@@ -2229,34 +2220,36 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
 <p>继续模拟 注意有的会转超过一圈</p>
 <details><summary>Details</summary>
 <p>
-</p><div class="highlight highlight-source-python"><pre class="notranslate"><span class="pl-s1">counts</span> <span class="pl-c1">=</span> <span class="pl-c1">0</span>
-<span class="pl-s1">now</span> <span class="pl-c1">=</span> <span class="pl-c1">50</span>
-<span class="pl-k">for</span> <span class="pl-s1">line</span> <span class="pl-c1">in</span> <span class="pl-s1">aaa</span>.<span class="pl-c1">splitlines</span>():
-    <span class="pl-s1">is_zero_now</span> <span class="pl-c1">=</span> (<span class="pl-s1">now</span> <span class="pl-c1">==</span> <span class="pl-c1">0</span>)
-    <span class="pl-s1">direction</span> <span class="pl-c1">=</span> <span class="pl-s1">line</span>[<span class="pl-c1">0</span>]
-    <span class="pl-s1">steps</span> <span class="pl-c1">=</span> <span class="pl-en">int</span>(<span class="pl-s1">line</span>[<span class="pl-c1">1</span>:])
+</p><pre lang="python" class="notranslate"><code class="notranslate">
+counts = 0
+now = 50
+for line in aaa.splitlines():
+    is_zero_now = (now == 0)
+    direction = line[0]
+    steps = int(line[1:])
 
-    <span class="pl-s1">cricles</span> <span class="pl-c1">=</span> <span class="pl-s1">steps</span> <span class="pl-c1">//</span> <span class="pl-c1">100</span>
-    <span class="pl-s1">counts</span> <span class="pl-c1">+=</span> <span class="pl-s1">cricles</span>
-    <span class="pl-s1">steps</span> <span class="pl-c1">=</span> <span class="pl-s1">steps</span> <span class="pl-c1">%</span> <span class="pl-c1">100</span>
+    cricles = steps // 100
+    counts += cricles
+    steps = steps % 100
 
-    <span class="pl-k">if</span> <span class="pl-s1">direction</span> <span class="pl-c1">==</span> <span class="pl-s">'L'</span>:
-        <span class="pl-s1">now</span> <span class="pl-c1">-=</span> <span class="pl-s1">steps</span>
-    <span class="pl-k">elif</span> <span class="pl-s1">direction</span> <span class="pl-c1">==</span> <span class="pl-s">'R'</span>:
-        <span class="pl-s1">now</span> <span class="pl-c1">+=</span> <span class="pl-s1">steps</span>
+    if direction == 'L':
+        now -= steps
+    elif direction == 'R':
+        now += steps
     
-    <span class="pl-k">if</span> <span class="pl-c1">not</span> <span class="pl-s1">is_zero_now</span>:
-        <span class="pl-k">if</span> <span class="pl-s1">now</span> <span class="pl-c1">&lt;=</span> <span class="pl-c1">0</span>:
-            <span class="pl-s1">counts</span> <span class="pl-c1">+=</span> <span class="pl-c1">1</span>
+    if not is_zero_now:
+        if now &lt;= 0:
+            counts += 1
     
-    <span class="pl-k">if</span> <span class="pl-s1">now</span> <span class="pl-c1">&gt;=</span> <span class="pl-c1">100</span>:
-        <span class="pl-s1">counts</span> <span class="pl-c1">+=</span> <span class="pl-c1">1</span>
+    if now &gt;= 100:
+        counts += 1
 
-    <span class="pl-s1">now</span> <span class="pl-c1">=</span> (<span class="pl-s1">now</span> <span class="pl-c1">+</span> <span class="pl-c1">100</span>) <span class="pl-c1">%</span> <span class="pl-c1">100</span>
-    <span class="pl-c"># if now == 0:</span>
-    <span class="pl-c">#     counts += 1</span>
+    now = (now + 100) % 100
+    # if now == 0:
+    #     counts += 1
 
-<span class="pl-en">print</span>(<span class="pl-s1">counts</span>)</pre></div>
+print(counts)
+</code></pre>
 <p></p>
 </details> 
 <h2>第二题</h2>
@@ -2265,64 +2258,66 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
 <p>给定范围 找到仅由重复两次的数序数字组成的任何 ID</p>
 <details><summary>Details</summary>
 <p>
-</p><div class="highlight highlight-source-python"><pre class="notranslate"><span class="pl-s1">input_list</span> <span class="pl-c1">=</span> <span class="pl-s1">aaa</span>.<span class="pl-c1">split</span>(<span class="pl-s">","</span>)
+</p><pre lang="python" class="notranslate"><code class="notranslate">input_list = aaa.split(",")
 
-<span class="pl-s1">ans</span> <span class="pl-c1">=</span> <span class="pl-c1">0</span>
-<span class="pl-k">for</span> <span class="pl-s1">range_pair</span> <span class="pl-c1">in</span> <span class="pl-s1">input_list</span>:
-    <span class="pl-s1">start</span>, <span class="pl-s1">end</span> <span class="pl-c1">=</span> <span class="pl-en">map</span>(<span class="pl-s1">int</span>, <span class="pl-s1">range_pair</span>.<span class="pl-c1">split</span>(<span class="pl-s">"-"</span>))
-    <span class="pl-k">for</span> <span class="pl-s1">number</span> <span class="pl-c1">in</span> <span class="pl-en">range</span>(<span class="pl-s1">start</span>, <span class="pl-s1">end</span> <span class="pl-c1">+</span> <span class="pl-c1">1</span>):
-        <span class="pl-s1">str_number</span> <span class="pl-c1">=</span> <span class="pl-en">str</span>(<span class="pl-s1">number</span>)
-        <span class="pl-k">if</span> <span class="pl-en">len</span>(<span class="pl-s1">str_number</span>) <span class="pl-c1">%</span> <span class="pl-c1">2</span> <span class="pl-c1">!=</span> <span class="pl-c1">0</span>:
-            <span class="pl-c"># if len(set(str_number)) == 1:</span>
-            <span class="pl-c">#     ans += number</span>
-            <span class="pl-k">continue</span>
-        <span class="pl-k">else</span>:
-            <span class="pl-s1">mid</span> <span class="pl-c1">=</span> <span class="pl-en">len</span>(<span class="pl-s1">str_number</span>) <span class="pl-c1">//</span> <span class="pl-c1">2</span>
-            <span class="pl-s1">first_half</span> <span class="pl-c1">=</span> <span class="pl-s1">str_number</span>[:<span class="pl-s1">mid</span>]
-            <span class="pl-s1">second_half</span> <span class="pl-c1">=</span> <span class="pl-s1">str_number</span>[<span class="pl-s1">mid</span>:]
-            <span class="pl-k">if</span> <span class="pl-s1">first_half</span> <span class="pl-c1">==</span> <span class="pl-s1">second_half</span>:
-                <span class="pl-s1">ans</span> <span class="pl-c1">+=</span> <span class="pl-s1">number</span>
-                <span class="pl-k">continue</span>
-<span class="pl-en">print</span>(<span class="pl-s1">ans</span>)</pre></div>
+ans = 0
+for range_pair in input_list:
+    start, end = map(int, range_pair.split("-"))
+    for number in range(start, end + 1):
+        str_number = str(number)
+        if len(str_number) % 2 != 0:
+            # if len(set(str_number)) == 1:
+            #     ans += number
+            continue
+        else:
+            mid = len(str_number) // 2
+            first_half = str_number[:mid]
+            second_half = str_number[mid:]
+            if first_half == second_half:
+                ans += number
+                continue
+print(ans)
+</code></pre>
 <p></p>
 </details> 
 <h3>2题</h3>
 <p>在1题的基础上 重复两次变成重复若干次</p>
 <details><summary>Details</summary>
 <p>
-</p><div class="highlight highlight-source-python"><pre class="notranslate"><span class="pl-s1">input_list</span> <span class="pl-c1">=</span> <span class="pl-s1">aaa</span>.<span class="pl-c1">split</span>(<span class="pl-s">","</span>)
+</p><pre lang="python" class="notranslate"><code class="notranslate">input_list = aaa.split(",")
 
-<span class="pl-k">def</span> <span class="pl-en">get_factors</span>(<span class="pl-s1">n</span>: <span class="pl-smi">int</span>) <span class="pl-c1">-&gt;</span> <span class="pl-smi">list</span>:
-    <span class="pl-s1">factors</span> <span class="pl-c1">=</span> []
-    <span class="pl-k">for</span> <span class="pl-s1">i</span> <span class="pl-c1">in</span> <span class="pl-en">range</span>(<span class="pl-c1">2</span>, <span class="pl-en">int</span>(<span class="pl-en">sqrt</span>(<span class="pl-s1">n</span>)) <span class="pl-c1">+</span> <span class="pl-c1">1</span>):
-        <span class="pl-k">if</span> <span class="pl-s1">n</span> <span class="pl-c1">%</span> <span class="pl-s1">i</span> <span class="pl-c1">==</span> <span class="pl-c1">0</span>:
-            <span class="pl-s1">factors</span>.<span class="pl-c1">append</span>([<span class="pl-s1">i</span>, <span class="pl-s1">n</span> <span class="pl-c1">//</span> <span class="pl-s1">i</span>])
+def get_factors(n: int) -&gt; list:
+    factors = []
+    for i in range(2, int(sqrt(n)) + 1):
+        if n % i == 0:
+            factors.append([i, n // i])
             
-    <span class="pl-s1">factors</span>.<span class="pl-c1">append</span>([<span class="pl-c1">1</span>, <span class="pl-s1">n</span>])
-    <span class="pl-k">return</span> <span class="pl-s1">factors</span>
+    factors.append([1, n])
+    return factors
 
 
-<span class="pl-s1">ans</span> <span class="pl-c1">=</span> <span class="pl-c1">0</span>
-<span class="pl-k">for</span> <span class="pl-s1">range_pair</span> <span class="pl-c1">in</span> <span class="pl-s1">input_list</span>:
-    <span class="pl-s1">start</span>, <span class="pl-s1">end</span> <span class="pl-c1">=</span> <span class="pl-en">map</span>(<span class="pl-s1">int</span>, <span class="pl-s1">range_pair</span>.<span class="pl-c1">split</span>(<span class="pl-s">"-"</span>))
-    <span class="pl-k">for</span> <span class="pl-s1">number</span> <span class="pl-c1">in</span> <span class="pl-en">range</span>(<span class="pl-s1">start</span>, <span class="pl-s1">end</span> <span class="pl-c1">+</span> <span class="pl-c1">1</span>):
-        <span class="pl-s1">str_number</span> <span class="pl-c1">=</span> <span class="pl-en">str</span>(<span class="pl-s1">number</span>)
-        <span class="pl-k">if</span> <span class="pl-en">len</span>(<span class="pl-s1">str_number</span>) <span class="pl-c1">&lt;</span> <span class="pl-c1">2</span>:
-            <span class="pl-k">continue</span>
+ans = 0
+for range_pair in input_list:
+    start, end = map(int, range_pair.split("-"))
+    for number in range(start, end + 1):
+        str_number = str(number)
+        if len(str_number) &lt; 2:
+            continue
             
-        <span class="pl-s1">factors</span> <span class="pl-c1">=</span> <span class="pl-en">get_factors</span>(<span class="pl-en">len</span>(<span class="pl-s1">str_number</span>))
-        <span class="pl-k">for</span> <span class="pl-s1">f1</span>, <span class="pl-s1">f2</span> <span class="pl-c1">in</span> <span class="pl-s1">factors</span>:
-            <span class="pl-k">if</span> <span class="pl-s1">str_number</span>[:<span class="pl-s1">f1</span>] <span class="pl-c1">*</span> <span class="pl-s1">f2</span> <span class="pl-c1">==</span> <span class="pl-s1">str_number</span>:
-                <span class="pl-c"># print(number)</span>
-                <span class="pl-s1">ans</span> <span class="pl-c1">+=</span> <span class="pl-s1">number</span>
-                <span class="pl-k">break</span>
-            <span class="pl-k">if</span> <span class="pl-c1">1</span> <span class="pl-c1"><span class="pl-c1">not</span> <span class="pl-c1">in</span></span> [<span class="pl-s1">f1</span>, <span class="pl-s1">f2</span>]:
-                <span class="pl-k">if</span> <span class="pl-s1">str_number</span>[:<span class="pl-s1">f2</span>] <span class="pl-c1">*</span> <span class="pl-s1">f1</span> <span class="pl-c1">==</span> <span class="pl-s1">str_number</span>:
-                    <span class="pl-c"># print(number)</span>
-                    <span class="pl-s1">ans</span> <span class="pl-c1">+=</span> <span class="pl-s1">number</span>
-                    <span class="pl-k">break</span>
+        factors = get_factors(len(str_number))
+        for f1, f2 in factors:
+            if str_number[:f1] * f2 == str_number:
+                # print(number)
+                ans += number
+                break
+            if 1 not in [f1, f2]:
+                if str_number[:f2] * f1 == str_number:
+                    # print(number)
+                    ans += number
+                    break
 
-<span class="pl-en">print</span>(<span class="pl-s1">ans</span>)</pre></div>
+print(ans)
+</code></pre>
 <p></p>
 </details> 
 <h2>第三题</h2>
@@ -2331,45 +2326,47 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
 <p>给定一串数字 这些数字在里面取 相对位置固定的两个数字 来组成最大的数</p>
 <details><summary>Details</summary>
 <p>
-</p><div class="highlight highlight-source-python"><pre class="notranslate"><span class="pl-s1">ans</span> <span class="pl-c1">=</span> <span class="pl-c1">0</span>
-<span class="pl-k">for</span> <span class="pl-s1">line</span> <span class="pl-c1">in</span> <span class="pl-s1">aaa</span>.<span class="pl-c1">split</span>(<span class="pl-s">"<span class="pl-cce">\n</span>"</span>):
-    <span class="pl-s1">max_left_num</span> <span class="pl-c1">=</span> <span class="pl-en">int</span>(<span class="pl-s1">line</span>[<span class="pl-c1">0</span>])
-    <span class="pl-s1">max_left_index</span> <span class="pl-c1">=</span> <span class="pl-c1">0</span>
-    <span class="pl-k">for</span> <span class="pl-s1">i</span>, <span class="pl-s1">c</span> <span class="pl-c1">in</span> <span class="pl-en">enumerate</span>(<span class="pl-s1">line</span>[<span class="pl-c1">1</span>:<span class="pl-c1">-</span><span class="pl-c1">1</span>]):
-        <span class="pl-k">if</span> <span class="pl-en">int</span>(<span class="pl-s1">c</span>) <span class="pl-c1">&gt;</span> <span class="pl-s1">max_left_num</span>:
-            <span class="pl-s1">max_left_num</span> <span class="pl-c1">=</span> <span class="pl-en">int</span>(<span class="pl-s1">c</span>)
-            <span class="pl-s1">max_left_index</span> <span class="pl-c1">=</span> <span class="pl-s1">i</span> <span class="pl-c1">+</span> <span class="pl-c1">1</span>
-    <span class="pl-s1">max_right_num</span> <span class="pl-c1">=</span> <span class="pl-en">int</span>(<span class="pl-s1">line</span>[<span class="pl-c1">-</span><span class="pl-c1">1</span>])
-    <span class="pl-k">for</span> <span class="pl-s1">j</span> <span class="pl-c1">in</span> <span class="pl-en">range</span>(<span class="pl-en">len</span>(<span class="pl-s1">line</span>) <span class="pl-c1">-</span> <span class="pl-c1">2</span>, <span class="pl-s1">max_left_index</span>, <span class="pl-c1">-</span><span class="pl-c1">1</span>):
-        <span class="pl-k">if</span> <span class="pl-en">int</span>(<span class="pl-s1">line</span>[<span class="pl-s1">j</span>]) <span class="pl-c1">&gt;</span> <span class="pl-s1">max_right_num</span>:
-            <span class="pl-s1">max_right_num</span> <span class="pl-c1">=</span> <span class="pl-en">int</span>(<span class="pl-s1">line</span>[<span class="pl-s1">j</span>])
+</p><pre lang="python" class="notranslate"><code class="notranslate">ans = 0
+for line in aaa.split("\n"):
+    max_left_num = int(line[0])
+    max_left_index = 0
+    for i, c in enumerate(line[1:-1]):
+        if int(c) &gt; max_left_num:
+            max_left_num = int(c)
+            max_left_index = i + 1
+    max_right_num = int(line[-1])
+    for j in range(len(line) - 2, max_left_index, -1):
+        if int(line[j]) &gt; max_right_num:
+            max_right_num = int(line[j])
     
-    <span class="pl-s1">ans</span> <span class="pl-c1">+=</span> <span class="pl-s1">max_left_num</span> <span class="pl-c1">*</span> <span class="pl-c1">10</span> <span class="pl-c1">+</span> <span class="pl-s1">max_right_num</span>
+    ans += max_left_num * 10 + max_right_num
 
-<span class="pl-en">print</span>(<span class="pl-s1">ans</span>)</pre></div>
+print(ans)
+</code></pre>
 <p></p>
 </details> 
 <h3>2题</h3>
 <p>在1题的基础上 取12个数字 组成最大的数</p>
 <details><summary>Details</summary>
 <p>
-</p><div class="highlight highlight-source-python"><pre class="notranslate"><span class="pl-s1">ans</span> <span class="pl-c1">=</span> <span class="pl-c1">0</span>
-<span class="pl-s1">n</span> <span class="pl-c1">=</span> <span class="pl-c1">12</span>
-<span class="pl-k">for</span> <span class="pl-s1">line</span> <span class="pl-c1">in</span> <span class="pl-s1">aaa</span>.<span class="pl-c1">split</span>(<span class="pl-s">"<span class="pl-cce">\n</span>"</span>):
-    <span class="pl-s1">dp</span> <span class="pl-c1">=</span> [[<span class="pl-c1">-</span><span class="pl-c1">1</span>] <span class="pl-c1">*</span> (<span class="pl-s1">n</span> <span class="pl-c1">+</span> <span class="pl-c1">1</span>) <span class="pl-k">for</span> <span class="pl-s1">_</span> <span class="pl-c1">in</span> <span class="pl-en">range</span>(<span class="pl-en">len</span>(<span class="pl-s1">line</span>) <span class="pl-c1">+</span> <span class="pl-c1">1</span>)]
-    <span class="pl-s1">dp</span>[<span class="pl-c1">0</span>][<span class="pl-c1">0</span>] <span class="pl-c1">=</span> <span class="pl-c1">0</span>
-    <span class="pl-k">for</span> <span class="pl-s1">i</span> <span class="pl-c1">in</span> <span class="pl-en">range</span>(<span class="pl-en">len</span>(<span class="pl-s1">line</span>)):
-        <span class="pl-k">for</span> <span class="pl-s1">j</span> <span class="pl-c1">in</span> <span class="pl-en">range</span>(<span class="pl-s1">n</span> <span class="pl-c1">+</span> <span class="pl-c1">1</span>):
-            <span class="pl-k">if</span> <span class="pl-s1">dp</span>[<span class="pl-s1">i</span>][<span class="pl-s1">j</span>] <span class="pl-c1">==</span> <span class="pl-c1">-</span><span class="pl-c1">1</span>:
-                <span class="pl-k">continue</span>
-            <span class="pl-c"># 不选</span>
-            <span class="pl-s1">dp</span>[<span class="pl-s1">i</span> <span class="pl-c1">+</span> <span class="pl-c1">1</span>][<span class="pl-s1">j</span>] <span class="pl-c1">=</span> <span class="pl-en">max</span>(<span class="pl-s1">dp</span>[<span class="pl-s1">i</span> <span class="pl-c1">+</span> <span class="pl-c1">1</span>][<span class="pl-s1">j</span>], <span class="pl-s1">dp</span>[<span class="pl-s1">i</span>][<span class="pl-s1">j</span>])
-            <span class="pl-c"># 选</span>
-            <span class="pl-k">if</span> <span class="pl-s1">j</span> <span class="pl-c1">&lt;</span> <span class="pl-s1">n</span>:
-                <span class="pl-s1">dp</span>[<span class="pl-s1">i</span> <span class="pl-c1">+</span> <span class="pl-c1">1</span>][<span class="pl-s1">j</span> <span class="pl-c1">+</span> <span class="pl-c1">1</span>] <span class="pl-c1">=</span> <span class="pl-en">max</span>(<span class="pl-s1">dp</span>[<span class="pl-s1">i</span> <span class="pl-c1">+</span> <span class="pl-c1">1</span>][<span class="pl-s1">j</span> <span class="pl-c1">+</span> <span class="pl-c1">1</span>], <span class="pl-s1">dp</span>[<span class="pl-s1">i</span>][<span class="pl-s1">j</span>] <span class="pl-c1">*</span> <span class="pl-c1">10</span> <span class="pl-c1">+</span> <span class="pl-en">int</span>(<span class="pl-s1">line</span>[<span class="pl-s1">i</span>]))
-    <span class="pl-s1">ans</span> <span class="pl-c1">+=</span> <span class="pl-s1">dp</span>[<span class="pl-en">len</span>(<span class="pl-s1">line</span>)][<span class="pl-s1">n</span>]
+</p><pre lang="python" class="notranslate"><code class="notranslate">ans = 0
+n = 12
+for line in aaa.split("\n"):
+    dp = [[-1] * (n + 1) for _ in range(len(line) + 1)]
+    dp[0][0] = 0
+    for i in range(len(line)):
+        for j in range(n + 1):
+            if dp[i][j] == -1:
+                continue
+            # 不选
+            dp[i + 1][j] = max(dp[i + 1][j], dp[i][j])
+            # 选
+            if j &lt; n:
+                dp[i + 1][j + 1] = max(dp[i + 1][j + 1], dp[i][j] * 10 + int(line[i]))
+    ans += dp[len(line)][n]
 
-<span class="pl-en">print</span>(<span class="pl-s1">ans</span>)</pre></div>
+print(ans)
+</code></pre>
 <p></p>
 </details> 
 <h2>第四题</h2>
@@ -2381,33 +2378,34 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
 </blockquote>
 <details><summary>Details</summary>
 <p>
-</p><div class="highlight highlight-source-python"><pre class="notranslate"><span class="pl-s1">a</span> <span class="pl-c1">=</span> [<span class="pl-en">list</span>(<span class="pl-s1">line</span>) <span class="pl-k">for</span> <span class="pl-s1">line</span> <span class="pl-c1">in</span> <span class="pl-s1">aaa</span>.<span class="pl-c1">splitlines</span>()]
+</p><pre lang="python" class="notranslate"><code class="notranslate">a = [list(line) for line in aaa.splitlines()]
 
-<span class="pl-k">for</span> <span class="pl-s1">row</span> <span class="pl-c1">in</span> <span class="pl-en">range</span>(<span class="pl-en">len</span>(<span class="pl-s1">a</span>)):
-    <span class="pl-k">for</span> <span class="pl-s1">col</span> <span class="pl-c1">in</span> <span class="pl-en">range</span>(<span class="pl-en">len</span>(<span class="pl-s1">a</span>[<span class="pl-c1">0</span>])):
-        <span class="pl-c"># if a[row][col] == '.':</span>
-        <span class="pl-s1">pairs</span> <span class="pl-c1">=</span> []
-        <span class="pl-c"># 统计周围八个少于4</span>
-        <span class="pl-k">for</span> <span class="pl-s1">i</span> <span class="pl-c1">in</span> [<span class="pl-c1">-</span><span class="pl-c1">1</span>, <span class="pl-c1">0</span>, <span class="pl-c1">1</span>]:
-            <span class="pl-k">for</span> <span class="pl-s1">j</span> <span class="pl-c1">in</span> [<span class="pl-c1">-</span><span class="pl-c1">1</span>, <span class="pl-c1">0</span>, <span class="pl-c1">1</span>]:
-                <span class="pl-k">if</span> <span class="pl-s1">i</span> <span class="pl-c1">==</span> <span class="pl-c1">0</span> <span class="pl-c1">and</span> <span class="pl-s1">j</span> <span class="pl-c1">==</span> <span class="pl-c1">0</span>:
-                    <span class="pl-k">continue</span>
-                <span class="pl-k">if</span> <span class="pl-c1">0</span> <span class="pl-c1">&lt;=</span> <span class="pl-s1">row</span> <span class="pl-c1">+</span> <span class="pl-s1">i</span> <span class="pl-c1">&lt;</span> <span class="pl-en">len</span>(<span class="pl-s1">a</span>) <span class="pl-c1">and</span> <span class="pl-c1">0</span> <span class="pl-c1">&lt;=</span> <span class="pl-s1">col</span> <span class="pl-c1">+</span> <span class="pl-s1">j</span> <span class="pl-c1">&lt;</span> <span class="pl-en">len</span>(<span class="pl-s1">a</span>[<span class="pl-c1">0</span>]):
-                    <span class="pl-k">if</span> <span class="pl-s1">a</span>[<span class="pl-s1">row</span> <span class="pl-c1">+</span> <span class="pl-s1">i</span>][<span class="pl-s1">col</span> <span class="pl-c1">+</span> <span class="pl-s1">j</span>] <span class="pl-c1">==</span> <span class="pl-s">'@'</span> <span class="pl-c1">or</span> <span class="pl-s1">a</span>[<span class="pl-s1">row</span> <span class="pl-c1">+</span> <span class="pl-s1">i</span>][<span class="pl-s1">col</span> <span class="pl-c1">+</span> <span class="pl-s1">j</span>] <span class="pl-c1">==</span> <span class="pl-s">'x'</span>:
-                        <span class="pl-s1">pairs</span>.<span class="pl-c1">append</span>((<span class="pl-s1">row</span> <span class="pl-c1">+</span> <span class="pl-s1">i</span>, <span class="pl-s1">col</span> <span class="pl-c1">+</span> <span class="pl-s1">j</span>))
-        <span class="pl-c"># 少于4个@ 则将@变成x</span>
-        <span class="pl-k">if</span> <span class="pl-en">len</span>(<span class="pl-s1">pairs</span>) <span class="pl-c1">&lt;</span> <span class="pl-c1">4</span> <span class="pl-c1">and</span> <span class="pl-s1">a</span>[<span class="pl-s1">row</span>][<span class="pl-s1">col</span>] <span class="pl-c1">==</span> <span class="pl-s">'@'</span>:
-            <span class="pl-c"># for i, j in pairs:</span>
-            <span class="pl-c">#     a[i][j] = 'x'</span>
-            <span class="pl-s1">a</span>[<span class="pl-s1">row</span>][<span class="pl-s1">col</span>] <span class="pl-c1">=</span> <span class="pl-s">'x'</span>
+for row in range(len(a)):
+    for col in range(len(a[0])):
+        # if a[row][col] == '.':
+        pairs = []
+        # 统计周围八个少于4
+        for i in [-1, 0, 1]:
+            for j in [-1, 0, 1]:
+                if i == 0 and j == 0:
+                    continue
+                if 0 &lt;= row + i &lt; len(a) and 0 &lt;= col + j &lt; len(a[0]):
+                    if a[row + i][col + j] == '@' or a[row + i][col + j] == 'x':
+                        pairs.append((row + i, col + j))
+        # 少于4个@ 则将@变成x
+        if len(pairs) &lt; 4 and a[row][col] == '@':
+            # for i, j in pairs:
+            #     a[i][j] = 'x'
+            a[row][col] = 'x'
 
-<span class="pl-s1">ans</span> <span class="pl-c1">=</span> <span class="pl-c1">0</span>
-<span class="pl-k">for</span> <span class="pl-s1">row</span> <span class="pl-c1">in</span> <span class="pl-en">range</span>(<span class="pl-en">len</span>(<span class="pl-s1">a</span>)):
-    <span class="pl-k">for</span> <span class="pl-s1">col</span> <span class="pl-c1">in</span> <span class="pl-en">range</span>(<span class="pl-en">len</span>(<span class="pl-s1">a</span>[<span class="pl-c1">0</span>])):
-        <span class="pl-k">if</span> <span class="pl-s1">a</span>[<span class="pl-s1">row</span>][<span class="pl-s1">col</span>] <span class="pl-c1">==</span> <span class="pl-s">'x'</span>:
-            <span class="pl-s1">ans</span> <span class="pl-c1">+=</span> <span class="pl-c1">1</span>
+ans = 0
+for row in range(len(a)):
+    for col in range(len(a[0])):
+        if a[row][col] == 'x':
+            ans += 1
 
-<span class="pl-en">print</span>(<span class="pl-s1">ans</span>)</pre></div>
+print(ans)
+</code></pre>
 <p></p>
 </details> 
 <blockquote>
@@ -2419,33 +2417,34 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
 <p>在1题的基础上 找出来的位置都可以去掉变成空的 然后继续找</p>
 <details><summary>Details</summary>
 <p>
-</p><div class="highlight highlight-source-python"><pre class="notranslate"><span class="pl-s1">a</span> <span class="pl-c1">=</span> [<span class="pl-en">list</span>(<span class="pl-s1">line</span>) <span class="pl-k">for</span> <span class="pl-s1">line</span> <span class="pl-c1">in</span> <span class="pl-s1">aaa</span>.<span class="pl-c1">splitlines</span>()]
-<span class="pl-s1">ans</span> <span class="pl-c1">=</span> <span class="pl-c1">0</span>
-<span class="pl-s1">num_of_at</span> <span class="pl-c1">=</span> <span class="pl-en">sum</span>(<span class="pl-s1">row</span>.<span class="pl-c1">count</span>(<span class="pl-s">'@'</span>) <span class="pl-k">for</span> <span class="pl-s1">row</span> <span class="pl-c1">in</span> <span class="pl-s1">a</span>)
-<span class="pl-s1">temp_num_of_at</span> <span class="pl-c1">=</span> <span class="pl-s1">num_of_at</span>
-<span class="pl-k">while</span> <span class="pl-c1">True</span>:
-    <span class="pl-k">for</span> <span class="pl-s1">row</span> <span class="pl-c1">in</span> <span class="pl-en">range</span>(<span class="pl-en">len</span>(<span class="pl-s1">a</span>)):
-        <span class="pl-k">for</span> <span class="pl-s1">col</span> <span class="pl-c1">in</span> <span class="pl-en">range</span>(<span class="pl-en">len</span>(<span class="pl-s1">a</span>[<span class="pl-c1">0</span>])):
-            <span class="pl-s1">pairs</span> <span class="pl-c1">=</span> []
-            <span class="pl-c"># 统计周围八个少于4</span>
-            <span class="pl-k">for</span> <span class="pl-s1">i</span> <span class="pl-c1">in</span> [<span class="pl-c1">-</span><span class="pl-c1">1</span>, <span class="pl-c1">0</span>, <span class="pl-c1">1</span>]:
-                <span class="pl-k">for</span> <span class="pl-s1">j</span> <span class="pl-c1">in</span> [<span class="pl-c1">-</span><span class="pl-c1">1</span>, <span class="pl-c1">0</span>, <span class="pl-c1">1</span>]:
-                    <span class="pl-k">if</span> <span class="pl-s1">i</span> <span class="pl-c1">==</span> <span class="pl-c1">0</span> <span class="pl-c1">and</span> <span class="pl-s1">j</span> <span class="pl-c1">==</span> <span class="pl-c1">0</span>:
-                        <span class="pl-k">continue</span>
-                    <span class="pl-k">if</span> <span class="pl-c1">0</span> <span class="pl-c1">&lt;=</span> <span class="pl-s1">row</span> <span class="pl-c1">+</span> <span class="pl-s1">i</span> <span class="pl-c1">&lt;</span> <span class="pl-en">len</span>(<span class="pl-s1">a</span>) <span class="pl-c1">and</span> <span class="pl-c1">0</span> <span class="pl-c1">&lt;=</span> <span class="pl-s1">col</span> <span class="pl-c1">+</span> <span class="pl-s1">j</span> <span class="pl-c1">&lt;</span> <span class="pl-en">len</span>(<span class="pl-s1">a</span>[<span class="pl-c1">0</span>]):
-                        <span class="pl-k">if</span> <span class="pl-s1">a</span>[<span class="pl-s1">row</span> <span class="pl-c1">+</span> <span class="pl-s1">i</span>][<span class="pl-s1">col</span> <span class="pl-c1">+</span> <span class="pl-s1">j</span>] <span class="pl-c1">==</span> <span class="pl-s">'@'</span> <span class="pl-c1">or</span> <span class="pl-s1">a</span>[<span class="pl-s1">row</span> <span class="pl-c1">+</span> <span class="pl-s1">i</span>][<span class="pl-s1">col</span> <span class="pl-c1">+</span> <span class="pl-s1">j</span>] <span class="pl-c1">==</span> <span class="pl-s">'x'</span>:
-                            <span class="pl-s1">pairs</span>.<span class="pl-c1">append</span>((<span class="pl-s1">row</span> <span class="pl-c1">+</span> <span class="pl-s1">i</span>, <span class="pl-s1">col</span> <span class="pl-c1">+</span> <span class="pl-s1">j</span>))
-            <span class="pl-c"># 少于4个@ 则将@变成x</span>
-            <span class="pl-k">if</span> <span class="pl-en">len</span>(<span class="pl-s1">pairs</span>) <span class="pl-c1">&lt;</span> <span class="pl-c1">4</span> <span class="pl-c1">and</span> <span class="pl-s1">a</span>[<span class="pl-s1">row</span>][<span class="pl-s1">col</span>] <span class="pl-c1">==</span> <span class="pl-s">'@'</span>:
-                <span class="pl-s1">a</span>[<span class="pl-s1">row</span>][<span class="pl-s1">col</span>] <span class="pl-c1">=</span> <span class="pl-s">'.'</span>
-    <span class="pl-s1">new_num_of_at</span> <span class="pl-c1">=</span> <span class="pl-en">sum</span>(<span class="pl-s1">row</span>.<span class="pl-c1">count</span>(<span class="pl-s">'@'</span>) <span class="pl-k">for</span> <span class="pl-s1">row</span> <span class="pl-c1">in</span> <span class="pl-s1">a</span>)
-    <span class="pl-k">if</span> <span class="pl-s1">new_num_of_at</span> <span class="pl-c1">==</span> <span class="pl-s1">temp_num_of_at</span>:
-        <span class="pl-k">break</span>
-    <span class="pl-s1">temp_num_of_at</span> <span class="pl-c1">=</span> <span class="pl-s1">new_num_of_at</span>
+</p><pre lang="python" class="notranslate"><code class="notranslate">a = [list(line) for line in aaa.splitlines()]
+ans = 0
+num_of_at = sum(row.count('@') for row in a)
+temp_num_of_at = num_of_at
+while True:
+    for row in range(len(a)):
+        for col in range(len(a[0])):
+            pairs = []
+            # 统计周围八个少于4
+            for i in [-1, 0, 1]:
+                for j in [-1, 0, 1]:
+                    if i == 0 and j == 0:
+                        continue
+                    if 0 &lt;= row + i &lt; len(a) and 0 &lt;= col + j &lt; len(a[0]):
+                        if a[row + i][col + j] == '@' or a[row + i][col + j] == 'x':
+                            pairs.append((row + i, col + j))
+            # 少于4个@ 则将@变成x
+            if len(pairs) &lt; 4 and a[row][col] == '@':
+                a[row][col] = '.'
+    new_num_of_at = sum(row.count('@') for row in a)
+    if new_num_of_at == temp_num_of_at:
+        break
+    temp_num_of_at = new_num_of_at
 
-<span class="pl-s1">ans</span> <span class="pl-c1">=</span> <span class="pl-s1">num_of_at</span> <span class="pl-c1">-</span> <span class="pl-s1">new_num_of_at</span> 
+ans = num_of_at - new_num_of_at 
 
-<span class="pl-en">print</span>(<span class="pl-s1">ans</span>)</pre></div>
+print(ans)
+</code></pre>
 <p></p>
 </details> 
 <blockquote>
@@ -2457,20 +2456,21 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
 <p>给定一个范围 给定一系列数字 找到所有在范围内的数</p>
 <details><summary>Details</summary>
 <p>
-</p><div class="highlight highlight-source-python"><pre class="notranslate"><span class="pl-s1">fresh_ranges_text</span>, <span class="pl-s1">vegtables_text</span> <span class="pl-c1">=</span> <span class="pl-s1">aaa</span>.<span class="pl-c1">split</span>(<span class="pl-s">"<span class="pl-cce">\n</span><span class="pl-cce">\n</span>"</span>)
+</p><pre lang="python" class="notranslate"><code class="notranslate">fresh_ranges_text, vegtables_text = aaa.split("\n\n")
 
-<span class="pl-s1">fresh_ranges</span> <span class="pl-c1">=</span> []
-<span class="pl-k">for</span> <span class="pl-s1">line</span> <span class="pl-c1">in</span> <span class="pl-s1">fresh_ranges_text</span>.<span class="pl-c1">strip</span>().<span class="pl-c1">splitlines</span>():
-    <span class="pl-s1">start</span>, <span class="pl-s1">end</span> <span class="pl-c1">=</span> <span class="pl-en">map</span>(<span class="pl-s1">int</span>, <span class="pl-s1">line</span>.<span class="pl-c1">split</span>(<span class="pl-s">"-"</span>))
-    <span class="pl-s1">fresh_ranges</span>.<span class="pl-c1">append</span>((<span class="pl-s1">start</span>, <span class="pl-s1">end</span>))
+fresh_ranges = []
+for line in fresh_ranges_text.strip().splitlines():
+    start, end = map(int, line.split("-"))
+    fresh_ranges.append((start, end))
 
-<span class="pl-s1">ans</span> <span class="pl-c1">=</span> <span class="pl-c1">0</span>
-<span class="pl-k">for</span> <span class="pl-s1">line</span> <span class="pl-c1">in</span> <span class="pl-s1">vegtables_text</span>.<span class="pl-c1">strip</span>().<span class="pl-c1">splitlines</span>():
-    <span class="pl-s1">iid</span> <span class="pl-c1">=</span> <span class="pl-en">int</span>(<span class="pl-s1">line</span>)
-    <span class="pl-s1">is_fresh</span> <span class="pl-c1">=</span> <span class="pl-en">any</span>(<span class="pl-s1">start</span> <span class="pl-c1">&lt;=</span> <span class="pl-s1">iid</span> <span class="pl-c1">&lt;=</span> <span class="pl-s1">end</span> <span class="pl-k">for</span> <span class="pl-s1">start</span>, <span class="pl-s1">end</span> <span class="pl-c1">in</span> <span class="pl-s1">fresh_ranges</span>)
-    <span class="pl-s1">ans</span> <span class="pl-c1">+=</span> <span class="pl-s1">is_fresh</span>
+ans = 0
+for line in vegtables_text.strip().splitlines():
+    iid = int(line)
+    is_fresh = any(start &lt;= iid &lt;= end for start, end in fresh_ranges)
+    ans += is_fresh
 
-<span class="pl-en">print</span>(<span class="pl-s1">ans</span>)</pre></div>
+print(ans)
+</code></pre>
 <p></p>
 </details> 
 <h3>2题</h3>
@@ -2479,26 +2479,27 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
 需要合并区间</p>
 <details><summary>Details</summary>
 <p>
-</p><div class="highlight highlight-source-python"><pre class="notranslate"><span class="pl-s1">fresh_ranges_text</span>, <span class="pl-s1">vegtables_text</span> <span class="pl-c1">=</span> <span class="pl-s1">aaa</span>.<span class="pl-c1">split</span>(<span class="pl-s">"<span class="pl-cce">\n</span><span class="pl-cce">\n</span>"</span>)
+</p><pre lang="python" class="notranslate"><code class="notranslate">fresh_ranges_text, vegtables_text = aaa.split("\n\n")
 
-<span class="pl-s1">fresh_ranges</span> <span class="pl-c1">=</span> []
-<span class="pl-k">for</span> <span class="pl-s1">line</span> <span class="pl-c1">in</span> <span class="pl-s1">fresh_ranges_text</span>.<span class="pl-c1">strip</span>().<span class="pl-c1">splitlines</span>():
-    <span class="pl-s1">start</span>, <span class="pl-s1">end</span> <span class="pl-c1">=</span> <span class="pl-en">map</span>(<span class="pl-s1">int</span>, <span class="pl-s1">line</span>.<span class="pl-c1">split</span>(<span class="pl-s">"-"</span>))
-    <span class="pl-s1">fresh_ranges</span>.<span class="pl-c1">append</span>((<span class="pl-s1">start</span>, <span class="pl-s1">end</span>))
+fresh_ranges = []
+for line in fresh_ranges_text.strip().splitlines():
+    start, end = map(int, line.split("-"))
+    fresh_ranges.append((start, end))
 
-<span class="pl-c"># merge</span>
-<span class="pl-s1">fresh_ranges</span>.<span class="pl-c1">sort</span>()
-<span class="pl-s1">merged_fresh</span> <span class="pl-c1">=</span> []
-<span class="pl-k">for</span> <span class="pl-s1">start</span>, <span class="pl-s1">end</span> <span class="pl-c1">in</span> <span class="pl-s1">fresh_ranges</span>:
-    <span class="pl-k">if</span> <span class="pl-c1">not</span> <span class="pl-s1">merged_fresh</span> <span class="pl-c1">or</span> <span class="pl-s1">merged_fresh</span>[<span class="pl-c1">-</span><span class="pl-c1">1</span>][<span class="pl-c1">1</span>] <span class="pl-c1">&lt;</span> <span class="pl-s1">start</span>:
-        <span class="pl-s1">merged_fresh</span>.<span class="pl-c1">append</span>((<span class="pl-s1">start</span>, <span class="pl-s1">end</span>))
-    <span class="pl-k">else</span>:
-        <span class="pl-s1">merged_fresh</span>[<span class="pl-c1">-</span><span class="pl-c1">1</span>] <span class="pl-c1">=</span> (<span class="pl-s1">merged_fresh</span>[<span class="pl-c1">-</span><span class="pl-c1">1</span>][<span class="pl-c1">0</span>], <span class="pl-en">max</span>(<span class="pl-s1">merged_fresh</span>[<span class="pl-c1">-</span><span class="pl-c1">1</span>][<span class="pl-c1">1</span>], <span class="pl-s1">end</span>))
+# merge
+fresh_ranges.sort()
+merged_fresh = []
+for start, end in fresh_ranges:
+    if not merged_fresh or merged_fresh[-1][1] &lt; start:
+        merged_fresh.append((start, end))
+    else:
+        merged_fresh[-1] = (merged_fresh[-1][0], max(merged_fresh[-1][1], end))
 
-<span class="pl-s1">ans</span> <span class="pl-c1">=</span> <span class="pl-c1">0</span>
-<span class="pl-k">for</span> <span class="pl-s1">i</span>, <span class="pl-s1">j</span> <span class="pl-c1">in</span> <span class="pl-s1">merged_fresh</span>:
-    <span class="pl-s1">ans</span> <span class="pl-c1">+=</span> <span class="pl-s1">j</span> <span class="pl-c1">-</span> <span class="pl-s1">i</span> <span class="pl-c1">+</span> <span class="pl-c1">1</span>
-<span class="pl-en">print</span>(<span class="pl-s1">ans</span>)</pre></div>
+ans = 0
+for i, j in merged_fresh:
+    ans += j - i + 1
+print(ans)
+</code></pre>
 <p></p>
 </details> 
 <h2>第六题</h2>
@@ -2507,67 +2508,69 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
 <p>竖着的加法乘法计算器</p>
 <details><summary>Details</summary>
 <p>
-</p><div class="highlight highlight-source-python"><pre class="notranslate"><span class="pl-s1">a</span> <span class="pl-c1">=</span> <span class="pl-s1">aaa</span>.<span class="pl-c1">splitlines</span>()
-<span class="pl-s1">b</span> <span class="pl-c1">=</span> [<span class="pl-en">list</span>(<span class="pl-en">map</span>(<span class="pl-s1">int</span>, <span class="pl-s1">line</span>.<span class="pl-c1">split</span>())) <span class="pl-k">for</span> <span class="pl-s1">line</span> <span class="pl-c1">in</span> <span class="pl-s1">a</span> <span class="pl-k">if</span> <span class="pl-s1">line</span> <span class="pl-c1">and</span> <span class="pl-c1">not</span> <span class="pl-s1">line</span>.<span class="pl-c1">startswith</span>(<span class="pl-s">'*'</span>)]
-<span class="pl-s1">c</span> <span class="pl-c1">=</span> [<span class="pl-s1">line</span>.<span class="pl-c1">split</span>() <span class="pl-k">for</span> <span class="pl-s1">line</span> <span class="pl-c1">in</span> <span class="pl-s1">a</span>[<span class="pl-c1">-</span><span class="pl-c1">1</span>]]
+</p><pre lang="python" class="notranslate"><code class="notranslate">a = aaa.splitlines()
+b = [list(map(int, line.split())) for line in a if line and not line.startswith('*')]
+c = [line.split() for line in a[-1]]
 
-<span class="pl-c"># 去除split后的空字符串</span>
-<span class="pl-s1">b</span> <span class="pl-c1">=</span> [[<span class="pl-s1">num</span> <span class="pl-k">for</span> <span class="pl-s1">num</span> <span class="pl-c1">in</span> <span class="pl-s1">line</span> <span class="pl-k">if</span> <span class="pl-s1">num</span>] <span class="pl-k">for</span> <span class="pl-s1">line</span> <span class="pl-c1">in</span> <span class="pl-s1">b</span>]
-<span class="pl-s1">c</span> <span class="pl-c1">=</span> [<span class="pl-s1">op</span>[<span class="pl-c1">0</span>] <span class="pl-k">for</span> <span class="pl-s1">op</span> <span class="pl-c1">in</span> <span class="pl-s1">c</span> <span class="pl-k">if</span> <span class="pl-s1">op</span>]
+# 去除split后的空字符串
+b = [[num for num in line if num] for line in b]
+c = [op[0] for op in c if op]
 
 
-<span class="pl-s1">result</span> <span class="pl-c1">=</span> <span class="pl-c1">0</span>
-<span class="pl-k">for</span> <span class="pl-s1">i</span> <span class="pl-c1">in</span> <span class="pl-en">range</span>(<span class="pl-en">len</span>(<span class="pl-s1">b</span>[<span class="pl-c1">0</span>])):
-    <span class="pl-k">match</span> <span class="pl-s1">c</span>[<span class="pl-s1">i</span>]:
-        <span class="pl-k">case</span> <span class="pl-s">'+'</span>:
-            <span class="pl-s1">result</span> <span class="pl-c1">+=</span> <span class="pl-s1">b</span>[<span class="pl-c1">0</span>][<span class="pl-s1">i</span>] <span class="pl-c1">+</span> <span class="pl-s1">b</span>[<span class="pl-c1">1</span>][<span class="pl-s1">i</span>] <span class="pl-c1">+</span> <span class="pl-s1">b</span>[<span class="pl-c1">2</span>][<span class="pl-s1">i</span>] <span class="pl-c1">+</span> <span class="pl-s1">b</span>[<span class="pl-c1">3</span>][<span class="pl-s1">i</span>]
-        <span class="pl-k">case</span> <span class="pl-s">'*'</span>:
-            <span class="pl-s1">result</span> <span class="pl-c1">+=</span> <span class="pl-s1">b</span>[<span class="pl-c1">0</span>][<span class="pl-s1">i</span>] <span class="pl-c1">*</span> <span class="pl-s1">b</span>[<span class="pl-c1">1</span>][<span class="pl-s1">i</span>] <span class="pl-c1">*</span> <span class="pl-s1">b</span>[<span class="pl-c1">2</span>][<span class="pl-s1">i</span>] <span class="pl-c1">*</span> <span class="pl-s1">b</span>[<span class="pl-c1">3</span>][<span class="pl-s1">i</span>]
+result = 0
+for i in range(len(b[0])):
+    match c[i]:
+        case '+':
+            result += b[0][i] + b[1][i] + b[2][i] + b[3][i]
+        case '*':
+            result += b[0][i] * b[1][i] * b[2][i] * b[3][i]
 
-<span class="pl-en">print</span>(<span class="pl-s1">result</span>)</pre></div>
+print(result)
+</code></pre>
 <p></p>
 </details> 
 <h3>2题</h3>
 <p>竖着的 按位的 加减乘除计算器</p>
 <details><summary>Details</summary>
 <p>
-</p><div class="highlight highlight-source-python"><pre class="notranslate"><span class="pl-s1">ops</span> <span class="pl-c1">=</span> <span class="pl-s1">aaa</span>.<span class="pl-c1">splitlines</span>()[<span class="pl-c1">-</span><span class="pl-c1">1</span>]
-<span class="pl-s1">ops</span> <span class="pl-c1">=</span> [<span class="pl-s1">op</span> <span class="pl-k">for</span> <span class="pl-s1">op</span> <span class="pl-c1">in</span> <span class="pl-s1">ops</span>.<span class="pl-c1">split</span>(<span class="pl-s">" "</span>) <span class="pl-k">if</span> <span class="pl-s1">op</span>]
-<span class="pl-s1">total_lines</span> <span class="pl-c1">=</span> <span class="pl-s1">aaa</span>.<span class="pl-c1">splitlines</span>()
-<span class="pl-s1">lines</span> <span class="pl-c1">=</span> <span class="pl-s1">total_lines</span>[:<span class="pl-c1">-</span><span class="pl-c1">1</span>]
+</p><pre lang="python" class="notranslate"><code class="notranslate">ops = aaa.splitlines()[-1]
+ops = [op for op in ops.split(" ") if op]
+total_lines = aaa.splitlines()
+lines = total_lines[:-1]
 
-<span class="pl-s1">width</span> <span class="pl-c1">=</span> <span class="pl-en">len</span>(<span class="pl-s1">lines</span>[<span class="pl-c1">0</span>])
-<span class="pl-s1">height</span> <span class="pl-c1">=</span> <span class="pl-en">len</span>(<span class="pl-s1">lines</span>)
+width = len(lines[0])
+height = len(lines)
 
-<span class="pl-s1">ans</span> <span class="pl-c1">=</span> <span class="pl-c1">0</span>
-<span class="pl-s1">temp</span> <span class="pl-c1">=</span> []
-<span class="pl-s1">number</span> <span class="pl-c1">=</span> <span class="pl-c1">0</span>
+ans = 0
+temp = []
+number = 0
 
-<span class="pl-k">for</span> <span class="pl-s1">pos_x</span> <span class="pl-c1">in</span> <span class="pl-en">range</span>(<span class="pl-s1">width</span> <span class="pl-c1">-</span> <span class="pl-c1">1</span>, <span class="pl-c1">-</span><span class="pl-c1">1</span>, <span class="pl-c1">-</span><span class="pl-c1">1</span>):
-    <span class="pl-k">for</span> <span class="pl-s1">pos_y</span> <span class="pl-c1">in</span> <span class="pl-en">range</span>(<span class="pl-s1">height</span> <span class="pl-c1">+</span> <span class="pl-c1">1</span>):
-        <span class="pl-s1">char</span> <span class="pl-c1">=</span> <span class="pl-s1">total_lines</span>[<span class="pl-s1">pos_y</span>][<span class="pl-s1">pos_x</span>]
-        <span class="pl-k">if</span> <span class="pl-s1">pos_y</span> <span class="pl-c1">==</span> <span class="pl-s1">height</span>:
-            <span class="pl-s1">temp</span>.<span class="pl-c1">append</span>(<span class="pl-s1">number</span>)
-            <span class="pl-s1">number</span> <span class="pl-c1">=</span> <span class="pl-c1">0</span>
-        <span class="pl-k">if</span> <span class="pl-s1">char</span> <span class="pl-c1">==</span> <span class="pl-s">" "</span> <span class="pl-c1">and</span> <span class="pl-s1">pos_y</span> <span class="pl-c1">!=</span> <span class="pl-s1">height</span>:
-            <span class="pl-k">continue</span>
-        <span class="pl-k">elif</span> <span class="pl-s1">char</span> <span class="pl-c1">in</span> <span class="pl-s">'+*'</span>:
-            <span class="pl-k">if</span> <span class="pl-s1">char</span> <span class="pl-c1">==</span> <span class="pl-s">'+'</span>:
-                <span class="pl-s1">ans</span> <span class="pl-c1">+=</span> <span class="pl-en">sum</span>(<span class="pl-s1">temp</span>)
-            <span class="pl-k">if</span> <span class="pl-s1">char</span> <span class="pl-c1">==</span> <span class="pl-s">'*'</span>:
-                <span class="pl-s1">prod</span> <span class="pl-c1">=</span> <span class="pl-c1">1</span>
-                <span class="pl-k">for</span> <span class="pl-s1">t</span> <span class="pl-c1">in</span> <span class="pl-s1">temp</span>:
-                    <span class="pl-k">if</span> <span class="pl-s1">t</span> <span class="pl-c1">!=</span> <span class="pl-c1">0</span>:
-                        <span class="pl-s1">prod</span> <span class="pl-c1">*=</span> <span class="pl-s1">t</span>
-                <span class="pl-s1">ans</span> <span class="pl-c1">+=</span> <span class="pl-s1">prod</span>
-            <span class="pl-s1">temp</span> <span class="pl-c1">=</span> []
-        <span class="pl-k">else</span>:
-            <span class="pl-k">if</span> <span class="pl-s1">char</span> <span class="pl-c1">==</span> <span class="pl-s">" "</span>:
-                <span class="pl-k">continue</span>
-            <span class="pl-s1">number</span> <span class="pl-c1">*=</span> <span class="pl-c1">10</span>
-            <span class="pl-s1">number</span> <span class="pl-c1">+=</span> <span class="pl-en">int</span>(<span class="pl-s1">char</span>)
+for pos_x in range(width - 1, -1, -1):
+    for pos_y in range(height + 1):
+        char = total_lines[pos_y][pos_x]
+        if pos_y == height:
+            temp.append(number)
+            number = 0
+        if char == " " and pos_y != height:
+            continue
+        elif char in '+*':
+            if char == '+':
+                ans += sum(temp)
+            if char == '*':
+                prod = 1
+                for t in temp:
+                    if t != 0:
+                        prod *= t
+                ans += prod
+            temp = []
+        else:
+            if char == " ":
+                continue
+            number *= 10
+            number += int(char)
 
-<span class="pl-en">print</span>(<span class="pl-s1">ans</span>)</pre></div>
+print(ans)
+</code></pre>
 <p></p>
 </details> 
 <h2>第七题</h2>
@@ -2577,68 +2580,70 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
 会分裂多少次</p>
 <details><summary>Details</summary>
 <p>
-</p><div class="highlight highlight-source-python"><pre class="notranslate"><span class="pl-s1">a</span> <span class="pl-c1">=</span> [<span class="pl-en">list</span>(<span class="pl-s1">line</span>) <span class="pl-k">for</span> <span class="pl-s1">line</span> <span class="pl-c1">in</span> <span class="pl-s1">aaa</span>.<span class="pl-c1">splitlines</span>()]
-<span class="pl-s1">width</span> <span class="pl-c1">=</span> <span class="pl-en">len</span>(<span class="pl-s1">a</span>[<span class="pl-c1">0</span>])
-<span class="pl-s1">height</span> <span class="pl-c1">=</span> <span class="pl-en">len</span>(<span class="pl-s1">a</span>)
+</p><pre lang="python" class="notranslate"><code class="notranslate">a = [list(line) for line in aaa.splitlines()]
+width = len(a[0])
+height = len(a)
 
-<span class="pl-s1">pos_s_x</span>, <span class="pl-s1">pos_s_y</span> <span class="pl-c1">=</span> <span class="pl-s1">aaa</span>.<span class="pl-c1">index</span>(<span class="pl-s">'S'</span>), <span class="pl-c1">0</span>
+pos_s_x, pos_s_y = aaa.index('S'), 0
 
-<span class="pl-s1">deque</span> <span class="pl-c1">=</span> [(<span class="pl-s1">pos_s_x</span>, <span class="pl-s1">pos_s_y</span>)]
-<span class="pl-s1">ans</span> <span class="pl-c1">=</span> <span class="pl-c1">0</span>
-<span class="pl-s1">visited</span> <span class="pl-c1">=</span> <span class="pl-en">set</span>()
-<span class="pl-k">for</span> <span class="pl-s1">i</span> <span class="pl-c1">in</span> <span class="pl-s1">deque</span>:
-    <span class="pl-s1">x</span>, <span class="pl-s1">y</span> <span class="pl-c1">=</span> <span class="pl-s1">i</span>
-    <span class="pl-k">if</span> <span class="pl-s1">y</span> <span class="pl-c1">+</span> <span class="pl-c1">1</span> <span class="pl-c1">&gt;=</span> <span class="pl-s1">height</span>:
-        <span class="pl-k">continue</span>
-    <span class="pl-k">if</span> <span class="pl-s1">a</span>[<span class="pl-s1">y</span> <span class="pl-c1">+</span> <span class="pl-c1">1</span>][<span class="pl-s1">x</span>] <span class="pl-c1">==</span> <span class="pl-s">'^'</span>:
-        <span class="pl-k">if</span> <span class="pl-s1">y</span> <span class="pl-c1">+</span> <span class="pl-c1">1</span> <span class="pl-c1">&lt;</span> <span class="pl-s1">height</span>:
-            <span class="pl-k">if</span> (<span class="pl-s1">x</span> <span class="pl-c1">+</span> <span class="pl-c1">1</span>, <span class="pl-s1">y</span> <span class="pl-c1">+</span> <span class="pl-c1">1</span>) <span class="pl-c1"><span class="pl-c1">not</span> <span class="pl-c1">in</span></span> <span class="pl-s1">visited</span>:
-                <span class="pl-s1">deque</span>.<span class="pl-c1">append</span>((<span class="pl-s1">x</span> <span class="pl-c1">+</span> <span class="pl-c1">1</span>, <span class="pl-s1">y</span> <span class="pl-c1">+</span> <span class="pl-c1">1</span>))
-                <span class="pl-s1">visited</span>.<span class="pl-c1">add</span>((<span class="pl-s1">x</span> <span class="pl-c1">+</span> <span class="pl-c1">1</span>, <span class="pl-s1">y</span> <span class="pl-c1">+</span> <span class="pl-c1">1</span>))
-            <span class="pl-k">if</span> (<span class="pl-s1">x</span> <span class="pl-c1">-</span> <span class="pl-c1">1</span>, <span class="pl-s1">y</span> <span class="pl-c1">+</span> <span class="pl-c1">1</span>) <span class="pl-c1"><span class="pl-c1">not</span> <span class="pl-c1">in</span></span> <span class="pl-s1">visited</span>:
-                <span class="pl-s1">deque</span>.<span class="pl-c1">append</span>((<span class="pl-s1">x</span> <span class="pl-c1">-</span> <span class="pl-c1">1</span>, <span class="pl-s1">y</span> <span class="pl-c1">+</span> <span class="pl-c1">1</span>))
-                <span class="pl-s1">visited</span>.<span class="pl-c1">add</span>((<span class="pl-s1">x</span> <span class="pl-c1">-</span> <span class="pl-c1">1</span>, <span class="pl-s1">y</span> <span class="pl-c1">+</span> <span class="pl-c1">1</span>))
-            <span class="pl-s1">ans</span> <span class="pl-c1">+=</span> <span class="pl-c1">1</span>
-    <span class="pl-k">elif</span> <span class="pl-s1">a</span>[<span class="pl-s1">y</span> <span class="pl-c1">+</span> <span class="pl-c1">1</span>][<span class="pl-s1">x</span>] <span class="pl-c1">==</span> <span class="pl-s">'.'</span>:
-        <span class="pl-k">if</span> <span class="pl-s1">y</span> <span class="pl-c1">+</span> <span class="pl-c1">1</span> <span class="pl-c1">&lt;</span> <span class="pl-s1">height</span>:
-            <span class="pl-k">if</span> (<span class="pl-s1">x</span>, <span class="pl-s1">y</span> <span class="pl-c1">+</span> <span class="pl-c1">1</span>) <span class="pl-c1"><span class="pl-c1">not</span> <span class="pl-c1">in</span></span> <span class="pl-s1">visited</span>:
-                <span class="pl-s1">deque</span>.<span class="pl-c1">append</span>((<span class="pl-s1">x</span>, <span class="pl-s1">y</span> <span class="pl-c1">+</span> <span class="pl-c1">1</span>))
-                <span class="pl-s1">visited</span>.<span class="pl-c1">add</span>((<span class="pl-s1">x</span>, <span class="pl-s1">y</span> <span class="pl-c1">+</span> <span class="pl-c1">1</span>))
+deque = [(pos_s_x, pos_s_y)]
+ans = 0
+visited = set()
+for i in deque:
+    x, y = i
+    if y + 1 &gt;= height:
+        continue
+    if a[y + 1][x] == '^':
+        if y + 1 &lt; height:
+            if (x + 1, y + 1) not in visited:
+                deque.append((x + 1, y + 1))
+                visited.add((x + 1, y + 1))
+            if (x - 1, y + 1) not in visited:
+                deque.append((x - 1, y + 1))
+                visited.add((x - 1, y + 1))
+            ans += 1
+    elif a[y + 1][x] == '.':
+        if y + 1 &lt; height:
+            if (x, y + 1) not in visited:
+                deque.append((x, y + 1))
+                visited.add((x, y + 1))
     
 
-<span class="pl-en">print</span>(<span class="pl-en">len</span>(<span class="pl-s1">visited</span>))
-<span class="pl-en">print</span>(<span class="pl-s1">ans</span>)</pre></div>
+print(len(visited))
+print(ans)
+</code></pre>
 <p></p>
 </details> 
 <h3>2题</h3>
 <p>在1题的基础上 有多少条不同路径的光线 (到达同一个目的地的不同路径光线 也需要计算)</p>
 <details><summary>Details</summary>
 <p>
-</p><div class="highlight highlight-source-python"><pre class="notranslate"><span class="pl-s1">a</span> <span class="pl-c1">=</span> [<span class="pl-en">list</span>(<span class="pl-s1">line</span>) <span class="pl-k">for</span> <span class="pl-s1">line</span> <span class="pl-c1">in</span> <span class="pl-s1">aaa</span>.<span class="pl-c1">splitlines</span>()]
-<span class="pl-s1">width</span> <span class="pl-c1">=</span> <span class="pl-en">len</span>(<span class="pl-s1">a</span>[<span class="pl-c1">0</span>])
-<span class="pl-s1">height</span> <span class="pl-c1">=</span> <span class="pl-en">len</span>(<span class="pl-s1">a</span>)
+</p><pre lang="python" class="notranslate"><code class="notranslate">a = [list(line) for line in aaa.splitlines()]
+width = len(a[0])
+height = len(a)
 
-<span class="pl-s1">pos_s_x</span>, <span class="pl-s1">pos_s_y</span> <span class="pl-c1">=</span> <span class="pl-s1">aaa</span>.<span class="pl-c1">index</span>(<span class="pl-s">'S'</span>), <span class="pl-c1">0</span>
+pos_s_x, pos_s_y = aaa.index('S'), 0
 
-<span class="pl-s1">cache</span> <span class="pl-c1">=</span> {}
+cache = {}
 
-<span class="pl-k">def</span> <span class="pl-en">dfs</span>(<span class="pl-s1">x</span>, <span class="pl-s1">y</span>):
-    <span class="pl-k">if</span> <span class="pl-s1">y</span> <span class="pl-c1">+</span> <span class="pl-c1">1</span> <span class="pl-c1">&gt;=</span> <span class="pl-s1">height</span> <span class="pl-c1">or</span> <span class="pl-s1">x</span> <span class="pl-c1">&lt;</span> <span class="pl-c1">0</span> <span class="pl-c1">or</span> <span class="pl-s1">x</span> <span class="pl-c1">&gt;=</span> <span class="pl-s1">width</span>:
-        <span class="pl-k">return</span> <span class="pl-c1">0</span>
-    <span class="pl-k">if</span> (<span class="pl-s1">x</span>, <span class="pl-s1">y</span>) <span class="pl-c1">in</span> <span class="pl-s1">cache</span>:
-        <span class="pl-k">return</span> <span class="pl-s1">cache</span>[(<span class="pl-s1">x</span>, <span class="pl-s1">y</span>)]
+def dfs(x, y):
+    if y + 1 &gt;= height or x &lt; 0 or x &gt;= width:
+        return 0
+    if (x, y) in cache:
+        return cache[(x, y)]
     
-    <span class="pl-k">if</span> <span class="pl-s1">a</span>[<span class="pl-s1">y</span> <span class="pl-c1">+</span> <span class="pl-c1">1</span>][<span class="pl-s1">x</span>] <span class="pl-c1">==</span> <span class="pl-s">'^'</span>:
-        <span class="pl-s1">result</span> <span class="pl-c1">=</span> <span class="pl-en">dfs</span>(<span class="pl-s1">x</span> <span class="pl-c1">+</span> <span class="pl-c1">1</span>, <span class="pl-s1">y</span> <span class="pl-c1">+</span> <span class="pl-c1">1</span>) <span class="pl-c1">+</span> <span class="pl-en">dfs</span>(<span class="pl-s1">x</span> <span class="pl-c1">-</span> <span class="pl-c1">1</span>, <span class="pl-s1">y</span> <span class="pl-c1">+</span> <span class="pl-c1">1</span>) <span class="pl-c1">+</span> <span class="pl-c1">1</span>
-    <span class="pl-k">elif</span> <span class="pl-s1">a</span>[<span class="pl-s1">y</span> <span class="pl-c1">+</span> <span class="pl-c1">1</span>][<span class="pl-s1">x</span>] <span class="pl-c1">==</span> <span class="pl-s">'.'</span>:
-        <span class="pl-s1">result</span> <span class="pl-c1">=</span> <span class="pl-en">dfs</span>(<span class="pl-s1">x</span>, <span class="pl-s1">y</span> <span class="pl-c1">+</span> <span class="pl-c1">1</span>)
-    <span class="pl-k">else</span>:
-        <span class="pl-s1">result</span> <span class="pl-c1">=</span> <span class="pl-c1">0</span>
+    if a[y + 1][x] == '^':
+        result = dfs(x + 1, y + 1) + dfs(x - 1, y + 1) + 1
+    elif a[y + 1][x] == '.':
+        result = dfs(x, y + 1)
+    else:
+        result = 0
     
-    <span class="pl-s1">cache</span>[(<span class="pl-s1">x</span>, <span class="pl-s1">y</span>)] <span class="pl-c1">=</span> <span class="pl-s1">result</span>
-    <span class="pl-k">return</span> <span class="pl-s1">result</span>
+    cache[(x, y)] = result
+    return result
     
-<span class="pl-en">print</span>(<span class="pl-en">dfs</span>(<span class="pl-s1">pos_s_x</span>, <span class="pl-s1">pos_s_y</span>) <span class="pl-c1">+</span> <span class="pl-c1">1</span>)</pre></div>
+print(dfs(pos_s_x, pos_s_y) + 1)
+</code></pre>
 <p></p>
 </details> 
 <h2>第八题</h2>
@@ -2647,49 +2652,50 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
 <p>给定若干个x,y,z坐标的点 连接最近的1000个点 问 有多少簇</p>
 <details><summary>Details</summary>
 <p>
-</p><div class="highlight highlight-source-python"><pre class="notranslate"><span class="pl-s1">a</span> <span class="pl-c1">=</span> <span class="pl-s1">aaa</span>.<span class="pl-c1">split</span>(<span class="pl-s">'<span class="pl-cce">\n</span>'</span>)
-<span class="pl-s1">a</span> <span class="pl-c1">=</span> [<span class="pl-en">list</span>(<span class="pl-en">map</span>(<span class="pl-s1">int</span>, <span class="pl-s1">i</span>.<span class="pl-c1">split</span>(<span class="pl-s">','</span>))) <span class="pl-k">for</span> <span class="pl-s1">i</span> <span class="pl-c1">in</span> <span class="pl-s1">a</span>]
+</p><pre lang="python" class="notranslate"><code class="notranslate">a = aaa.split('\n')
+a = [list(map(int, i.split(','))) for i in a]
 
-<span class="pl-k">def</span> <span class="pl-en">distance</span>(<span class="pl-s1">x1</span>, <span class="pl-s1">y1</span>, <span class="pl-s1">z1</span>, <span class="pl-s1">x2</span>, <span class="pl-s1">y2</span>, <span class="pl-s1">z2</span>):
-    <span class="pl-k">return</span> ((<span class="pl-s1">x1</span> <span class="pl-c1">-</span> <span class="pl-s1">x2</span>) <span class="pl-c1">**</span> <span class="pl-c1">2</span> <span class="pl-c1">+</span> (<span class="pl-s1">y1</span> <span class="pl-c1">-</span> <span class="pl-s1">y2</span>) <span class="pl-c1">**</span> <span class="pl-c1">2</span> <span class="pl-c1">+</span> (<span class="pl-s1">z1</span> <span class="pl-c1">-</span> <span class="pl-s1">z2</span>) <span class="pl-c1">**</span> <span class="pl-c1">2</span>) <span class="pl-c1">**</span> <span class="pl-c1">0.5</span>
+def distance(x1, y1, z1, x2, y2, z2):
+    return ((x1 - x2) ** 2 + (y1 - y2) ** 2 + (z1 - z2) ** 2) ** 0.5
 
-<span class="pl-s1">distances</span> <span class="pl-c1">=</span> []
-<span class="pl-k">for</span> <span class="pl-s1">i</span> <span class="pl-c1">in</span> <span class="pl-en">range</span>(<span class="pl-en">len</span>(<span class="pl-s1">a</span>)):
-    <span class="pl-k">for</span> <span class="pl-s1">j</span> <span class="pl-c1">in</span> <span class="pl-en">range</span>(<span class="pl-s1">i</span> <span class="pl-c1">+</span> <span class="pl-c1">1</span>, <span class="pl-en">len</span>(<span class="pl-s1">a</span>)):
-        <span class="pl-s1">dist</span> <span class="pl-c1">=</span> <span class="pl-en">distance</span>(<span class="pl-s1">a</span>[<span class="pl-s1">i</span>][<span class="pl-c1">0</span>], <span class="pl-s1">a</span>[<span class="pl-s1">i</span>][<span class="pl-c1">1</span>], <span class="pl-s1">a</span>[<span class="pl-s1">i</span>][<span class="pl-c1">2</span>], <span class="pl-s1">a</span>[<span class="pl-s1">j</span>][<span class="pl-c1">0</span>], <span class="pl-s1">a</span>[<span class="pl-s1">j</span>][<span class="pl-c1">1</span>], <span class="pl-s1">a</span>[<span class="pl-s1">j</span>][<span class="pl-c1">2</span>])
-        <span class="pl-s1">distances</span>.<span class="pl-c1">append</span>((<span class="pl-s1">dist</span>, <span class="pl-s1">i</span>, <span class="pl-s1">j</span>))
+distances = []
+for i in range(len(a)):
+    for j in range(i + 1, len(a)):
+        dist = distance(a[i][0], a[i][1], a[i][2], a[j][0], a[j][1], a[j][2])
+        distances.append((dist, i, j))
 
-<span class="pl-s1">distances</span>.<span class="pl-c1">sort</span>(<span class="pl-s1">key</span><span class="pl-c1">=</span><span class="pl-k">lambda</span> <span class="pl-s1">x</span>: <span class="pl-s1">x</span>[<span class="pl-c1">0</span>])
+distances.sort(key=lambda x: x[0])
 
-<span class="pl-s1">needed_distances</span> <span class="pl-c1">=</span> <span class="pl-s1">distances</span>[:<span class="pl-c1">1000</span>]
+needed_distances = distances[:1000]
 
-<span class="pl-c"># 邻接表</span>
-<span class="pl-s1">graph</span> <span class="pl-c1">=</span> {<span class="pl-s1">i</span>: [] <span class="pl-k">for</span> <span class="pl-s1">i</span> <span class="pl-c1">in</span> <span class="pl-en">range</span>(<span class="pl-en">len</span>(<span class="pl-s1">a</span>))}
-<span class="pl-k">for</span> <span class="pl-s1">dist</span>, <span class="pl-s1">i</span>, <span class="pl-s1">j</span> <span class="pl-c1">in</span> <span class="pl-s1">needed_distances</span>:
-    <span class="pl-s1">graph</span>[<span class="pl-s1">i</span>].<span class="pl-c1">append</span>((<span class="pl-s1">j</span>, <span class="pl-s1">dist</span>))
-    <span class="pl-s1">graph</span>[<span class="pl-s1">j</span>].<span class="pl-c1">append</span>((<span class="pl-s1">i</span>, <span class="pl-s1">dist</span>))
+# 邻接表
+graph = {i: [] for i in range(len(a))}
+for dist, i, j in needed_distances:
+    graph[i].append((j, dist))
+    graph[j].append((i, dist))
 
-<span class="pl-c"># dfs 遍历所有群组 获取所有群组节点数量</span>
-<span class="pl-s1">visited</span> <span class="pl-c1">=</span> [<span class="pl-c1">False</span>] <span class="pl-c1">*</span> <span class="pl-en">len</span>(<span class="pl-s1">a</span>)
-<span class="pl-k">def</span> <span class="pl-en">dfs</span>(<span class="pl-s1">node</span>):
-    <span class="pl-s1">stack</span> <span class="pl-c1">=</span> [<span class="pl-s1">node</span>]
-    <span class="pl-s1">size</span> <span class="pl-c1">=</span> <span class="pl-c1">0</span>
-    <span class="pl-k">while</span> <span class="pl-s1">stack</span>:
-        <span class="pl-s1">current</span> <span class="pl-c1">=</span> <span class="pl-s1">stack</span>.<span class="pl-c1">pop</span>()
-        <span class="pl-k">if</span> <span class="pl-c1">not</span> <span class="pl-s1">visited</span>[<span class="pl-s1">current</span>]:
-            <span class="pl-s1">visited</span>[<span class="pl-s1">current</span>] <span class="pl-c1">=</span> <span class="pl-c1">True</span>
-            <span class="pl-s1">size</span> <span class="pl-c1">+=</span> <span class="pl-c1">1</span>
-            <span class="pl-k">for</span> <span class="pl-s1">neighbor</span>, <span class="pl-s1">_</span> <span class="pl-c1">in</span> <span class="pl-s1">graph</span>[<span class="pl-s1">current</span>]:
-                <span class="pl-k">if</span> <span class="pl-c1">not</span> <span class="pl-s1">visited</span>[<span class="pl-s1">neighbor</span>]:
-                    <span class="pl-s1">stack</span>.<span class="pl-c1">append</span>(<span class="pl-s1">neighbor</span>)
-    <span class="pl-k">return</span> <span class="pl-s1">size</span>
-<span class="pl-s1">group_sizes</span> <span class="pl-c1">=</span> []
-<span class="pl-k">for</span> <span class="pl-s1">i</span> <span class="pl-c1">in</span> <span class="pl-en">range</span>(<span class="pl-en">len</span>(<span class="pl-s1">a</span>)):
-    <span class="pl-k">if</span> <span class="pl-c1">not</span> <span class="pl-s1">visited</span>[<span class="pl-s1">i</span>]:
-        <span class="pl-s1">group_size</span> <span class="pl-c1">=</span> <span class="pl-en">dfs</span>(<span class="pl-s1">i</span>)
-        <span class="pl-s1">group_sizes</span>.<span class="pl-c1">append</span>(<span class="pl-s1">group_size</span>)
-<span class="pl-s1">group_sizes</span>.<span class="pl-c1">sort</span>()
-<span class="pl-en">print</span>(<span class="pl-s1">group_sizes</span>)</pre></div>
+# dfs 遍历所有群组 获取所有群组节点数量
+visited = [False] * len(a)
+def dfs(node):
+    stack = [node]
+    size = 0
+    while stack:
+        current = stack.pop()
+        if not visited[current]:
+            visited[current] = True
+            size += 1
+            for neighbor, _ in graph[current]:
+                if not visited[neighbor]:
+                    stack.append(neighbor)
+    return size
+group_sizes = []
+for i in range(len(a)):
+    if not visited[i]:
+        group_size = dfs(i)
+        group_sizes.append(group_size)
+group_sizes.sort()
+print(group_sizes)
+</code></pre>
 <p></p>
 </details> 
 <h3>2题</h3>
@@ -2697,51 +2703,52 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
 一点一点连接最近的两个点 最后连接的两个点是哪两个点</p>
 <details><summary>Details</summary>
 <p>
-</p><div class="highlight highlight-source-python"><pre class="notranslate"><span class="pl-s1">a</span> <span class="pl-c1">=</span> <span class="pl-s1">aaa</span>.<span class="pl-c1">split</span>(<span class="pl-s">'<span class="pl-cce">\n</span>'</span>)
-<span class="pl-s1">a</span> <span class="pl-c1">=</span> [<span class="pl-en">list</span>(<span class="pl-en">map</span>(<span class="pl-s1">int</span>, <span class="pl-s1">i</span>.<span class="pl-c1">split</span>(<span class="pl-s">','</span>))) <span class="pl-k">for</span> <span class="pl-s1">i</span> <span class="pl-c1">in</span> <span class="pl-s1">a</span>]
+</p><pre lang="python" class="notranslate"><code class="notranslate">a = aaa.split('\n')
+a = [list(map(int, i.split(','))) for i in a]
 
-<span class="pl-k">def</span> <span class="pl-en">distance</span>(<span class="pl-s1">x1</span>, <span class="pl-s1">y1</span>, <span class="pl-s1">z1</span>, <span class="pl-s1">x2</span>, <span class="pl-s1">y2</span>, <span class="pl-s1">z2</span>):
-    <span class="pl-k">return</span> ((<span class="pl-s1">x1</span> <span class="pl-c1">-</span> <span class="pl-s1">x2</span>) <span class="pl-c1">**</span> <span class="pl-c1">2</span> <span class="pl-c1">+</span> (<span class="pl-s1">y1</span> <span class="pl-c1">-</span> <span class="pl-s1">y2</span>) <span class="pl-c1">**</span> <span class="pl-c1">2</span> <span class="pl-c1">+</span> (<span class="pl-s1">z1</span> <span class="pl-c1">-</span> <span class="pl-s1">z2</span>) <span class="pl-c1">**</span> <span class="pl-c1">2</span>) <span class="pl-c1">**</span> <span class="pl-c1">0.5</span>
+def distance(x1, y1, z1, x2, y2, z2):
+    return ((x1 - x2) ** 2 + (y1 - y2) ** 2 + (z1 - z2) ** 2) ** 0.5
 
-<span class="pl-s1">distances</span> <span class="pl-c1">=</span> []
-<span class="pl-k">for</span> <span class="pl-s1">i</span> <span class="pl-c1">in</span> <span class="pl-en">range</span>(<span class="pl-en">len</span>(<span class="pl-s1">a</span>)):
-    <span class="pl-k">for</span> <span class="pl-s1">j</span> <span class="pl-c1">in</span> <span class="pl-en">range</span>(<span class="pl-s1">i</span> <span class="pl-c1">+</span> <span class="pl-c1">1</span>, <span class="pl-en">len</span>(<span class="pl-s1">a</span>)):
-        <span class="pl-s1">dist</span> <span class="pl-c1">=</span> <span class="pl-en">distance</span>(<span class="pl-s1">a</span>[<span class="pl-s1">i</span>][<span class="pl-c1">0</span>], <span class="pl-s1">a</span>[<span class="pl-s1">i</span>][<span class="pl-c1">1</span>], <span class="pl-s1">a</span>[<span class="pl-s1">i</span>][<span class="pl-c1">2</span>], <span class="pl-s1">a</span>[<span class="pl-s1">j</span>][<span class="pl-c1">0</span>], <span class="pl-s1">a</span>[<span class="pl-s1">j</span>][<span class="pl-c1">1</span>], <span class="pl-s1">a</span>[<span class="pl-s1">j</span>][<span class="pl-c1">2</span>])
-        <span class="pl-s1">distances</span>.<span class="pl-c1">append</span>((<span class="pl-s1">dist</span>, <span class="pl-s1">i</span>, <span class="pl-s1">j</span>))
+distances = []
+for i in range(len(a)):
+    for j in range(i + 1, len(a)):
+        dist = distance(a[i][0], a[i][1], a[i][2], a[j][0], a[j][1], a[j][2])
+        distances.append((dist, i, j))
 
-<span class="pl-s1">distances</span>.<span class="pl-c1">sort</span>(<span class="pl-s1">key</span><span class="pl-c1">=</span><span class="pl-k">lambda</span> <span class="pl-s1">x</span>: <span class="pl-s1">x</span>[<span class="pl-c1">0</span>])
+distances.sort(key=lambda x: x[0])
 
-<span class="pl-c"># 构建最小生成树</span>
-<span class="pl-s1">parent</span> <span class="pl-c1">=</span> [<span class="pl-s1">i</span> <span class="pl-k">for</span> <span class="pl-s1">i</span> <span class="pl-c1">in</span> <span class="pl-en">range</span>(<span class="pl-en">len</span>(<span class="pl-s1">a</span>))]
-<span class="pl-s1">num_components</span> <span class="pl-c1">=</span> <span class="pl-en">len</span>(<span class="pl-s1">a</span>)
-<span class="pl-k">def</span> <span class="pl-en">find</span>(<span class="pl-s1">x</span>):
-    <span class="pl-k">if</span> <span class="pl-s1">parent</span>[<span class="pl-s1">x</span>] <span class="pl-c1">!=</span> <span class="pl-s1">x</span>:
-        <span class="pl-s1">parent</span>[<span class="pl-s1">x</span>] <span class="pl-c1">=</span> <span class="pl-en">find</span>(<span class="pl-s1">parent</span>[<span class="pl-s1">x</span>])
-    <span class="pl-k">return</span> <span class="pl-s1">parent</span>[<span class="pl-s1">x</span>]
+# 构建最小生成树
+parent = [i for i in range(len(a))]
+num_components = len(a)
+def find(x):
+    if parent[x] != x:
+        parent[x] = find(parent[x])
+    return parent[x]
 
-<span class="pl-k">def</span> <span class="pl-en">union</span>(<span class="pl-s1">x</span>, <span class="pl-s1">y</span>):
-    <span class="pl-s1">rootX</span> <span class="pl-c1">=</span> <span class="pl-en">find</span>(<span class="pl-s1">x</span>)
-    <span class="pl-s1">rootY</span> <span class="pl-c1">=</span> <span class="pl-en">find</span>(<span class="pl-s1">y</span>)
-    <span class="pl-k">if</span> <span class="pl-s1">rootX</span> <span class="pl-c1">!=</span> <span class="pl-s1">rootY</span>:
-        <span class="pl-s1">parent</span>[<span class="pl-s1">rootY</span>] <span class="pl-c1">=</span> <span class="pl-s1">rootX</span>
-        <span class="pl-k">return</span> <span class="pl-c1">True</span>
-    <span class="pl-k">return</span> <span class="pl-c1">False</span>
+def union(x, y):
+    rootX = find(x)
+    rootY = find(y)
+    if rootX != rootY:
+        parent[rootY] = rootX
+        return True
+    return False
 
-<span class="pl-s1">mst_edges</span> <span class="pl-c1">=</span> []
-<span class="pl-k">for</span> <span class="pl-s1">dist</span>, <span class="pl-s1">i</span>, <span class="pl-s1">j</span> <span class="pl-c1">in</span> <span class="pl-s1">distances</span>:
-    <span class="pl-k">if</span> <span class="pl-en">union</span>(<span class="pl-s1">i</span>, <span class="pl-s1">j</span>):
-        <span class="pl-s1">mst_edges</span>.<span class="pl-c1">append</span>((<span class="pl-s1">dist</span>, <span class="pl-s1">i</span>, <span class="pl-s1">j</span>))
-        <span class="pl-s1">num_components</span> <span class="pl-c1">-=</span> <span class="pl-c1">1</span>
-        <span class="pl-k">if</span> <span class="pl-s1">num_components</span> <span class="pl-c1">==</span> <span class="pl-c1">1</span>:
-            <span class="pl-en">print</span>(<span class="pl-s">"i, j, dist:"</span>, <span class="pl-s1">i</span>, <span class="pl-s1">j</span>, <span class="pl-s1">dist</span>)
-            <span class="pl-k">break</span>
+mst_edges = []
+for dist, i, j in distances:
+    if union(i, j):
+        mst_edges.append((dist, i, j))
+        num_components -= 1
+        if num_components == 1:
+            print("i, j, dist:", i, j, dist)
+            break
 
-<span class="pl-c"># 获取 i, j 对应的点坐标</span>
-<span class="pl-s1">point_i</span> <span class="pl-c1">=</span> <span class="pl-s1">a</span>[<span class="pl-s1">i</span>]
-<span class="pl-s1">point_j</span> <span class="pl-c1">=</span> <span class="pl-s1">a</span>[<span class="pl-s1">j</span>]
+# 获取 i, j 对应的点坐标
+point_i = a[i]
+point_j = a[j]
 
-<span class="pl-en">print</span>(<span class="pl-s">"Point i:"</span>, <span class="pl-s1">point_i</span>)
-<span class="pl-en">print</span>(<span class="pl-s">"Point j:"</span>, <span class="pl-s1">point_j</span>)</pre></div>
+print("Point i:", point_i)
+print("Point j:", point_j)
+</code></pre>
 <p></p>
 </details> 
 <h2>第九题</h2>
@@ -2750,21 +2757,22 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
 <p>给定若干个x y 坐标点 找到最大的 以这两个点作为对角的 矩形</p>
 <details><summary>Details</summary>
 <p>
-</p><div class="highlight highlight-source-python"><pre class="notranslate"><span class="pl-s1">a</span> <span class="pl-c1">=</span> [(<span class="pl-en">int</span>(<span class="pl-s1">x</span>), <span class="pl-en">int</span>(<span class="pl-s1">y</span>)) <span class="pl-k">for</span> <span class="pl-s1">x</span>, <span class="pl-s1">y</span> <span class="pl-c1">in</span> (<span class="pl-s1">line</span>.<span class="pl-c1">split</span>(<span class="pl-s">","</span>) <span class="pl-k">for</span> <span class="pl-s1">line</span> <span class="pl-c1">in</span> <span class="pl-s1">aaa</span>.<span class="pl-c1">split</span>(<span class="pl-s">"<span class="pl-cce">\n</span>"</span>))]
+</p><pre lang="python" class="notranslate"><code class="notranslate">a = [(int(x), int(y)) for x, y in (line.split(",") for line in aaa.split("\n"))]
 
-<span class="pl-k">def</span> <span class="pl-en">cal_space</span>(<span class="pl-s1">x1</span>, <span class="pl-s1">y1</span>, <span class="pl-s1">x2</span>, <span class="pl-s1">y2</span>):
-    <span class="pl-k">return</span> (<span class="pl-en">abs</span>(<span class="pl-s1">x1</span> <span class="pl-c1">-</span> <span class="pl-s1">x2</span>) <span class="pl-c1">+</span> <span class="pl-c1">1</span>) <span class="pl-c1">*</span> (<span class="pl-en">abs</span>(<span class="pl-s1">y1</span> <span class="pl-c1">-</span> <span class="pl-s1">y2</span>) <span class="pl-c1">+</span> <span class="pl-c1">1</span>)
+def cal_space(x1, y1, x2, y2):
+    return (abs(x1 - x2) + 1) * (abs(y1 - y2) + 1)
 
-<span class="pl-s1">ans</span> <span class="pl-c1">=</span> <span class="pl-c1">0</span>
-<span class="pl-k">for</span> <span class="pl-s1">i</span> <span class="pl-c1">in</span> <span class="pl-en">range</span>(<span class="pl-en">len</span>(<span class="pl-s1">a</span>) <span class="pl-c1">-</span> <span class="pl-c1">1</span>):
-    <span class="pl-k">for</span> <span class="pl-s1">j</span> <span class="pl-c1">in</span> <span class="pl-en">range</span>(<span class="pl-s1">i</span> <span class="pl-c1">+</span> <span class="pl-c1">1</span>, <span class="pl-en">len</span>(<span class="pl-s1">a</span>)):
-        <span class="pl-s1">x1</span>, <span class="pl-s1">y1</span> <span class="pl-c1">=</span> <span class="pl-s1">a</span>[<span class="pl-s1">i</span>]
-        <span class="pl-s1">x2</span>, <span class="pl-s1">y2</span> <span class="pl-c1">=</span> <span class="pl-s1">a</span>[<span class="pl-s1">j</span>]
-        <span class="pl-s1">space</span> <span class="pl-c1">=</span> <span class="pl-en">cal_space</span>(<span class="pl-s1">x1</span>, <span class="pl-s1">y1</span>, <span class="pl-s1">x2</span>, <span class="pl-s1">y2</span>)
-        <span class="pl-k">if</span> <span class="pl-s1">space</span> <span class="pl-c1">&gt;</span> <span class="pl-s1">ans</span>:
-            <span class="pl-s1">ans</span> <span class="pl-c1">=</span> <span class="pl-s1">space</span>
+ans = 0
+for i in range(len(a) - 1):
+    for j in range(i + 1, len(a)):
+        x1, y1 = a[i]
+        x2, y2 = a[j]
+        space = cal_space(x1, y1, x2, y2)
+        if space &gt; ans:
+            ans = space
 
-<span class="pl-en">print</span>(<span class="pl-s1">ans</span>)</pre></div>
+print(ans)
+</code></pre>
 <p></p>
 </details> 
 <h3>2题</h3>
@@ -2774,66 +2782,67 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
 </blockquote>
 <details><summary>Details</summary>
 <p>
-</p><div class="highlight highlight-source-python"><pre class="notranslate"><span class="pl-s1">a</span> <span class="pl-c1">=</span> [(<span class="pl-en">int</span>(<span class="pl-s1">x</span>), <span class="pl-en">int</span>(<span class="pl-s1">y</span>)) <span class="pl-k">for</span> <span class="pl-s1">x</span>, <span class="pl-s1">y</span> <span class="pl-c1">in</span> (<span class="pl-s1">line</span>.<span class="pl-c1">split</span>(<span class="pl-s">","</span>) <span class="pl-k">for</span> <span class="pl-s1">line</span> <span class="pl-c1">in</span> <span class="pl-s1">aaa</span>.<span class="pl-c1">split</span>(<span class="pl-s">"<span class="pl-cce">\n</span>"</span>))]
+</p><pre lang="python" class="notranslate"><code class="notranslate">a = [(int(x), int(y)) for x, y in (line.split(",") for line in aaa.split("\n"))]
 
-<span class="pl-k">def</span> <span class="pl-en">cal_space</span>(<span class="pl-s1">x1</span>, <span class="pl-s1">y1</span>, <span class="pl-s1">x2</span>, <span class="pl-s1">y2</span>):
-    <span class="pl-k">return</span> (<span class="pl-en">abs</span>(<span class="pl-s1">x1</span> <span class="pl-c1">-</span> <span class="pl-s1">x2</span>) <span class="pl-c1">+</span> <span class="pl-c1">1</span>) <span class="pl-c1">*</span> (<span class="pl-en">abs</span>(<span class="pl-s1">y1</span> <span class="pl-c1">-</span> <span class="pl-s1">y2</span>) <span class="pl-c1">+</span> <span class="pl-c1">1</span>)
+def cal_space(x1, y1, x2, y2):
+    return (abs(x1 - x2) + 1) * (abs(y1 - y2) + 1)
 
-<span class="pl-k">def</span> <span class="pl-en">check</span>(<span class="pl-s1">edges</span>, <span class="pl-s1">x1</span>, <span class="pl-s1">y1</span>, <span class="pl-s1">x2</span>, <span class="pl-s1">y2</span>) <span class="pl-c1">-&gt;</span> <span class="pl-smi">bool</span>:
-    <span class="pl-s1">min_x</span> <span class="pl-c1">=</span> <span class="pl-en">min</span>(<span class="pl-s1">x1</span>, <span class="pl-s1">x2</span>)
-    <span class="pl-s1">max_x</span> <span class="pl-c1">=</span> <span class="pl-en">max</span>(<span class="pl-s1">x1</span>, <span class="pl-s1">x2</span>)
-    <span class="pl-s1">min_y</span> <span class="pl-c1">=</span> <span class="pl-en">min</span>(<span class="pl-s1">y1</span>, <span class="pl-s1">y2</span>)
-    <span class="pl-s1">max_y</span> <span class="pl-c1">=</span> <span class="pl-en">max</span>(<span class="pl-s1">y1</span>, <span class="pl-s1">y2</span>)
-    <span class="pl-s1">mid_x</span> <span class="pl-c1">=</span> (<span class="pl-s1">x1</span> <span class="pl-c1">+</span> <span class="pl-s1">x2</span>) <span class="pl-c1">/</span> <span class="pl-c1">2</span>
-    <span class="pl-s1">mid_y</span> <span class="pl-c1">=</span> (<span class="pl-s1">y1</span> <span class="pl-c1">+</span> <span class="pl-s1">y2</span>) <span class="pl-c1">/</span> <span class="pl-c1">2</span>
+def check(edges, x1, y1, x2, y2) -&gt; bool:
+    min_x = min(x1, x2)
+    max_x = max(x1, x2)
+    min_y = min(y1, y2)
+    max_y = max(y1, y2)
+    mid_x = (x1 + x2) / 2
+    mid_y = (y1 + y2) / 2
 
-    <span class="pl-k">def</span> <span class="pl-en">ray_cast</span>(<span class="pl-s1">midpoint</span>, <span class="pl-s1">edges</span>):
-        <span class="pl-s1">count</span> <span class="pl-c1">=</span> <span class="pl-c1">0</span>
-        <span class="pl-s1">mx</span>, <span class="pl-s1">my</span> <span class="pl-c1">=</span> <span class="pl-s1">midpoint</span>
-        <span class="pl-k">for</span> (<span class="pl-s1">x3</span>, <span class="pl-s1">y3</span>), (<span class="pl-s1">x4</span>, <span class="pl-s1">y4</span>) <span class="pl-c1">in</span> <span class="pl-s1">edges</span>:
-            <span class="pl-k">if</span> <span class="pl-s1">x3</span> <span class="pl-c1">&gt;</span> <span class="pl-s1">mx</span> <span class="pl-c1">and</span> <span class="pl-s1">x4</span> <span class="pl-c1">&gt;</span> <span class="pl-s1">mx</span>:
-                <span class="pl-k">if</span> <span class="pl-en">min</span>(<span class="pl-s1">y3</span>, <span class="pl-s1">y4</span>) <span class="pl-c1">&lt;=</span> <span class="pl-s1">my</span> <span class="pl-c1">&lt;</span> <span class="pl-en">max</span>(<span class="pl-s1">y3</span>, <span class="pl-s1">y4</span>):
-                    <span class="pl-s1">count</span> <span class="pl-c1">+=</span> <span class="pl-c1">1</span>
-        <span class="pl-k">return</span> <span class="pl-s1">count</span> <span class="pl-c1">%</span> <span class="pl-c1">2</span> <span class="pl-c1">==</span> <span class="pl-c1">1</span>
+    def ray_cast(midpoint, edges):
+        count = 0
+        mx, my = midpoint
+        for (x3, y3), (x4, y4) in edges:
+            if x3 &gt; mx and x4 &gt; mx:
+                if min(y3, y4) &lt;= my &lt; max(y3, y4):
+                    count += 1
+        return count % 2 == 1
     
-    <span class="pl-k">if</span> <span class="pl-c1">not</span> <span class="pl-en">ray_cast</span>((<span class="pl-s1">mid_x</span>, <span class="pl-s1">mid_y</span>), <span class="pl-s1">edges</span>):
-        <span class="pl-k">return</span> <span class="pl-c1">False</span>
+    if not ray_cast((mid_x, mid_y), edges):
+        return False
 
-    <span class="pl-k">for</span> (<span class="pl-s1">x3</span>, <span class="pl-s1">y3</span>), (<span class="pl-s1">x4</span>, <span class="pl-s1">y4</span>) <span class="pl-c1">in</span> <span class="pl-s1">edges</span>:
-        <span class="pl-k">if</span> <span class="pl-s1">x3</span> <span class="pl-c1">==</span> <span class="pl-s1">x4</span>:
-            <span class="pl-k">if</span> <span class="pl-s1">min_x</span> <span class="pl-c1">&lt;</span> <span class="pl-s1">x3</span> <span class="pl-c1">&lt;</span> <span class="pl-s1">max_x</span>:
-                <span class="pl-s1">edge_min_y</span> <span class="pl-c1">=</span> <span class="pl-en">min</span>(<span class="pl-s1">y3</span>, <span class="pl-s1">y4</span>)
-                <span class="pl-s1">edge_max_y</span> <span class="pl-c1">=</span> <span class="pl-en">max</span>(<span class="pl-s1">y3</span>, <span class="pl-s1">y4</span>)
-                <span class="pl-k">if</span> <span class="pl-c1">not</span> (<span class="pl-s1">edge_max_y</span> <span class="pl-c1">&lt;=</span> <span class="pl-s1">min_y</span> <span class="pl-c1">or</span> <span class="pl-s1">edge_min_y</span> <span class="pl-c1">&gt;=</span> <span class="pl-s1">max_y</span>):
-                    <span class="pl-k">return</span> <span class="pl-c1">False</span>
+    for (x3, y3), (x4, y4) in edges:
+        if x3 == x4:
+            if min_x &lt; x3 &lt; max_x:
+                edge_min_y = min(y3, y4)
+                edge_max_y = max(y3, y4)
+                if not (edge_max_y &lt;= min_y or edge_min_y &gt;= max_y):
+                    return False
                 
-        <span class="pl-k">elif</span> <span class="pl-s1">y3</span> <span class="pl-c1">==</span> <span class="pl-s1">y4</span>:
-            <span class="pl-k">if</span> <span class="pl-s1">min_y</span> <span class="pl-c1">&lt;</span> <span class="pl-s1">y3</span> <span class="pl-c1">&lt;</span> <span class="pl-s1">max_y</span>:
-                <span class="pl-s1">edge_min_x</span> <span class="pl-c1">=</span> <span class="pl-en">min</span>(<span class="pl-s1">x3</span>, <span class="pl-s1">x4</span>)
-                <span class="pl-s1">edge_max_x</span> <span class="pl-c1">=</span> <span class="pl-en">max</span>(<span class="pl-s1">x3</span>, <span class="pl-s1">x4</span>)
-                <span class="pl-k">if</span> <span class="pl-c1">not</span> (<span class="pl-s1">edge_max_x</span> <span class="pl-c1">&lt;=</span> <span class="pl-s1">min_x</span> <span class="pl-c1">or</span> <span class="pl-s1">edge_min_x</span> <span class="pl-c1">&gt;=</span> <span class="pl-s1">max_x</span>):
-                    <span class="pl-k">return</span> <span class="pl-c1">False</span>
-    <span class="pl-k">return</span> <span class="pl-c1">True</span>
+        elif y3 == y4:
+            if min_y &lt; y3 &lt; max_y:
+                edge_min_x = min(x3, x4)
+                edge_max_x = max(x3, x4)
+                if not (edge_max_x &lt;= min_x or edge_min_x &gt;= max_x):
+                    return False
+    return True
 
 
-<span class="pl-s1">edges</span> <span class="pl-c1">=</span> []
-<span class="pl-k">for</span> <span class="pl-s1">i</span> <span class="pl-c1">in</span> <span class="pl-en">range</span>(<span class="pl-c1">0</span>, <span class="pl-en">len</span>(<span class="pl-s1">a</span>) <span class="pl-c1">-</span> <span class="pl-c1">1</span>):
-    <span class="pl-s1">edges</span>.<span class="pl-c1">append</span>((<span class="pl-s1">a</span>[<span class="pl-s1">i</span>], <span class="pl-s1">a</span>[<span class="pl-s1">i</span> <span class="pl-c1">+</span> <span class="pl-c1">1</span>]))
+edges = []
+for i in range(0, len(a) - 1):
+    edges.append((a[i], a[i + 1]))
 
-<span class="pl-s1">edges</span>.<span class="pl-c1">append</span>((<span class="pl-s1">a</span>[<span class="pl-c1">-</span><span class="pl-c1">1</span>], <span class="pl-s1">a</span>[<span class="pl-c1">0</span>]))
+edges.append((a[-1], a[0]))
 
-<span class="pl-s1">ans</span> <span class="pl-c1">=</span> <span class="pl-c1">0</span>
-<span class="pl-k">for</span> <span class="pl-s1">i</span> <span class="pl-c1">in</span> <span class="pl-en">range</span>(<span class="pl-c1">0</span>, <span class="pl-en">len</span>(<span class="pl-s1">a</span>) <span class="pl-c1">-</span> <span class="pl-c1">1</span>):
-    <span class="pl-k">for</span> <span class="pl-s1">j</span> <span class="pl-c1">in</span> <span class="pl-en">range</span>(<span class="pl-s1">i</span> <span class="pl-c1">+</span> <span class="pl-c1">1</span>, <span class="pl-en">len</span>(<span class="pl-s1">a</span>)):
-        <span class="pl-s1">x1</span>, <span class="pl-s1">y1</span> <span class="pl-c1">=</span> <span class="pl-s1">a</span>[<span class="pl-s1">i</span>]
-        <span class="pl-s1">x2</span>, <span class="pl-s1">y2</span> <span class="pl-c1">=</span> <span class="pl-s1">a</span>[<span class="pl-s1">j</span>]
-        <span class="pl-s1">space</span> <span class="pl-c1">=</span> <span class="pl-en">cal_space</span>(<span class="pl-s1">x1</span>, <span class="pl-s1">y1</span>, <span class="pl-s1">x2</span>, <span class="pl-s1">y2</span>)
-        <span class="pl-k">if</span> <span class="pl-s1">space</span> <span class="pl-c1">&lt;=</span> <span class="pl-s1">ans</span>:
-            <span class="pl-k">continue</span>
-        <span class="pl-k">if</span> <span class="pl-en">check</span>(<span class="pl-s1">edges</span>, <span class="pl-s1">x1</span>, <span class="pl-s1">y1</span>, <span class="pl-s1">x2</span>, <span class="pl-s1">y2</span>):
-            <span class="pl-s1">ans</span> <span class="pl-c1">=</span> <span class="pl-s1">space</span>
+ans = 0
+for i in range(0, len(a) - 1):
+    for j in range(i + 1, len(a)):
+        x1, y1 = a[i]
+        x2, y2 = a[j]
+        space = cal_space(x1, y1, x2, y2)
+        if space &lt;= ans:
+            continue
+        if check(edges, x1, y1, x2, y2):
+            ans = space
 
-<span class="pl-en">print</span>(<span class="pl-s1">ans</span>)</pre></div>
+print(ans)
+</code></pre>
 <p></p>
 </details> 
 <h2>第十题</h2>
@@ -2845,43 +2854,44 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
 <p>求 将完全关闭的灯泡 切换到 最终需要到达的状态需要按多少次</p>
 <details><summary>Details</summary>
 <p>
-</p><div class="highlight highlight-source-python"><pre class="notranslate"><span class="pl-k">import</span> <span class="pl-s1">re</span>
+</p><pre lang="python" class="notranslate"><code class="notranslate">import re
 
-<span class="pl-s1">a</span> <span class="pl-c1">=</span> <span class="pl-s1">aaa</span>.<span class="pl-c1">splitlines</span>()
-<span class="pl-s1">t</span> <span class="pl-c1">=</span> []
-<span class="pl-k">for</span> <span class="pl-s1">i</span> <span class="pl-c1">in</span> <span class="pl-s1">a</span>:
-    <span class="pl-s1">lights</span> <span class="pl-c1">=</span> <span class="pl-s1">re</span>.<span class="pl-c1">findall</span>(<span class="pl-s">r'\[(.*?)\]'</span>, <span class="pl-s1">i</span>)[<span class="pl-c1">0</span>]
-    <span class="pl-s1">steps</span> <span class="pl-c1">=</span> <span class="pl-s1">re</span>.<span class="pl-c1">findall</span>(<span class="pl-s">r'\((.*?)\)'</span>, <span class="pl-s1">i</span>)
-    <span class="pl-s1">joltages</span> <span class="pl-c1">=</span> <span class="pl-s1">re</span>.<span class="pl-c1">findall</span>(<span class="pl-s">r'\{(.*?)\}'</span>, <span class="pl-s1">i</span>)[<span class="pl-c1">0</span>]
-    <span class="pl-s1">steps</span> <span class="pl-c1">=</span> [<span class="pl-en">list</span>(<span class="pl-en">map</span>(<span class="pl-s1">int</span>, <span class="pl-s1">s</span>.<span class="pl-c1">split</span>(<span class="pl-s">','</span>))) <span class="pl-k">if</span> <span class="pl-s1">s</span> <span class="pl-k">else</span> [] <span class="pl-k">for</span> <span class="pl-s1">s</span> <span class="pl-c1">in</span> <span class="pl-s1">steps</span>]
-    <span class="pl-s1">joltages</span> <span class="pl-c1">=</span> <span class="pl-en">list</span>(<span class="pl-en">map</span>(<span class="pl-s1">int</span>, <span class="pl-s1">joltages</span>.<span class="pl-c1">split</span>(<span class="pl-s">','</span>)))
-    <span class="pl-s1">lights_len</span> <span class="pl-c1">=</span> <span class="pl-en">len</span>(<span class="pl-s1">lights</span>)
-    <span class="pl-s1">t</span>.<span class="pl-c1">append</span>((<span class="pl-s1">lights</span>, <span class="pl-s1">lights_len</span>, <span class="pl-s1">steps</span>, <span class="pl-s1">joltages</span>))
+a = aaa.splitlines()
+t = []
+for i in a:
+    lights = re.findall(r'\[(.*?)\]', i)[0]
+    steps = re.findall(r'\((.*?)\)', i)
+    joltages = re.findall(r'\{(.*?)\}', i)[0]
+    steps = [list(map(int, s.split(','))) if s else [] for s in steps]
+    joltages = list(map(int, joltages.split(',')))
+    lights_len = len(lights)
+    t.append((lights, lights_len, steps, joltages))
 
-<span class="pl-s1">ans</span> <span class="pl-c1">=</span> <span class="pl-c1">0</span>
-<span class="pl-k">for</span> <span class="pl-s1">lights</span>, <span class="pl-s1">lights_len</span>, <span class="pl-s1">steps</span>, <span class="pl-s1">joltages</span> <span class="pl-c1">in</span> <span class="pl-s1">t</span>:
-    <span class="pl-c"># 最少操作数让所有灯满足lights中的要求 不需要考虑电压</span>
-    <span class="pl-s1">dp</span> <span class="pl-c1">=</span> {<span class="pl-c1">0</span>: <span class="pl-c1">0</span>}  <span class="pl-c"># 状态压缩dp</span>
-    <span class="pl-k">for</span> <span class="pl-s1">step</span> <span class="pl-c1">in</span> <span class="pl-s1">steps</span>:
-        <span class="pl-s1">next_dp</span> <span class="pl-c1">=</span> {}
-        <span class="pl-k">for</span> <span class="pl-s1">state</span>, <span class="pl-s1">cnt</span> <span class="pl-c1">in</span> <span class="pl-s1">dp</span>.<span class="pl-c1">items</span>():
-            <span class="pl-c"># 不按</span>
-            <span class="pl-k">if</span> <span class="pl-s1">state</span> <span class="pl-c1"><span class="pl-c1">not</span> <span class="pl-c1">in</span></span> <span class="pl-s1">next_dp</span> <span class="pl-c1">or</span> <span class="pl-s1">next_dp</span>[<span class="pl-s1">state</span>] <span class="pl-c1">&gt;</span> <span class="pl-s1">cnt</span>:
-                <span class="pl-s1">next_dp</span>[<span class="pl-s1">state</span>] <span class="pl-c1">=</span> <span class="pl-s1">cnt</span>
-            <span class="pl-c"># 按</span>
-            <span class="pl-s1">next_state</span> <span class="pl-c1">=</span> <span class="pl-s1">state</span>
-            <span class="pl-k">for</span> <span class="pl-s1">s</span> <span class="pl-c1">in</span> <span class="pl-s1">step</span>:
-                <span class="pl-s1">next_state</span> <span class="pl-c1">^=</span> (<span class="pl-c1">1</span> <span class="pl-c1">&lt;&lt;</span> <span class="pl-s1">s</span>)
-            <span class="pl-k">if</span> <span class="pl-s1">next_state</span> <span class="pl-c1"><span class="pl-c1">not</span> <span class="pl-c1">in</span></span> <span class="pl-s1">next_dp</span> <span class="pl-c1">or</span> <span class="pl-s1">next_dp</span>[<span class="pl-s1">next_state</span>] <span class="pl-c1">&gt;</span> <span class="pl-s1">cnt</span> <span class="pl-c1">+</span> <span class="pl-c1">1</span>:
-                <span class="pl-s1">next_dp</span>[<span class="pl-s1">next_state</span>] <span class="pl-c1">=</span> <span class="pl-s1">cnt</span> <span class="pl-c1">+</span> <span class="pl-c1">1</span>
-        <span class="pl-s1">dp</span> <span class="pl-c1">=</span> <span class="pl-s1">next_dp</span>
-    <span class="pl-s1">final_state</span> <span class="pl-c1">=</span> <span class="pl-c1">0</span>
-    <span class="pl-k">for</span> <span class="pl-s1">i</span> <span class="pl-c1">in</span> <span class="pl-en">range</span>(<span class="pl-s1">lights_len</span>):
-        <span class="pl-k">if</span> <span class="pl-s1">lights</span>[<span class="pl-s1">i</span>] <span class="pl-c1">==</span> <span class="pl-s">'#'</span>:
-            <span class="pl-s1">final_state</span> <span class="pl-c1">|=</span> (<span class="pl-c1">1</span> <span class="pl-c1">&lt;&lt;</span> <span class="pl-s1">i</span>)
-    <span class="pl-s1">ans</span> <span class="pl-c1">+=</span> <span class="pl-s1">dp</span>[<span class="pl-s1">final_state</span>]
+ans = 0
+for lights, lights_len, steps, joltages in t:
+    # 最少操作数让所有灯满足lights中的要求 不需要考虑电压
+    dp = {0: 0}  # 状态压缩dp
+    for step in steps:
+        next_dp = {}
+        for state, cnt in dp.items():
+            # 不按
+            if state not in next_dp or next_dp[state] &gt; cnt:
+                next_dp[state] = cnt
+            # 按
+            next_state = state
+            for s in step:
+                next_state ^= (1 &lt;&lt; s)
+            if next_state not in next_dp or next_dp[next_state] &gt; cnt + 1:
+                next_dp[next_state] = cnt + 1
+        dp = next_dp
+    final_state = 0
+    for i in range(lights_len):
+        if lights[i] == '#':
+            final_state |= (1 &lt;&lt; i)
+    ans += dp[final_state]
 
-<span class="pl-en">print</span>(<span class="pl-s1">ans</span>)</pre></div>
+print(ans)
+</code></pre>
 <p></p>
 </details> 
 <h3>2题</h3>
@@ -2895,58 +2905,59 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
 </blockquote>
 <details><summary>Details</summary>
 <p>
-</p><div class="highlight highlight-source-python"><pre class="notranslate"><span class="pl-k">import</span> <span class="pl-s1">re</span>
+</p><pre lang="python" class="notranslate"><code class="notranslate">import re
 
-<span class="pl-s1">a</span> <span class="pl-c1">=</span> <span class="pl-s1">aaa</span>.<span class="pl-c1">splitlines</span>()
-<span class="pl-s1">t</span> <span class="pl-c1">=</span> []
-<span class="pl-k">for</span> <span class="pl-s1">i</span> <span class="pl-c1">in</span> <span class="pl-s1">a</span>:
-    <span class="pl-s1">lights</span> <span class="pl-c1">=</span> <span class="pl-s1">re</span>.<span class="pl-c1">findall</span>(<span class="pl-s">r'\[(.*?)\]'</span>, <span class="pl-s1">i</span>)[<span class="pl-c1">0</span>]
-    <span class="pl-s1">steps</span> <span class="pl-c1">=</span> <span class="pl-s1">re</span>.<span class="pl-c1">findall</span>(<span class="pl-s">r'\((.*?)\)'</span>, <span class="pl-s1">i</span>)
-    <span class="pl-s1">joltages</span> <span class="pl-c1">=</span> <span class="pl-s1">re</span>.<span class="pl-c1">findall</span>(<span class="pl-s">r'\{(.*?)\}'</span>, <span class="pl-s1">i</span>)[<span class="pl-c1">0</span>]
-    <span class="pl-s1">steps</span> <span class="pl-c1">=</span> [<span class="pl-en">list</span>(<span class="pl-en">map</span>(<span class="pl-s1">int</span>, <span class="pl-s1">s</span>.<span class="pl-c1">split</span>(<span class="pl-s">','</span>))) <span class="pl-k">if</span> <span class="pl-s1">s</span> <span class="pl-k">else</span> [] <span class="pl-k">for</span> <span class="pl-s1">s</span> <span class="pl-c1">in</span> <span class="pl-s1">steps</span>]
-    <span class="pl-s1">joltages</span> <span class="pl-c1">=</span> <span class="pl-en">list</span>(<span class="pl-en">map</span>(<span class="pl-s1">int</span>, <span class="pl-s1">joltages</span>.<span class="pl-c1">split</span>(<span class="pl-s">','</span>)))
-    <span class="pl-s1">lights_len</span> <span class="pl-c1">=</span> <span class="pl-en">len</span>(<span class="pl-s1">lights</span>)
-    <span class="pl-s1">t</span>.<span class="pl-c1">append</span>((<span class="pl-s1">lights</span>, <span class="pl-s1">lights_len</span>, <span class="pl-s1">steps</span>, <span class="pl-s1">joltages</span>))
+a = aaa.splitlines()
+t = []
+for i in a:
+    lights = re.findall(r'\[(.*?)\]', i)[0]
+    steps = re.findall(r'\((.*?)\)', i)
+    joltages = re.findall(r'\{(.*?)\}', i)[0]
+    steps = [list(map(int, s.split(','))) if s else [] for s in steps]
+    joltages = list(map(int, joltages.split(',')))
+    lights_len = len(lights)
+    t.append((lights, lights_len, steps, joltages))
 
-<span class="pl-k">import</span> <span class="pl-s1">z3</span>
+import z3
 
-<span class="pl-k">def</span> <span class="pl-en">solve</span>(<span class="pl-s1">lights</span>, <span class="pl-s1">lights_len</span>, <span class="pl-s1">steps</span>, <span class="pl-s1">joltages</span>):
-    <span class="pl-c"># 设 steps 列表中的第 i 个元素为xi 约束: xi大于等于0 且整数</span>
-    <span class="pl-c"># sum(Aji * xi) = bj</span>
-    <span class="pl-c"># Aji = 1 表示第i个按钮可以控制到第j个灯, 也就是可以增加第j个灯的电压</span>
-    <span class="pl-c"># xi 表示第i个按钮按下的次数</span>
-    <span class="pl-c"># bj 表示第j个灯的目标电压</span>
-    <span class="pl-c"># 求解 minimize sum(xi)</span>
-    <span class="pl-s1">s</span> <span class="pl-c1">=</span> <span class="pl-s1">z3</span>.<span class="pl-c1">Solver</span>()
-    <span class="pl-s1">x</span> <span class="pl-c1">=</span> [<span class="pl-s1">z3</span>.<span class="pl-c1">Int</span>(<span class="pl-s">f'x<span class="pl-s1"><span class="pl-kos">{</span><span class="pl-s1">i</span><span class="pl-kos">}</span></span>'</span>) <span class="pl-k">for</span> <span class="pl-s1">i</span> <span class="pl-c1">in</span> <span class="pl-en">range</span>(<span class="pl-en">len</span>(<span class="pl-s1">steps</span>))]
-    <span class="pl-k">for</span> <span class="pl-s1">i</span> <span class="pl-c1">in</span> <span class="pl-en">range</span>(<span class="pl-en">len</span>(<span class="pl-s1">steps</span>)):
-        <span class="pl-s1">s</span>.<span class="pl-c1">add</span>(<span class="pl-s1">x</span>[<span class="pl-s1">i</span>] <span class="pl-c1">&gt;=</span> <span class="pl-c1">0</span>)
-    <span class="pl-k">for</span> <span class="pl-s1">j</span> <span class="pl-c1">in</span> <span class="pl-en">range</span>(<span class="pl-s1">lights_len</span>):
-        <span class="pl-s1">coeffs</span> <span class="pl-c1">=</span> []
-        <span class="pl-k">for</span> <span class="pl-s1">i</span> <span class="pl-c1">in</span> <span class="pl-en">range</span>(<span class="pl-en">len</span>(<span class="pl-s1">steps</span>)):
-            <span class="pl-k">if</span> <span class="pl-s1">j</span> <span class="pl-c1">in</span> <span class="pl-s1">steps</span>[<span class="pl-s1">i</span>]:
-                <span class="pl-s1">coeffs</span>.<span class="pl-c1">append</span>(<span class="pl-s1">x</span>[<span class="pl-s1">i</span>])
-        <span class="pl-s1">s</span>.<span class="pl-c1">add</span>(<span class="pl-s1">z3</span>.<span class="pl-c1">Sum</span>(<span class="pl-s1">coeffs</span>) <span class="pl-c1">==</span> <span class="pl-s1">joltages</span>[<span class="pl-s1">j</span>])
-    <span class="pl-s1">obj</span> <span class="pl-c1">=</span> <span class="pl-s1">z3</span>.<span class="pl-c1">Sum</span>(<span class="pl-s1">x</span>)
-    <span class="pl-s1">h</span> <span class="pl-c1">=</span> <span class="pl-s1">z3</span>.<span class="pl-c1">Optimize</span>()
-    <span class="pl-s1">h</span>.<span class="pl-c1">add</span>(<span class="pl-s1">s</span>.<span class="pl-c1">assertions</span>())
-    <span class="pl-s1">h</span>.<span class="pl-c1">minimize</span>(<span class="pl-s1">obj</span>)
-    <span class="pl-k">if</span> <span class="pl-s1">h</span>.<span class="pl-c1">check</span>() <span class="pl-c1">==</span> <span class="pl-s1">z3</span>.<span class="pl-c1">sat</span>:
-        <span class="pl-s1">m</span> <span class="pl-c1">=</span> <span class="pl-s1">h</span>.<span class="pl-c1">model</span>()
-        <span class="pl-s1">res</span> <span class="pl-c1">=</span> [<span class="pl-s1">m</span>.<span class="pl-c1">evaluate</span>(<span class="pl-s1">x</span>[<span class="pl-s1">i</span>]).<span class="pl-c1">as_long</span>() <span class="pl-k">for</span> <span class="pl-s1">i</span> <span class="pl-c1">in</span> <span class="pl-en">range</span>(<span class="pl-en">len</span>(<span class="pl-s1">steps</span>))]
-        <span class="pl-k">return</span> <span class="pl-s1">res</span>
-    <span class="pl-k">else</span>:
-        <span class="pl-k">return</span> [<span class="pl-c1">-</span><span class="pl-c1">1</span>] <span class="pl-c1">*</span> <span class="pl-en">len</span>(<span class="pl-s1">steps</span>)
+def solve(lights, lights_len, steps, joltages):
+    # 设 steps 列表中的第 i 个元素为xi 约束: xi大于等于0 且整数
+    # sum(Aji * xi) = bj
+    # Aji = 1 表示第i个按钮可以控制到第j个灯, 也就是可以增加第j个灯的电压
+    # xi 表示第i个按钮按下的次数
+    # bj 表示第j个灯的目标电压
+    # 求解 minimize sum(xi)
+    s = z3.Solver()
+    x = [z3.Int(f'x{i}') for i in range(len(steps))]
+    for i in range(len(steps)):
+        s.add(x[i] &gt;= 0)
+    for j in range(lights_len):
+        coeffs = []
+        for i in range(len(steps)):
+            if j in steps[i]:
+                coeffs.append(x[i])
+        s.add(z3.Sum(coeffs) == joltages[j])
+    obj = z3.Sum(x)
+    h = z3.Optimize()
+    h.add(s.assertions())
+    h.minimize(obj)
+    if h.check() == z3.sat:
+        m = h.model()
+        res = [m.evaluate(x[i]).as_long() for i in range(len(steps))]
+        return res
+    else:
+        return [-1] * len(steps)
     
-<span class="pl-s1">results</span> <span class="pl-c1">=</span> []
-<span class="pl-k">for</span> <span class="pl-s1">lights</span>, <span class="pl-s1">lights_len</span>, <span class="pl-s1">steps</span>, <span class="pl-s1">joltages</span> <span class="pl-c1">in</span> <span class="pl-s1">t</span>:
-    <span class="pl-s1">res</span> <span class="pl-c1">=</span> <span class="pl-en">solve</span>(<span class="pl-s1">lights</span>, <span class="pl-s1">lights_len</span>, <span class="pl-s1">steps</span>, <span class="pl-s1">joltages</span>)
-    <span class="pl-s1">results</span>.<span class="pl-c1">append</span>(<span class="pl-s1">res</span>)
-<span class="pl-k">for</span> <span class="pl-s1">res</span> <span class="pl-c1">in</span> <span class="pl-s1">results</span>:
-    <span class="pl-en">print</span>(<span class="pl-s">' '</span>.<span class="pl-c1">join</span>(<span class="pl-en">map</span>(<span class="pl-s1">str</span>, <span class="pl-s1">res</span>)))
+results = []
+for lights, lights_len, steps, joltages in t:
+    res = solve(lights, lights_len, steps, joltages)
+    results.append(res)
+for res in results:
+    print(' '.join(map(str, res)))
 
-<span class="pl-s1">ans</span> <span class="pl-c1">=</span> <span class="pl-en">sum</span>(<span class="pl-en">sum</span>(<span class="pl-s1">r</span>) <span class="pl-k">for</span> <span class="pl-s1">r</span> <span class="pl-c1">in</span> <span class="pl-s1">results</span>)
-<span class="pl-en">print</span>(<span class="pl-s1">ans</span>)</pre></div>
+ans = sum(sum(r) for r in results)
+print(ans)
+</code></pre>
 <p></p>
 </details> 
 <h2>第十一题</h2>
@@ -2956,54 +2967,56 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
 b不一定只有一个 找到从 特定字符开始 到结束字符的 每条路径</p>
 <details><summary>Details</summary>
 <p>
-</p><div class="highlight highlight-source-python"><pre class="notranslate"><span class="pl-s1">a</span> <span class="pl-c1">=</span> {}
-<span class="pl-k">for</span> <span class="pl-s1">i</span> <span class="pl-c1">in</span> <span class="pl-s1">aaa</span>.<span class="pl-c1">splitlines</span>():
-    <span class="pl-s1">p</span>, <span class="pl-s1">q</span> <span class="pl-c1">=</span> <span class="pl-s1">i</span>.<span class="pl-c1">split</span>(<span class="pl-s">": "</span>)
-    <span class="pl-s1">a</span>[<span class="pl-s1">p</span>] <span class="pl-c1">=</span> <span class="pl-s1">q</span>.<span class="pl-c1">split</span>(<span class="pl-s">" "</span>)
+</p><pre lang="python" class="notranslate"><code class="notranslate">a = {}
+for i in aaa.splitlines():
+    p, q = i.split(": ")
+    a[p] = q.split(" ")
 
 
-<span class="pl-k">def</span> <span class="pl-en">dfs</span>(<span class="pl-s1">t</span>):
-    <span class="pl-k">if</span> <span class="pl-s1">t</span> <span class="pl-c1">==</span> <span class="pl-s">'out'</span>:
-        <span class="pl-k">return</span> <span class="pl-c1">0</span>
-    <span class="pl-s1">nt</span> <span class="pl-c1">=</span> <span class="pl-s1">a</span>[<span class="pl-s1">t</span>]
-    <span class="pl-s1">b</span> <span class="pl-c1">=</span> <span class="pl-c1">0</span>
-    <span class="pl-k">for</span> <span class="pl-s1">i</span> <span class="pl-c1">in</span> <span class="pl-s1">nt</span>:
-        <span class="pl-s1">b</span> <span class="pl-c1">+=</span> <span class="pl-en">dfs</span>(<span class="pl-s1">i</span>)
-    <span class="pl-k">return</span> <span class="pl-s1">b</span> <span class="pl-c1">+</span> <span class="pl-en">len</span>(<span class="pl-s1">nt</span>) <span class="pl-c1">-</span> <span class="pl-c1">1</span>
+def dfs(t):
+    if t == 'out':
+        return 0
+    nt = a[t]
+    b = 0
+    for i in nt:
+        b += dfs(i)
+    return b + len(nt) - 1
 
-<span class="pl-en">print</span>(<span class="pl-en">dfs</span>(<span class="pl-s">'you'</span>) <span class="pl-c1">+</span> <span class="pl-c1">1</span>)</pre></div>
+print(dfs('you') + 1)
+</code></pre>
 <p></p>
 </details> 
 <h3>2题</h3>
 <p>在1题的基础上 特定字符换了一下 且需要同时经过 某两个字符(顺序无关)</p>
 <details><summary>Details</summary>
 <p>
-</p><div class="highlight highlight-source-python"><pre class="notranslate"><span class="pl-k">import</span> <span class="pl-s1">functools</span>
+</p><pre lang="python" class="notranslate"><code class="notranslate">import functools
 
-<span class="pl-s1">a</span> <span class="pl-c1">=</span> {}
-<span class="pl-k">for</span> <span class="pl-s1">i</span> <span class="pl-c1">in</span> <span class="pl-s1">aaa</span>.<span class="pl-c1">splitlines</span>():
-    <span class="pl-s1">p</span>, <span class="pl-s1">q</span> <span class="pl-c1">=</span> <span class="pl-s1">i</span>.<span class="pl-c1">split</span>(<span class="pl-s">": "</span>)
-    <span class="pl-s1">a</span>[<span class="pl-s1">p</span>] <span class="pl-c1">=</span> <span class="pl-s1">q</span>.<span class="pl-c1">split</span>(<span class="pl-s">" "</span>)
+a = {}
+for i in aaa.splitlines():
+    p, q = i.split(": ")
+    a[p] = q.split(" ")
 
 
-<span class="pl-en">@<span class="pl-s1">functools</span>.<span class="pl-c1">lru_cache</span>(<span class="pl-c1">None</span>)</span>
-<span class="pl-k">def</span> <span class="pl-en">dfs</span>(<span class="pl-s1">t</span>, <span class="pl-s1">visited_dac</span>, <span class="pl-s1">visited_fft</span>):
-    <span class="pl-k">if</span> <span class="pl-s1">t</span> <span class="pl-c1">==</span> <span class="pl-s">'dac'</span>:
-        <span class="pl-s1">visited_dac</span> <span class="pl-c1">=</span> <span class="pl-c1">True</span>
-    <span class="pl-k">if</span> <span class="pl-s1">t</span> <span class="pl-c1">==</span> <span class="pl-s">'fft'</span>:
-        <span class="pl-s1">visited_fft</span> <span class="pl-c1">=</span> <span class="pl-c1">True</span>
-    <span class="pl-k">if</span> <span class="pl-s1">t</span> <span class="pl-c1">==</span> <span class="pl-s">'out'</span>:
-        <span class="pl-k">if</span> <span class="pl-s1">visited_dac</span> <span class="pl-c1">and</span> <span class="pl-s1">visited_fft</span>:
-            <span class="pl-k">return</span> <span class="pl-c1">1</span>, <span class="pl-s1">visited_dac</span>, <span class="pl-s1">visited_fft</span>
-        <span class="pl-k">else</span>:
-            <span class="pl-k">return</span> <span class="pl-c1">0</span>, <span class="pl-s1">visited_dac</span>, <span class="pl-s1">visited_fft</span>
-    <span class="pl-s1">nt</span> <span class="pl-c1">=</span> <span class="pl-s1">a</span>[<span class="pl-s1">t</span>]
-    <span class="pl-s1">b</span> <span class="pl-c1">=</span> <span class="pl-c1">0</span>
-    <span class="pl-k">for</span> <span class="pl-s1">i</span> <span class="pl-c1">in</span> <span class="pl-s1">nt</span>:
-        <span class="pl-s1">b</span> <span class="pl-c1">+=</span> <span class="pl-en">dfs</span>(<span class="pl-s1">i</span>, <span class="pl-s1">visited_dac</span>, <span class="pl-s1">visited_fft</span>)[<span class="pl-c1">0</span>]
-    <span class="pl-k">return</span> <span class="pl-s1">b</span>, <span class="pl-s1">visited_dac</span>, <span class="pl-s1">visited_fft</span>
+@functools.lru_cache(None)
+def dfs(t, visited_dac, visited_fft):
+    if t == 'dac':
+        visited_dac = True
+    if t == 'fft':
+        visited_fft = True
+    if t == 'out':
+        if visited_dac and visited_fft:
+            return 1, visited_dac, visited_fft
+        else:
+            return 0, visited_dac, visited_fft
+    nt = a[t]
+    b = 0
+    for i in nt:
+        b += dfs(i, visited_dac, visited_fft)[0]
+    return b, visited_dac, visited_fft
 
-<span class="pl-en">print</span>(<span class="pl-en">dfs</span>(<span class="pl-s">'svr'</span>, <span class="pl-c1">False</span>, <span class="pl-c1">False</span>))</pre></div>
+print(dfs('svr', False, False))
+</code></pre>
 <p></p>
 </details> 
 <blockquote>
@@ -3020,41 +3033,42 @@ b不一定只有一个 找到从 特定字符开始 到结束字符的 每条路
 </blockquote>
 <details><summary>Details</summary>
 <p>
-</p><div class="highlight highlight-source-python"><pre class="notranslate"><span class="pl-s1">all_data</span> <span class="pl-c1">=</span> <span class="pl-s1">aaa</span>.<span class="pl-c1">split</span>(<span class="pl-s">'<span class="pl-cce">\n</span><span class="pl-cce">\n</span>'</span>)
-<span class="pl-s1">t</span> <span class="pl-c1">=</span> <span class="pl-s1">all_data</span>[:<span class="pl-c1">-</span><span class="pl-c1">1</span>]
-<span class="pl-s1">gifts</span> <span class="pl-c1">=</span> []
-<span class="pl-k">for</span> <span class="pl-s1">i</span> <span class="pl-c1">in</span> <span class="pl-s1">t</span>:
-    <span class="pl-s1">gift</span> <span class="pl-c1">=</span> []
-    <span class="pl-k">for</span> <span class="pl-s1">line</span> <span class="pl-c1">in</span> <span class="pl-s1">i</span>.<span class="pl-c1">split</span>(<span class="pl-s">'<span class="pl-cce">\n</span>'</span>):
-        <span class="pl-k">if</span> <span class="pl-s">':'</span> <span class="pl-c1">in</span> <span class="pl-s1">line</span>:
-            <span class="pl-k">continue</span>
-        <span class="pl-s1">gift</span>.<span class="pl-c1">append</span>(<span class="pl-s1">line</span>)
-    <span class="pl-s1">gifts</span>.<span class="pl-c1">append</span>(<span class="pl-s1">gift</span>)
+</p><pre lang="python" class="notranslate"><code class="notranslate">all_data = aaa.split('\n\n')
+t = all_data[:-1]
+gifts = []
+for i in t:
+    gift = []
+    for line in i.split('\n'):
+        if ':' in line:
+            continue
+        gift.append(line)
+    gifts.append(gift)
 
-<span class="pl-en">print</span>(<span class="pl-s1">gifts</span>)
-<span class="pl-s1">gift_area</span> <span class="pl-c1">=</span> []
-<span class="pl-k">for</span> <span class="pl-s1">i</span> <span class="pl-c1">in</span> <span class="pl-s1">gifts</span>:
-    <span class="pl-s1">area_num</span> <span class="pl-c1">=</span> <span class="pl-c1">0</span>
-    <span class="pl-k">for</span> <span class="pl-s1">line</span> <span class="pl-c1">in</span> <span class="pl-s1">i</span>:
-        <span class="pl-s1">area_num</span> <span class="pl-c1">+=</span> <span class="pl-s1">line</span>.<span class="pl-c1">count</span>(<span class="pl-s">"#"</span>)
-    <span class="pl-s1">gift_area</span>.<span class="pl-c1">append</span>(<span class="pl-s1">area_num</span>)
+print(gifts)
+gift_area = []
+for i in gifts:
+    area_num = 0
+    for line in i:
+        area_num += line.count("#")
+    gift_area.append(area_num)
 
-<span class="pl-en">print</span>(<span class="pl-s1">gift_area</span>)
+print(gift_area)
 
-<span class="pl-s1">ans</span> <span class="pl-c1">=</span> <span class="pl-c1">0</span>
-<span class="pl-s1">a</span> <span class="pl-c1">=</span> <span class="pl-s1">all_data</span>[<span class="pl-c1">-</span><span class="pl-c1">1</span>]
-<span class="pl-k">for</span> <span class="pl-s1">line</span> <span class="pl-c1">in</span> <span class="pl-s1">a</span>.<span class="pl-c1">splitlines</span>():
-    <span class="pl-s1">region</span>, <span class="pl-s1">gift_nums_str</span> <span class="pl-c1">=</span> <span class="pl-s1">line</span>.<span class="pl-c1">split</span>(<span class="pl-s">': '</span>)
-    <span class="pl-s1">wide_</span>, <span class="pl-s1">long_</span> <span class="pl-c1">=</span> <span class="pl-s1">region</span>.<span class="pl-c1">split</span>(<span class="pl-s">'x'</span>)
-    <span class="pl-s1">gift_nums</span> <span class="pl-c1">=</span> <span class="pl-s1">gift_nums_str</span>.<span class="pl-c1">split</span>(<span class="pl-s">" "</span>)
-    <span class="pl-s1">all_area</span> <span class="pl-c1">=</span> <span class="pl-en">int</span>(<span class="pl-s1">wide_</span>) <span class="pl-c1">*</span> <span class="pl-en">int</span>(<span class="pl-s1">long_</span>)
-    <span class="pl-s1">needed_area</span> <span class="pl-c1">=</span> <span class="pl-c1">0</span>
-    <span class="pl-k">for</span> <span class="pl-s1">i</span> <span class="pl-c1">in</span> <span class="pl-en">range</span>(<span class="pl-en">len</span>(<span class="pl-s1">gift_nums</span>)):
-        <span class="pl-s1">needed_area</span> <span class="pl-c1">+=</span> <span class="pl-en">int</span>(<span class="pl-s1">gift_nums</span>[<span class="pl-s1">i</span>]) <span class="pl-c1">*</span> <span class="pl-s1">gift_area</span>[<span class="pl-s1">i</span>]
-    <span class="pl-k">if</span> <span class="pl-s1">needed_area</span> <span class="pl-c1">&lt;=</span> <span class="pl-s1">all_area</span>:
-        <span class="pl-s1">ans</span> <span class="pl-c1">+=</span> <span class="pl-c1">1</span>
+ans = 0
+a = all_data[-1]
+for line in a.splitlines():
+    region, gift_nums_str = line.split(': ')
+    wide_, long_ = region.split('x')
+    gift_nums = gift_nums_str.split(" ")
+    all_area = int(wide_) * int(long_)
+    needed_area = 0
+    for i in range(len(gift_nums)):
+        needed_area += int(gift_nums[i]) * gift_area[i]
+    if needed_area &lt;= all_area:
+        ans += 1
 
-<span class="pl-en">print</span>(<span class="pl-s1">ans</span>)</pre></div>
+print(ans)
+</code></pre>
 <p></p>
 </details> 
 <blockquote>
@@ -3084,7 +3098,7 @@ if("11/22/2024"!=""){
 </script></div>
 </body>
 <script>
-var IconList={'sun': 'M8 10.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5zM8 12a4 4 0 100-8 4 4 0 000 8zM8 0a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0V.75A.75.75 0 018 0zm0 13a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0v-1.5A.75.75 0 018 13zM2.343 2.343a.75.75 0 011.061 0l1.06 1.061a.75.75 0 01-1.06 1.06l-1.06-1.06a.75.75 0 010-1.06zm9.193 9.193a.75.75 0 011.06 0l1.061 1.06a.75.75 0 01-1.06 1.061l-1.061-1.06a.75.75 0 010-1.061zM16 8a.75.75 0 01-.75.75h-1.5a.75.75 0 010-1.5h1.5A.75.75 0 0116 8zM3 8a.75.75 0 01-.75.75H.75a.75.75 0 010-1.5h1.5A.75.75 0 013 8zm10.657-5.657a.75.75 0 010 1.061l-1.061 1.06a.75.75 0 11-1.06-1.06l1.06-1.06a.75.75 0 011.06 0zm-9.193 9.193a.75.75 0 010 1.06l-1.06 1.061a.75.75 0 11-1.061-1.06l1.06-1.061a.75.75 0 011.061 0z', 'moon': 'M9.598 1.591a.75.75 0 01.785-.175 7 7 0 11-8.967 8.967.75.75 0 01.961-.96 5.5 5.5 0 007.046-7.046.75.75 0 01.175-.786zm1.616 1.945a7 7 0 01-7.678 7.678 5.5 5.5 0 107.678-7.678z', 'sync': 'M1.705 8.005a.75.75 0 0 1 .834.656 5.5 5.5 0 0 0 9.592 2.97l-1.204-1.204a.25.25 0 0 1 .177-.427h3.646a.25.25 0 0 1 .25.25v3.646a.25.25 0 0 1-.427.177l-1.38-1.38A7.002 7.002 0 0 1 1.05 8.84a.75.75 0 0 1 .656-.834ZM8 2.5a5.487 5.487 0 0 0-4.131 1.869l1.204 1.204A.25.25 0 0 1 4.896 6H1.25A.25.25 0 0 1 1 5.75V2.104a.25.25 0 0 1 .427-.177l1.38 1.38A7.002 7.002 0 0 1 14.95 7.16a.75.75 0 0 1-1.49.178A5.5 5.5 0 0 0 8 2.5Z', 'home': 'M6.906.664a1.749 1.749 0 0 1 2.187 0l5.25 4.2c.415.332.657.835.657 1.367v7.019A1.75 1.75 0 0 1 13.25 15h-3.5a.75.75 0 0 1-.75-.75V9H7v5.25a.75.75 0 0 1-.75.75h-3.5A1.75 1.75 0 0 1 1 13.25V6.23c0-.531.242-1.034.657-1.366l5.25-4.2Zm1.25 1.171a.25.25 0 0 0-.312 0l-5.25 4.2a.25.25 0 0 0-.094.196v7.019c0 .138.112.25.25.25H5.5V8.25a.75.75 0 0 1 .75-.75h3.5a.75.75 0 0 1 .75.75v5.25h2.75a.25.25 0 0 0 .25-.25V6.23a.25.25 0 0 0-.094-.195Z', 'github': 'M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27-.68 0-1.36.09-2 .27-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.31 2.69.94 0 .67.01 1.3.01 1.49 0 .21-.15.45-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8Z', 'copy': 'M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 0 1 0 1.5h-1.5a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-1.5a.75.75 0 0 1 1.5 0v1.5A1.75 1.75 0 0 1 9.25 16h-7.5A1.75 1.75 0 0 1 0 14.25Z M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0 1 14.25 11h-7.5A1.75 1.75 0 0 1 5 9.25Zm1.75-.25a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-7.5a.25.25 0 0 0-.25-.25Z', 'check': 'M13.78 4.22a.75.75 0 0 1 0 1.06l-7.25 7.25a.75.75 0 0 1-1.06 0L2.22 9.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018L6 10.94l6.72-6.72a.75.75 0 0 1 1.06 0Z'};
+var IconList={'sun': 'M8 10.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5zM8 12a4 4 0 100-8 4 4 0 000 8zM8 0a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0V.75A.75.75 0 018 0zm0 13a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0v-1.5A.75.75 0 018 13zM2.343 2.343a.75.75 0 011.061 0l1.06 1.061a.75.75 0 01-1.06 1.06l-1.06-1.06a.75.75 0 010-1.06zm9.193 9.193a.75.75 0 011.06 0l1.061 1.06a.75.75 0 01-1.06 1.061l-1.061-1.06a.75.75 0 010-1.061zM16 8a.75.75 0 01-.75.75h-1.5a.75.75 0 010-1.5h1.5A.75.75 0 0116 8zM3 8a.75.75 0 01-.75.75H.75a.75.75 0 010-1.5h1.5A.75.75 0 013 8zm10.657-5.657a.75.75 0 010 1.061l-1.061 1.06a.75.75 0 11-1.06-1.06l1.06-1.06a.75.75 0 011.06 0zm-9.193 9.193a.75.75 0 010 1.06l-1.06 1.061a.75.75 0 11-1.061-1.06l1.06-1.061a.75.75 0 011.061 0z', 'moon': 'M9.598 1.591a.75.75 0 01.785-.175 7 7 0 11-8.967 8.967.75.75 0 01.961-.96 5.5 5.5 0 007.046-7.046.75.75 0 01.175-.786zm1.616 1.945a7 7 0 01-7.678 7.678 5.5 5.5 0 107.678-7.678z', 'sync': 'M1.705 8.005a.75.75 0 0 1 .834.656 5.5 5.5 0 0 0 9.592 2.97l-1.204-1.204a.25.25 0 0 1 .177-.427h3.646a.25.25 0 0 1 .25.25v3.646a.25.25 0 0 1-.427.177l-1.38-1.38A7.002 7.002 0 0 1 1.05 8.84a.75.75 0 0 1 .656-.834ZM8 2.5a5.487 5.487 0 0 0-4.131 1.869l1.204 1.204A.25.25 0 0 1 4.896 6H1.25A.25.25 0 0 1 1 5.75V2.104a.25.25 0 0 1 .427-.177l1.38 1.38A7.002 7.002 0 0 1 14.95 7.16a.75.75 0 0 1-1.49.178A5.5 5.5 0 0 0 8 2.5Z', 'home': 'M6.906.664a1.749 1.749 0 0 1 2.187 0l5.25 4.2c.415.332.657.835.657 1.367v7.019A1.75 1.75 0 0 1 13.25 15h-3.5a.75.75 0 0 1-.75-.75V9H7v5.25a.75.75 0 0 1-.75.75h-3.5A1.75 1.75 0 0 1 1 13.25V6.23c0-.531.242-1.034.657-1.366l5.25-4.2Zm1.25 1.171a.25.25 0 0 0-.312 0l-5.25 4.2a.25.25 0 0 0-.094.196v7.019c0 .138.112.25.25.25H5.5V8.25a.75.75 0 0 1 .75-.75h3.5a.75.75 0 0 1 .75.75v5.25h2.75a.25.25 0 0 0 .25-.25V6.23a.25.25 0 0 0-.094-.195Z', 'github': 'M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27-.68 0-1.36.09-2 .27-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.31 2.69.94 0 .67.01 1.3.01 1.49 0 .21-.15.45-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8Z'};
 var utterancesLoad=0;
 
 let themeSettings={
@@ -3158,70 +3172,7 @@ function iFrameLoading(){
     }
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-    const createClipboardHTML = (codeContent, additionalClasses = '') => `
-        <pre class="notranslate"><code class="notranslate">${codeContent}</code></pre>
-        <div class="clipboard-container position-absolute right-0 top-0 ${additionalClasses}">
-            <clipboard-copy class="ClipboardButton btn m-2 p-0" role="button" style="display: inherit;">
-                <svg height="16" width="16" class="octicon octicon-copy m-2"><path d="${IconList["copy"]}"></path></svg>
-                <svg height="16" width="16" class="octicon octicon-check color-fg-success m-2 d-none"><path d="${IconList["check"]}"></path></svg>
-            </clipboard-copy>
-            <div class="copy-feedback">Copied!</div>
-        </div>
-    `;
 
-    const handleCodeElements = (selector = '') => {
-        document.querySelectorAll(selector).forEach(codeElement => {
-            const codeContent = codeElement.innerHTML;
-            const newStructure = document.createElement('div');
-            newStructure.className = 'snippet-clipboard-content position-relative overflow-auto';
-            newStructure.innerHTML = createClipboardHTML(codeContent);
-
-            const parentElement = codeElement.parentElement;
-            if (selector.includes('highlight')) {
-                parentElement.insertBefore(newStructure, codeElement.nextSibling);
-                parentElement.removeChild(codeElement);
-            } else {
-                parentElement.parentElement.replaceChild(newStructure, parentElement);
-            }
-        });
-    };
-
-    handleCodeElements('pre.notranslate > code.notranslate');
-    handleCodeElements('div.highlight > pre.notranslate');
-
-    let currentFeedback = null;
-    document.querySelectorAll('clipboard-copy').forEach(copyButton => {
-        copyButton.addEventListener('click', () => {
-            const codeContent = copyButton.closest('.snippet-clipboard-content').innerText;
-            const tempTextArea = document.createElement('textarea');
-            tempTextArea.value = codeContent;
-            document.body.appendChild(tempTextArea);
-            tempTextArea.select();
-            document.execCommand('copy');
-            document.body.removeChild(tempTextArea);
-
-            const copyIcon = copyButton.querySelector('.octicon-copy');
-            const checkIcon = copyButton.querySelector('.octicon-check');
-            const copyFeedback = copyButton.nextElementSibling;
-
-            if (currentFeedback && currentFeedback !== copyFeedback) {currentFeedback.style.display = 'none';}
-            currentFeedback = copyFeedback;
-
-            copyIcon.classList.add('d-none');
-            checkIcon.classList.remove('d-none');
-            copyFeedback.style.display = 'block';
-            copyButton.style.borderColor = 'var(--color-success-fg)';
-
-            setTimeout(() => {
-                copyIcon.classList.remove('d-none');
-                checkIcon.classList.add('d-none');
-                copyFeedback.style.display = 'none';
-                copyButton.style.borderColor = '';
-            }, 2000);
-        });
-    });
-});
 
 </script>
 
