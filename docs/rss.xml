@@ -1,5 +1,68 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0"><channel><title>FairyOwO 的 Blog</title><link>https://FairyOwO.github.io</link><description>记录一些琐事</description><copyright>FairyOwO 的 Blog</copyright><docs>http://www.rssboard.org/rss-specification</docs><generator>python-feedgen</generator><image><url>https://github.githubassets.com/favicons/favicon.svg</url><title>avatar</title><link>https://FairyOwO.github.io</link></image><lastBuildDate>Mon, 02 Feb 2026 09:33:45 +0000</lastBuildDate><managingEditor>FairyOwO 的 Blog</managingEditor><ttl>60</ttl><webMaster>FairyOwO 的 Blog</webMaster><item><title>2025 Advent of Code 复盘与答案</title><link>https://FairyOwO.github.io/post/2025%20Advent%20of%20Code%20-fu-pan-yu-da-an.html</link><description>[Advent of Code](https://adventofcode.com/)
+<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0"><channel><title>FairyOwO 的 Blog</title><link>https://FairyOwO.github.io</link><description>记录一些琐事</description><copyright>FairyOwO 的 Blog</copyright><docs>http://www.rssboard.org/rss-specification</docs><generator>python-feedgen</generator><image><url>https://github.githubassets.com/favicons/favicon.svg</url><title>avatar</title><link>https://FairyOwO.github.io</link></image><lastBuildDate>Wed, 04 Mar 2026 08:09:50 +0000</lastBuildDate><managingEditor>FairyOwO 的 Blog</managingEditor><ttl>60</ttl><webMaster>FairyOwO 的 Blog</webMaster><item><title>通用结构化数据建模 LimiX 试玩</title><link>https://FairyOwO.github.io/post/tong-yong-jie-gou-hua-shu-ju-jian-mo-%20LimiX%20-shi-wan.html</link><description>对于自然语言处理来讲, LLM 实现了大一统, 干掉了所有传统自然语言处理
+但在结构化数据建模, 建模依旧高度依赖特定的流水线, 不同的数据使用不同的算法(XGBoost, 随机森林, 不同的特征工程).
+LimiX 旨在通过大型结构化数据基础模型, 来填补结构化数据的通用处理能力, 来实现通用人工智能
+
+## 核心动机与研究定位
+
+传统的表格处理方法 (包括深度表格网络和早期的表格基础模型) 局限于单一任务, 且面对新的数据集时需要微调.
+LimiX 重新定义了这一范式: 将结构化数据建模变成对变量与缺失值的联合分布建模
+仅需单一模型 无需梯度更新 无需微调 即可在推理阶段完成分类 回归 缺失值填补 数据值生成等任务
+
+
+## 架构
+
+### LimiX 拥有轻量 Transformer 结构
+
+传统 Transformer 难以直接处理具有行列二维属性的表格数据, LimiX 将结构化数据映射为一组 'Sample-Feature Embeddings', 并并采用了由 12 层 Transformer Block 组成的非对称自注意力机制
+在 特征维度(列) 进行两次注意力传递
+在 样本维度(行) 进行一次注意力传递
+
+#### 细节
+
+标准 transformer  对于 扁平化序列会产生 $\mathcal{O}((NM)^2)$ 的计算复杂度, 对于较大规模的表格数据来说是不可接受的.
+
+1. 特征维度级别注意力
+    对于 第 $i$ 个样本的特征切片 $Z_{i, *, :} \in \mathbb{R}^{M \times d}$
+    $$Q_{feat} = Z_{i}W_Q^{(f)}, \quad K_{feat} = Z_{i}W_K^{(f)}, \quad V_{feat} = Z_{i}W_V^{(f)}$$
+    $$\text{Attn}_{feat}(Z_{i}) = \text{Softmax}\left(\frac{Q_{feat}K_{feat}^\top}{\sqrt{d_k}}\right)V_{feat}$$
+    &gt; 与一般的
+2. 样本维度级别注意力
+    对于第 $j$ 个特征的样本切片 $Z_{*, j, :} \in \mathbb{R}^{N \times d}$
+    $$Q_{samp} = Z_{j}W_Q^{(s)}, \quad K_{samp} = Z_{j}W_K^{(s)}, \quad V_{samp} = Z_{j}W_V^{(s)}$$
+    $$\text{Attn}_{samp}(Z_{j}) = \text{Softmax}\left(\frac{Q_{samp}K_{samp}^\top}{\sqrt{d_k}}\right)V_{samp}$$
+
+加到一起
+
+$$\tilde{\mathcal{Z}}_1 = \mathcal{Z} + \text{Attn}_{feat}(\text{LN}(\mathcal{Z}))$$
+
+$$\tilde{\mathcal{Z}}_2 = \tilde{\mathcal{Z}}_1 + \text{Attn}_{samp}(\text{LN}(\tilde{\mathcal{Z}}_1))$$
+
+$$\tilde{\mathcal{Z}}_3 = \tilde{\mathcal{Z}}_2 + \text{Attn}_{feat}(\text{LN}(\tilde{\mathcal{Z}}_2))$$
+
+$$\mathcal{Z}_{out} = \tilde{\mathcal{Z}}_3 + \text{FFN}(\text{LN}(\tilde{\mathcal{Z}}_3))$$
+
+&gt; 两次注意力传递体现在这里 这里有两次的feat attn
+
+最终复杂度变成了 $\mathcal{O}(NM^2 + MN^2)$
+
+### LimiX 采用了 判别性特征编码 (Discriminative Feature Encoding)
+
+针对不同表格的异构数据, LimiX 引入了可学习的低秩列标识符 (Low-rank Column Identifiers).
+模型无需依赖固定的特征名称或位置, 就能在统一的高维空间中辨识和对齐不同来源的特征语义.
+
+&gt; 通过语义建模整列
+
+#### 数据表示
+
+1. 针对数据的embedding
+    表格数据通常是二维的张量: $\mathcal{X} \in \mathbb{R}^{N \times M}$ 其中 $N$ 是样本数(行), $M$ 是特征数(列)
+    对于表格中的任意单元格, 无论是连续还是离散先通过线性映射或者查表转换为维度为 $d$ 的向量
+        
+    &gt; 想了想没找到合适的词 使用 ai 推荐的单元格, 实际上是$x_{i,j}$ 其中 $i$ 是第 i 个样本 $j$ 是第 j 个特征
+
+2. 针对整列的embedding (低秩列标识符)
+    引入一个可学习的低秩矩阵 $C \in \mathbb{R}^{M \times r}$ 其中 $r$ 为秩且满足 $r \ll d$。</description><guid isPermaLink="true">https://FairyOwO.github.io/post/tong-yong-jie-gou-hua-shu-ju-jian-mo-%20LimiX%20-shi-wan.html</guid><pubDate>Wed, 04 Mar 2026 08:07:25 +0000</pubDate></item><item><title>2025 Advent of Code 复盘与答案</title><link>https://FairyOwO.github.io/post/2025%20Advent%20of%20Code%20-fu-pan-yu-da-an.html</link><description>[Advent of Code](https://adventofcode.com/)
 
 使用 python 编写, 没有整理代码, 所以非常乱(变量乱取名, 没有注释, 逻辑奇怪, 并非最佳实现)
 可以使用 gpt 相关工具辅助查看

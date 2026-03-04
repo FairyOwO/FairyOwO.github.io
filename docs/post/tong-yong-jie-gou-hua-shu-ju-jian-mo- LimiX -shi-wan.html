@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html data-color-mode="light" data-dark-theme="dark_colorblind" data-light-theme="light" lang="zh-CN">
+<head>
+    <meta content="text/html; charset=utf-8" http-equiv="content-type" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <link href='https://mirrors.sustech.edu.cn/cdnjs/ajax/libs/Primer/21.0.7/primer.css' rel='stylesheet' />
+    
+    <link rel="icon" href="https://github.githubassets.com/favicons/favicon.svg"><script>
+        let theme = localStorage.getItem("meek_theme") || "light";
+        document.documentElement.setAttribute("data-color-mode", theme);
+    </script>
+<meta name="description" content="对于自然语言处理来讲, LLM 实现了大一统, 干掉了所有传统自然语言处理
+但在结构化数据建模, 建模依旧高度依赖特定的流水线, 不同的数据使用不同的算法(XGBoost, 随机森林, 不同的特征工程).
+LimiX 旨在通过大型结构化数据基础模型, 来填补结构化数据的通用处理能力, 来实现通用人工智能
+
+## 核心动机与研究定位
+
+传统的表格处理方法 (包括深度表格网络和早期的表格基础模型) 局限于单一任务, 且面对新的数据集时需要微调.
+LimiX 重新定义了这一范式: 将结构化数据建模变成对变量与缺失值的联合分布建模
+仅需单一模型 无需梯度更新 无需微调 即可在推理阶段完成分类 回归 缺失值填补 数据值生成等任务
+
+
+## 架构
+
+### LimiX 拥有轻量 Transformer 结构
+
+传统 Transformer 难以直接处理具有行列二维属性的表格数据, LimiX 将结构化数据映射为一组 'Sample-Feature Embeddings', 并并采用了由 12 层 Transformer Block 组成的非对称自注意力机制
+在 特征维度(列) 进行两次注意力传递
+在 样本维度(行) 进行一次注意力传递
+
+#### 细节
+
+标准 transformer  对于 扁平化序列会产生 $\mathcal{O}((NM)^2)$ 的计算复杂度, 对于较大规模的表格数据来说是不可接受的.
+
+1. 特征维度级别注意力
+    对于 第 $i$ 个样本的特征切片 $Z_{i, *, :} \in \mathbb{R}^{M \times d}$
+    $$Q_{feat} = Z_{i}W_Q^{(f)}, \quad K_{feat} = Z_{i}W_K^{(f)}, \quad V_{feat} = Z_{i}W_V^{(f)}$$
+    $$\text{Attn}_{feat}(Z_{i}) = \text{Softmax}\left(\frac{Q_{feat}K_{feat}^\top}{\sqrt{d_k}}\right)V_{feat}$$
+    > 与一般的
+2. 样本维度级别注意力
+    对于第 $j$ 个特征的样本切片 $Z_{*, j, :} \in \mathbb{R}^{N \times d}$
+    $$Q_{samp} = Z_{j}W_Q^{(s)}, \quad K_{samp} = Z_{j}W_K^{(s)}, \quad V_{samp} = Z_{j}W_V^{(s)}$$
+    $$\text{Attn}_{samp}(Z_{j}) = \text{Softmax}\left(\frac{Q_{samp}K_{samp}^\top}{\sqrt{d_k}}\right)V_{samp}$$
+
+加到一起
+
+$$\tilde{\mathcal{Z}}_1 = \mathcal{Z} + \text{Attn}_{feat}(\text{LN}(\mathcal{Z}))$$
+
+$$\tilde{\mathcal{Z}}_2 = \tilde{\mathcal{Z}}_1 + \text{Attn}_{samp}(\text{LN}(\tilde{\mathcal{Z}}_1))$$
+
+$$\tilde{\mathcal{Z}}_3 = \tilde{\mathcal{Z}}_2 + \text{Attn}_{feat}(\text{LN}(\tilde{\mathcal{Z}}_2))$$
+
+$$\mathcal{Z}_{out} = \tilde{\mathcal{Z}}_3 + \text{FFN}(\text{LN}(\tilde{\mathcal{Z}}_3))$$
+
+> 两次注意力传递体现在这里 这里有两次的feat attn
+
+最终复杂度变成了 $\mathcal{O}(NM^2 + MN^2)$
+
+### LimiX 采用了 判别性特征编码 (Discriminative Feature Encoding)
+
+针对不同表格的异构数据, LimiX 引入了可学习的低秩列标识符 (Low-rank Column Identifiers).
+模型无需依赖固定的特征名称或位置, 就能在统一的高维空间中辨识和对齐不同来源的特征语义.
+
+> 通过语义建模整列
+
+#### 数据表示
+
+1. 针对数据的embedding
+    表格数据通常是二维的张量: $\mathcal{X} \in \mathbb{R}^{N \times M}$ 其中 $N$ 是样本数(行), $M$ 是特征数(列)
+    对于表格中的任意单元格, 无论是连续还是离散先通过线性映射或者查表转换为维度为 $d$ 的向量
+        
+    > 想了想没找到合适的词 使用 ai 推荐的单元格, 实际上是$x_{i,j}$ 其中 $i$ 是第 i 个样本 $j$ 是第 j 个特征
+
+2. 针对整列的embedding (低秩列标识符)
+    引入一个可学习的低秩矩阵 $C \in \mathbb{R}^{M \times r}$ 其中 $r$ 为秩且满足 $r \ll d$。">
+<meta property="og:title" content="通用结构化数据建模 LimiX 试玩">
+<meta property="og:description" content="对于自然语言处理来讲, LLM 实现了大一统, 干掉了所有传统自然语言处理
+但在结构化数据建模, 建模依旧高度依赖特定的流水线, 不同的数据使用不同的算法(XGBoost, 随机森林, 不同的特征工程).
+LimiX 旨在通过大型结构化数据基础模型, 来填补结构化数据的通用处理能力, 来实现通用人工智能
+
+## 核心动机与研究定位
+
+传统的表格处理方法 (包括深度表格网络和早期的表格基础模型) 局限于单一任务, 且面对新的数据集时需要微调.
+LimiX 重新定义了这一范式: 将结构化数据建模变成对变量与缺失值的联合分布建模
+仅需单一模型 无需梯度更新 无需微调 即可在推理阶段完成分类 回归 缺失值填补 数据值生成等任务
+
+
+## 架构
+
+### LimiX 拥有轻量 Transformer 结构
+
+传统 Transformer 难以直接处理具有行列二维属性的表格数据, LimiX 将结构化数据映射为一组 'Sample-Feature Embeddings', 并并采用了由 12 层 Transformer Block 组成的非对称自注意力机制
+在 特征维度(列) 进行两次注意力传递
+在 样本维度(行) 进行一次注意力传递
+
+#### 细节
+
+标准 transformer  对于 扁平化序列会产生 $\mathcal{O}((NM)^2)$ 的计算复杂度, 对于较大规模的表格数据来说是不可接受的.
+
+1. 特征维度级别注意力
+    对于 第 $i$ 个样本的特征切片 $Z_{i, *, :} \in \mathbb{R}^{M \times d}$
+    $$Q_{feat} = Z_{i}W_Q^{(f)}, \quad K_{feat} = Z_{i}W_K^{(f)}, \quad V_{feat} = Z_{i}W_V^{(f)}$$
+    $$\text{Attn}_{feat}(Z_{i}) = \text{Softmax}\left(\frac{Q_{feat}K_{feat}^\top}{\sqrt{d_k}}\right)V_{feat}$$
+    > 与一般的
+2. 样本维度级别注意力
+    对于第 $j$ 个特征的样本切片 $Z_{*, j, :} \in \mathbb{R}^{N \times d}$
+    $$Q_{samp} = Z_{j}W_Q^{(s)}, \quad K_{samp} = Z_{j}W_K^{(s)}, \quad V_{samp} = Z_{j}W_V^{(s)}$$
+    $$\text{Attn}_{samp}(Z_{j}) = \text{Softmax}\left(\frac{Q_{samp}K_{samp}^\top}{\sqrt{d_k}}\right)V_{samp}$$
+
+加到一起
+
+$$\tilde{\mathcal{Z}}_1 = \mathcal{Z} + \text{Attn}_{feat}(\text{LN}(\mathcal{Z}))$$
+
+$$\tilde{\mathcal{Z}}_2 = \tilde{\mathcal{Z}}_1 + \text{Attn}_{samp}(\text{LN}(\tilde{\mathcal{Z}}_1))$$
+
+$$\tilde{\mathcal{Z}}_3 = \tilde{\mathcal{Z}}_2 + \text{Attn}_{feat}(\text{LN}(\tilde{\mathcal{Z}}_2))$$
+
+$$\mathcal{Z}_{out} = \tilde{\mathcal{Z}}_3 + \text{FFN}(\text{LN}(\tilde{\mathcal{Z}}_3))$$
+
+> 两次注意力传递体现在这里 这里有两次的feat attn
+
+最终复杂度变成了 $\mathcal{O}(NM^2 + MN^2)$
+
+### LimiX 采用了 判别性特征编码 (Discriminative Feature Encoding)
+
+针对不同表格的异构数据, LimiX 引入了可学习的低秩列标识符 (Low-rank Column Identifiers).
+模型无需依赖固定的特征名称或位置, 就能在统一的高维空间中辨识和对齐不同来源的特征语义.
+
+> 通过语义建模整列
+
+#### 数据表示
+
+1. 针对数据的embedding
+    表格数据通常是二维的张量: $\mathcal{X} \in \mathbb{R}^{N \times M}$ 其中 $N$ 是样本数(行), $M$ 是特征数(列)
+    对于表格中的任意单元格, 无论是连续还是离散先通过线性映射或者查表转换为维度为 $d$ 的向量
+        
+    > 想了想没找到合适的词 使用 ai 推荐的单元格, 实际上是$x_{i,j}$ 其中 $i$ 是第 i 个样本 $j$ 是第 j 个特征
+
+2. 针对整列的embedding (低秩列标识符)
+    引入一个可学习的低秩矩阵 $C \in \mathbb{R}^{M \times r}$ 其中 $r$ 为秩且满足 $r \ll d$。">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://FairyOwO.github.io/post/tong-yong-jie-gou-hua-shu-ju-jian-mo-%20LimiX%20-shi-wan.html">
+<meta property="og:image" content="https://github.githubassets.com/favicons/favicon.svg">
+<title>通用结构化数据建模 LimiX 试玩</title>
+
+
+
+</head>
+<style>
+body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;padding: 45px;font-size: 16px;font-family: sans-serif;line-height: 1.25;}
+#header{display:flex;padding-bottom:8px;border-bottom: 1px solid var(--borderColor-muted, var(--color-border-muted));margin-bottom: 16px;}
+#footer {margin-top:64px; text-align: center;font-size: small;}
+
+</style>
+
+<style>
+.postTitle{margin: auto 0;font-size:40px;font-weight:bold;}
+.title-right{display:flex;margin:auto 0 0 auto;}
+.title-right .circle{padding: 14px 16px;margin-right:8px;}
+#postBody{border-bottom: 1px solid var(--color-border-default);padding-bottom:36px;}
+#postBody hr{height:2px;}
+#cmButton{height:48px;margin-top:48px;}
+#comments{margin-top:64px;}
+.g-emoji{font-size:24px;}
+@media (max-width: 600px) {
+    body {padding: 8px;}
+    .postTitle{font-size:24px;}
+}
+
+</style>
+
+
+
+
+<body>
+    <div id="header">
+<h1 class="postTitle">通用结构化数据建模 LimiX 试玩</h1>
+<div class="title-right">
+    <a href="https://FairyOwO.github.io" id="buttonHome" class="btn btn-invisible circle" title="首页">
+        <svg class="octicon" width="16" height="16">
+            <path id="pathHome" fill-rule="evenodd"></path>
+        </svg>
+    </a>
+    
+    <a href="https://github.com/FairyOwO/FairyOwO.github.io/issues/19" target="_blank" class="btn btn-invisible circle" title="Issue">
+        <svg class="octicon" width="16" height="16">
+            <path id="pathIssue" fill-rule="evenodd"></path>
+        </svg>
+    </a>
+    
+
+    <a class="btn btn-invisible circle" onclick="modeSwitch();" title="切换主题">
+        <svg class="octicon" width="16" height="16" >
+            <path id="themeSwitch" fill-rule="evenodd"></path>
+        </svg>
+    </a>
+
+</div>
+</div>
+    <div id="content">
+<div class="markdown-body" id="postBody"><p>对于自然语言处理来讲, LLM 实现了大一统, 干掉了所有传统自然语言处理<br>
+但在结构化数据建模, 建模依旧高度依赖特定的流水线, 不同的数据使用不同的算法(XGBoost, 随机森林, 不同的特征工程).<br>
+LimiX 旨在通过大型结构化数据基础模型, 来填补结构化数据的通用处理能力, 来实现通用人工智能</p>
+<h2>核心动机与研究定位</h2>
+<p>传统的表格处理方法 (包括深度表格网络和早期的表格基础模型) 局限于单一任务, 且面对新的数据集时需要微调.<br>
+LimiX 重新定义了这一范式: 将结构化数据建模变成对变量与缺失值的联合分布建模<br>
+仅需单一模型 无需梯度更新 无需微调 即可在推理阶段完成分类 回归 缺失值填补 数据值生成等任务</p>
+<h2>架构</h2>
+<h3>LimiX 拥有轻量 Transformer 结构</h3>
+<p>传统 Transformer 难以直接处理具有行列二维属性的表格数据, LimiX 将结构化数据映射为一组 "Sample-Feature Embeddings", 并并采用了由 12 层 Transformer Block 组成的非对称自注意力机制<br>
+在 特征维度(列) 进行两次注意力传递<br>
+在 样本维度(行) 进行一次注意力传递</p>
+<h4>细节</h4>
+<p>标准 transformer  对于 扁平化序列会产生 $\mathcal{O}((NM)^2)$ 的计算复杂度, 对于较大规模的表格数据来说是不可接受的.</p>
+<ol>
+<li>特征维度级别注意力<br>
+对于 第 $i$ 个样本的特征切片 $Z_{i, *, :} \in \mathbb{R}^{M \times d}$<br>
+$$Q_{feat} = Z_{i}W_Q^{(f)}, \quad K_{feat} = Z_{i}W_K^{(f)}, \quad V_{feat} = Z_{i}W_V^{(f)}$$<br>
+$$\text{Attn}<em>{feat}(Z</em>{i}) = \text{Softmax}\left(\frac{Q_{feat}K_{feat}^\top}{\sqrt{d_k}}\right)V_{feat}$$
+<blockquote>
+<p>与一般的</p>
+</blockquote>
+</li>
+<li>样本维度级别注意力<br>
+对于第 $j$ 个特征的样本切片 $Z_{*, j, :} \in \mathbb{R}^{N \times d}$<br>
+$$Q_{samp} = Z_{j}W_Q^{(s)}, \quad K_{samp} = Z_{j}W_K^{(s)}, \quad V_{samp} = Z_{j}W_V^{(s)}$$<br>
+$$\text{Attn}<em>{samp}(Z</em>{j}) = \text{Softmax}\left(\frac{Q_{samp}K_{samp}^\top}{\sqrt{d_k}}\right)V_{samp}$$</li>
+</ol>
+<p>加到一起</p>
+<p>$$\tilde{\mathcal{Z}}_1 = \mathcal{Z} + \text{Attn}_{feat}(\text{LN}(\mathcal{Z}))$$</p>
+<p>$$\tilde{\mathcal{Z}}_2 = \tilde{\mathcal{Z}}_1 + \text{Attn}_{samp}(\text{LN}(\tilde{\mathcal{Z}}_1))$$</p>
+<p>$$\tilde{\mathcal{Z}}_3 = \tilde{\mathcal{Z}}_2 + \text{Attn}_{feat}(\text{LN}(\tilde{\mathcal{Z}}_2))$$</p>
+<p>$$\mathcal{Z}_{out} = \tilde{\mathcal{Z}}_3 + \text{FFN}(\text{LN}(\tilde{\mathcal{Z}}_3))$$</p>
+<blockquote>
+<p>两次注意力传递体现在这里 这里有两次的feat attn</p>
+</blockquote>
+<p>最终复杂度变成了 $\mathcal{O}(NM^2 + MN^2)$</p>
+<h3>LimiX 采用了 判别性特征编码 (Discriminative Feature Encoding)</h3>
+<p>针对不同表格的异构数据, LimiX 引入了可学习的低秩列标识符 (Low-rank Column Identifiers).<br>
+模型无需依赖固定的特征名称或位置, 就能在统一的高维空间中辨识和对齐不同来源的特征语义.</p>
+<blockquote>
+<p>通过语义建模整列</p>
+</blockquote>
+<h4>数据表示</h4>
+<ol>
+<li>
+<p>针对数据的embedding<br>
+表格数据通常是二维的张量: $\mathcal{X} \in \mathbb{R}^{N \times M}$ 其中 $N$ 是样本数(行), $M$ 是特征数(列)<br>
+对于表格中的任意单元格, 无论是连续还是离散先通过线性映射或者查表转换为维度为 $d$ 的向量</p>
+<blockquote>
+<p>想了想没找到合适的词 使用 ai 推荐的单元格, 实际上是$x_{i,j}$ 其中 $i$ 是第 i 个样本 $j$ 是第 j 个特征</p>
+</blockquote>
+</li>
+<li>
+<p>针对整列的embedding (低秩列标识符)<br>
+引入一个可学习的低秩矩阵 $C \in \mathbb{R}^{M \times r}$ 其中 $r$ 为秩且满足 $r \ll d$。<br>
+对于第 $j$ 列 提取其低维编码 $c_j \in \mathbb{R}^r$, 并通过线性变换矩阵 $W_c \in \mathbb{R}^{r \times d}$ 将其升维:<br>
+$$ \tilde{c}_j = c_j W_c$$</p>
+</li>
+<li>
+<p>最终输出<br>
+单元格最终的初始嵌入表示为基础特征与列标识符的加和:<br>
+$$z_{i,j} = h_{i,j} + \tilde{c}_j$$</p>
+</li>
+</ol>
+<p>由此构成了模型的初始三维输入张量 $\mathcal{Z} \in \mathbb{R}^{N \times M \times d}$。</p>
+<h3>LimiX 使用了 上下文作为条件的掩码预训练 (Context-Conditional Masked Pretraining)</h3>
+<p>在训练的时候, 使用同一数据集的一部分数据作为上下文输入, 用于建立该数据集的统计先验<br>
+另一部分数据作为 query, 某些数据的单元格会被随机mask. 根据给定的上下文, 预测这些被mask的内容</p>
+<h4>细节</h4>
+<p>在训练中 数据集被划分为 上下文集 $\mathcal{X}<em>{ctx}$ 和查询集 $\mathcal{X}</em>{query}$</p>
+<p>引入一个mask矩阵 $\mathcal{M} \in {0, 1}^{N_q \times M}$ 作用于 $\mathcal{X}<em>{query}$<br>
+如果$m</em>{i,j} = 1$，则单元格被替换为 <code class="notranslate">[MASK]</code> 标记. 可见部分记作 $\mathcal{X}_{query}^{\setminus \mathcal{M}}$</p>
+<p>模型的预训练目标是最小化被掩码位置的负对数似然</p>
+<p>$$\mathcal{L}(\theta) = -\sum_{(i,j) \in \mathcal{M}} \log P_\theta\left(x_{i,j} \mid \mathcal{X}_{ctx}, \mathcal{X}_{query}^{\setminus \mathcal{M}}\right)$$</p>
+<p>对于连续变量 使用均方误差 (MSE) 作为高斯对数似然的代理:<br>
+$$\mathcal{L}<em>{cont} = \sum |x</em>{i,j} - \hat{x}_{i,j}|^2$$</p>
+<p>对于分类变量 使用交叉熵:<br>
+$$\mathcal{L}<em>{cat} = -\sum x</em>{i,j} \log(\hat{p}_{i,j})$$</p>
+<h2>推理</h2>
+<p>推理阶段, LimiX 利用训练好的权重 $\theta$, 通过传入上下文样本, 利用模型自带的注意力score, 进行上下文学习.</p>
+<ol>
+<li>第一遍前向传播 提取注意力<br>
+将所有的上下文样本 $\mathcal{X}<em>{ctx}$ 和测试样本输入模型. 在最后一层 $L$, 提取预测目标列 $y$ 与其他特征列的特征级注意力矩阵 $\mathcal{A}^{(f)}$, 以及测试样本与上下文样本间的样本级交叉注意力矩阵 $\mathcal{A}^{(s)}$.<br>
+特征重要性可以形式化为:<br>
+$$Score(feat_j) = \frac{1}{N}\sum</em>{i=1}^N \mathcal{A}^{(f)}_{i, y, j}$$
+<blockquote>
+<p>预热 先捕捉数据集的关系 之前针对不同数据集的针对性建模就在这一步完成</p>
+</blockquote>
+</li>
+<li>第二遍前向传播 条件推理<br>
+根据 $Score(feat_j)$ 和样本级分数, 模型会对上下文进行加权过滤或重组, 到一个提纯后的定制化上下文 $\tilde{\mathcal{X}}<em>{ctx}$, 随后执行最终的条件预测:<br>
+$$\hat{y}</em>{test} = \arg\max_y P_\theta(y \mid \tilde{\mathcal{X}}<em>{ctx}, x</em>{test})$$</li>
+</ol>
+<p>这种机制天然赋予了 LimiX 极强的可解释性与因果推断能力</p>
+<h2>测试</h2>
+<p>在 kaggle 上进行测试<br>
+受限于环境 本文对于开源代码进行了修改</p>
+<ol>
+<li>取消了 flashattn 使用pytorch的标准混精度实现</li>
+<li>受限于显存 大幅度的降低了第一遍前向传播的上下文样本 这也是大幅影响模型效果的原因</li>
+<li>没有精调 没有指定数据类型</li>
+</ol>
+<p><a href="https://www.kaggle.com/competitions/titanic" rel="nofollow">Titanic - Machine Learning from Disaster</a><br>
+Public Score: 0.80143<br>
+573/11597</p>
+<blockquote>
+<p>此数据集用于测试</p>
+</blockquote>
+<p><a href="https://www.kaggle.com/competitions/playground-series-s6e2" rel="nofollow">Predicting Heart Disease</a><br>
+Private Score: 0.95257<br>
+Public Score: 0.95089<br>
+3167/4371</p>
+<p><a href="https://www.kaggle.com/competitions/playground-series-s6e1" rel="nofollow">Predicting Student Test Scores</a><br>
+Private Score: 8.92351<br>
+Public Score: 8.90245<br>
+1/4319</p>
+<blockquote>
+<p>这场比赛已经结束, 我也不知道为什么score会这么高 第一名8.57273 遥遥领先</p>
+</blockquote></div>
+<div style="font-size:small;margin-top:8px;float:right;">转载无需注明出处</div>
+
+<button class="btn btn-block" type="button" onclick="openComments()" id="cmButton">评论</button>
+<div class="comments" id="comments"></div>
+
+</div>
+    <div id="footer"><div id="footer1">Copyright © <span id="copyrightYear"></span> <a href="https://FairyOwO.github.io">FairyOwO 的 Blog</a></div>
+<div id="footer2">
+    <span id="runday"></span><span>Powered by <a href="https://meekdai.com/Gmeek.html" target="_blank">Gmeek</a></span>
+</div>
+
+<script>
+var now=new Date();
+document.getElementById("copyrightYear").innerHTML=now.getFullYear();
+
+if("11/22/2024"!=""){
+    var startSite=new Date("11/22/2024");
+    var diff=now.getTime()-startSite.getTime();
+    var diffDay=Math.floor(diff/(1000*60*60*24));
+    document.getElementById("runday").innerHTML="网站运行 "+diffDay+" 天"+" • ";
+}
+</script></div>
+</body>
+<script>
+var IconList={'sun': 'M8 10.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5zM8 12a4 4 0 100-8 4 4 0 000 8zM8 0a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0V.75A.75.75 0 018 0zm0 13a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0v-1.5A.75.75 0 018 13zM2.343 2.343a.75.75 0 011.061 0l1.06 1.061a.75.75 0 01-1.06 1.06l-1.06-1.06a.75.75 0 010-1.06zm9.193 9.193a.75.75 0 011.06 0l1.061 1.06a.75.75 0 01-1.06 1.061l-1.061-1.06a.75.75 0 010-1.061zM16 8a.75.75 0 01-.75.75h-1.5a.75.75 0 010-1.5h1.5A.75.75 0 0116 8zM3 8a.75.75 0 01-.75.75H.75a.75.75 0 010-1.5h1.5A.75.75 0 013 8zm10.657-5.657a.75.75 0 010 1.061l-1.061 1.06a.75.75 0 11-1.06-1.06l1.06-1.06a.75.75 0 011.06 0zm-9.193 9.193a.75.75 0 010 1.06l-1.06 1.061a.75.75 0 11-1.061-1.06l1.06-1.061a.75.75 0 011.061 0z', 'moon': 'M9.598 1.591a.75.75 0 01.785-.175 7 7 0 11-8.967 8.967.75.75 0 01.961-.96 5.5 5.5 0 007.046-7.046.75.75 0 01.175-.786zm1.616 1.945a7 7 0 01-7.678 7.678 5.5 5.5 0 107.678-7.678z', 'sync': 'M1.705 8.005a.75.75 0 0 1 .834.656 5.5 5.5 0 0 0 9.592 2.97l-1.204-1.204a.25.25 0 0 1 .177-.427h3.646a.25.25 0 0 1 .25.25v3.646a.25.25 0 0 1-.427.177l-1.38-1.38A7.002 7.002 0 0 1 1.05 8.84a.75.75 0 0 1 .656-.834ZM8 2.5a5.487 5.487 0 0 0-4.131 1.869l1.204 1.204A.25.25 0 0 1 4.896 6H1.25A.25.25 0 0 1 1 5.75V2.104a.25.25 0 0 1 .427-.177l1.38 1.38A7.002 7.002 0 0 1 14.95 7.16a.75.75 0 0 1-1.49.178A5.5 5.5 0 0 0 8 2.5Z', 'home': 'M6.906.664a1.749 1.749 0 0 1 2.187 0l5.25 4.2c.415.332.657.835.657 1.367v7.019A1.75 1.75 0 0 1 13.25 15h-3.5a.75.75 0 0 1-.75-.75V9H7v5.25a.75.75 0 0 1-.75.75h-3.5A1.75 1.75 0 0 1 1 13.25V6.23c0-.531.242-1.034.657-1.366l5.25-4.2Zm1.25 1.171a.25.25 0 0 0-.312 0l-5.25 4.2a.25.25 0 0 0-.094.196v7.019c0 .138.112.25.25.25H5.5V8.25a.75.75 0 0 1 .75-.75h3.5a.75.75 0 0 1 .75.75v5.25h2.75a.25.25 0 0 0 .25-.25V6.23a.25.25 0 0 0-.094-.195Z', 'github': 'M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27-.68 0-1.36.09-2 .27-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.31 2.69.94 0 .67.01 1.3.01 1.49 0 .21-.15.45-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8Z'};
+var utterancesLoad=0;
+
+let themeSettings={
+    "dark": ["dark","moon","#00f0ff","dark-blue"],
+    "light": ["light","sun","#ff5000","github-light"],
+    "auto": ["auto","sync","","preferred-color-scheme"]
+};
+function changeTheme(mode, icon, color, utheme){
+    document.documentElement.setAttribute("data-color-mode",mode);
+    document.getElementById("themeSwitch").setAttribute("d",value=IconList[icon]);
+    document.getElementById("themeSwitch").parentNode.style.color=color;
+    if(utterancesLoad==1){utterancesTheme(utheme);}
+}
+function modeSwitch(){
+    let currentMode=document.documentElement.getAttribute('data-color-mode');
+    let newMode = currentMode === "light" ? "dark" : currentMode === "dark" ? "auto" : "light";
+    localStorage.setItem("meek_theme", newMode);
+    if(themeSettings[newMode]){
+        changeTheme(...themeSettings[newMode]);
+    }
+}
+function utterancesTheme(theme){
+    const message={type:'set-theme',theme: theme};
+    const iframe=document.getElementsByClassName('utterances-frame')[0];
+    iframe.contentWindow.postMessage(message,'https://utteranc.es');
+}
+if(themeSettings[theme]){changeTheme(...themeSettings[theme]);}
+console.log("\n %c Gmeek last https://github.com/Meekdai/Gmeek \n","padding:5px 0;background:#02d81d;color:#fff");
+</script>
+
+<script>
+document.getElementById("pathHome").setAttribute("d",IconList["home"]);
+document.getElementById("pathIssue").setAttribute("d",IconList["github"]);
+
+
+
+function openComments(){
+    cm=document.getElementById("comments");
+    cmButton=document.getElementById("cmButton");
+    cmButton.disabled=true;
+    cmButton.innerHTML="loading";
+    span=document.createElement("span");
+    span.setAttribute("class","AnimatedEllipsis");
+    cmButton.appendChild(span);
+
+    script=document.createElement("script");
+    script.setAttribute("src","https://utteranc.es/client.js");
+    script.setAttribute("repo","FairyOwO/FairyOwO.github.io");
+    script.setAttribute("issue-term","title");
+    
+    if(localStorage.getItem("meek_theme")=="dark"){script.setAttribute("theme","dark-blue");}
+    else if(localStorage.getItem("meek_theme")=="light") {script.setAttribute("theme","github-light");}
+    else{script.setAttribute("theme","preferred-color-scheme");}
+    
+    script.setAttribute("crossorigin","anonymous");
+    script.setAttribute("async","");
+    cm.appendChild(script);
+
+    int=self.setInterval("iFrameLoading()",200);
+}
+
+function iFrameLoading(){
+    var utterances=document.getElementsByClassName('utterances');
+    if(utterances.length==1){
+        if(utterances[0].style.height!=""){
+            utterancesLoad=1;
+            int=window.clearInterval(int);
+            document.getElementById("cmButton").style.display="none";
+            console.log("utterances Load OK");
+        }
+    }
+}
+
+
+
+</script>
+<script>MathJax = {tex: {inlineMath: [["$", "$"]]}};</script><script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+</html>
