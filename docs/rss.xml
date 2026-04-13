@@ -1,5 +1,16 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0"><channel><title>FairyOwO 的 Blog</title><link>https://FairyOwO.github.io</link><description>记录一些琐事</description><copyright>FairyOwO 的 Blog</copyright><docs>http://www.rssboard.org/rss-specification</docs><generator>python-feedgen</generator><image><url>https://github.githubassets.com/favicons/favicon.svg</url><title>avatar</title><link>https://FairyOwO.github.io</link></image><lastBuildDate>Wed, 04 Mar 2026 08:09:50 +0000</lastBuildDate><managingEditor>FairyOwO 的 Blog</managingEditor><ttl>60</ttl><webMaster>FairyOwO 的 Blog</webMaster><item><title>通用结构化数据建模 LimiX 试玩</title><link>https://FairyOwO.github.io/post/tong-yong-jie-gou-hua-shu-ju-jian-mo-%20LimiX%20-shi-wan.html</link><description>对于自然语言处理来讲, LLM 实现了大一统, 干掉了所有传统自然语言处理
+<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0"><channel><title>FairyOwO 的 Blog</title><link>https://FairyOwO.github.io</link><description>记录一些琐事</description><copyright>FairyOwO 的 Blog</copyright><docs>http://www.rssboard.org/rss-specification</docs><generator>python-feedgen</generator><image><url>https://github.githubassets.com/favicons/favicon.svg</url><title>avatar</title><link>https://FairyOwO.github.io</link></image><lastBuildDate>Mon, 13 Apr 2026 01:19:14 +0000</lastBuildDate><managingEditor>FairyOwO 的 Blog</managingEditor><ttl>60</ttl><webMaster>FairyOwO 的 Blog</webMaster><item><title>agent时代到来了</title><link>https://FairyOwO.github.io/post/agent-shi-dai-dao-lai-le.html</link><description>引用几篇文章
+
+正方
+[https://zhuanlan.zhihu.com/p/2025676117307138196](https://zhuanlan.zhihu.com/p/2025676117307138196)
+[https://zhuanlan.zhihu.com/p/2019826804764979414](https://zhuanlan.zhihu.com/p/2019826804764979414)
+[https://zhuanlan.zhihu.com/p/2022389695955346888](https://zhuanlan.zhihu.com/p/2022389695955346888)
+[https://www.zhihu.com/question/2016648624256340425/answer/2017950264284436048](https://www.zhihu.com/question/2016648624256340425/answer/2017950264284436048)
+
+反方
+[https://www.zhihu.com/question/1924453356719543095/answer/2022273731377070713](https://www.zhihu.com/question/1924453356719543095/answer/2022273731377070713)
+[https://www.zhihu.com/pin/2023161462416319320](https://www.zhihu.com/pin/2023161462416319320)
+。</description><guid isPermaLink="true">https://FairyOwO.github.io/post/agent-shi-dai-dao-lai-le.html</guid><pubDate>Mon, 13 Apr 2026 01:18:48 +0000</pubDate></item><item><title>通用结构化数据建模 LimiX 试玩</title><link>https://FairyOwO.github.io/post/tong-yong-jie-gou-hua-shu-ju-jian-mo-%20LimiX%20-shi-wan.html</link><description>对于自然语言处理来讲, LLM 实现了大一统, 干掉了所有传统自然语言处理
 但在结构化数据建模, 建模依旧高度依赖特定的流水线, 不同的数据使用不同的算法(XGBoost, 随机森林, 不同的特征工程).
 LimiX 旨在通过大型结构化数据基础模型, 来填补结构化数据的通用处理能力, 来实现通用人工智能
 
