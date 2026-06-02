@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0"><channel><title>FairyOwO 的 Blog</title><link>https://FairyOwO.github.io</link><description>记录一些琐事</description><copyright>FairyOwO 的 Blog</copyright><docs>http://www.rssboard.org/rss-specification</docs><generator>python-feedgen</generator><image><url>https://github.githubassets.com/favicons/favicon.svg</url><title>avatar</title><link>https://FairyOwO.github.io</link></image><lastBuildDate>Mon, 11 May 2026 02:43:27 +0000</lastBuildDate><managingEditor>FairyOwO 的 Blog</managingEditor><ttl>60</ttl><webMaster>FairyOwO 的 Blog</webMaster><item><title>vscode + 插件 配置 51单片机开发环境</title><link>https://FairyOwO.github.io/post/vscode%20%2B%20-cha-jian-%20-pei-zhi-%2051-dan-pian-ji-kai-fa-huan-jing.html</link><description>## 从 0 配置 vscode 编写 51 单片机程序
+<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0"><channel><title>FairyOwO 的 Blog</title><link>https://FairyOwO.github.io</link><description>记录一些琐事</description><copyright>FairyOwO 的 Blog</copyright><docs>http://www.rssboard.org/rss-specification</docs><generator>python-feedgen</generator><image><url>https://github.githubassets.com/favicons/favicon.svg</url><title>avatar</title><link>https://FairyOwO.github.io</link></image><lastBuildDate>Tue, 02 Jun 2026 12:31:37 +0000</lastBuildDate><managingEditor>FairyOwO 的 Blog</managingEditor><ttl>60</ttl><webMaster>FairyOwO 的 Blog</webMaster><item><title>vscode + 插件 配置 51单片机开发环境</title><link>https://FairyOwO.github.io/post/vscode%20%2B%20-cha-jian-%20-pei-zhi-%2051-dan-pian-ji-kai-fa-huan-jing.html</link><description>## 从 0 配置 vscode 编写 51 单片机程序
 
 ### 1. 安装 vscode 和 插件
 
@@ -66,7 +66,8 @@ void main() {
 ```
 
 点击编译 没问题的话 连接单片机 点击烧录 重启单片机的电源即可烧录成功
-。</description><guid isPermaLink="true">https://FairyOwO.github.io/post/vscode%20%2B%20-cha-jian-%20-pei-zhi-%2051-dan-pian-ji-kai-fa-huan-jing.html</guid><pubDate>Mon, 11 May 2026 02:42:58 +0000</pubDate></item><item><title>agent时代到来了</title><link>https://FairyOwO.github.io/post/agent-shi-dai-dao-lai-le.html</link><description>引用几篇文章
+
+参考视频: [https://www.bilibili.com/video/BV1ZDR9BJEwJ/](https://www.bilibili.com/video/BV1ZDR9BJEwJ/)。</description><guid isPermaLink="true">https://FairyOwO.github.io/post/vscode%20%2B%20-cha-jian-%20-pei-zhi-%2051-dan-pian-ji-kai-fa-huan-jing.html</guid><pubDate>Mon, 11 May 2026 02:42:58 +0000</pubDate></item><item><title>agent时代到来了</title><link>https://FairyOwO.github.io/post/agent-shi-dai-dao-lai-le.html</link><description>引用几篇文章
 
 正方
 [https://zhuanlan.zhihu.com/p/2025676117307138196](https://zhuanlan.zhihu.com/p/2025676117307138196)

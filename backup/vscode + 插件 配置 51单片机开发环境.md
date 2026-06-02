@@ -65,3 +65,5 @@ void main() {
 ```
 
 点击编译 没问题的话 连接单片机 点击烧录 重启单片机的电源即可烧录成功
+
+参考视频: [https://www.bilibili.com/video/BV1ZDR9BJEwJ/](https://www.bilibili.com/video/BV1ZDR9BJEwJ/)
