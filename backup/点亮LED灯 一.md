@@ -28,14 +28,14 @@
 
 
 * LED阴极与控制引脚：
-* D1 阴极 $\rightarrow$ P20/SDA
-* D2 阴极 $\rightarrow$ P21/SCL
-* D3 阴极 $\rightarrow$ P22
-* D4 阴极 $\rightarrow$ P23
-* D5 阴极 $\rightarrow$ P24
-* D6 阴极 $\rightarrow$ P25/WR
-* D7 阴极 $\rightarrow$ P26/RD
-* D8 阴极 $\rightarrow$ P27/LCDE
+* D1 阴极 -> P20/SDA
+* D2 阴极 -> P21/SCL
+* D3 阴极 -> P22
+* D4 阴极 -> P23
+* D5 阴极 -> P24
+* D6 阴极 -> P25/WR
+* D7 阴极 -> P26/RD
+* D8 阴极 -> P27/LCDE
 
 
 
