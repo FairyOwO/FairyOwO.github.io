@@ -1,5 +1,9 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0"><channel><title>FairyOwO 的 Blog</title><link>https://FairyOwO.github.io</link><description>记录一些琐事</description><copyright>FairyOwO 的 Blog</copyright><docs>http://www.rssboard.org/rss-specification</docs><generator>python-feedgen</generator><image><url>https://github.githubassets.com/favicons/favicon.svg</url><title>avatar</title><link>https://FairyOwO.github.io</link></image><lastBuildDate>Tue, 02 Jun 2026 13:36:20 +0000</lastBuildDate><managingEditor>FairyOwO 的 Blog</managingEditor><ttl>60</ttl><webMaster>FairyOwO 的 Blog</webMaster><item><title>点亮LED灯 一</title><link>https://FairyOwO.github.io/post/dian-liang-LED-deng-%20-yi.html</link><description>## 点亮第一个LED灯
+<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0"><channel><title>FairyOwO 的 Blog</title><link>https://FairyOwO.github.io</link><description>记录一些琐事</description><copyright>FairyOwO 的 Blog</copyright><docs>http://www.rssboard.org/rss-specification</docs><generator>python-feedgen</generator><image><url>https://github.githubassets.com/favicons/favicon.svg</url><title>avatar</title><link>https://FairyOwO.github.io</link></image><lastBuildDate>Fri, 07 Aug 2026 09:05:38 +0000</lastBuildDate><managingEditor>FairyOwO 的 Blog</managingEditor><ttl>60</ttl><webMaster>FairyOwO 的 Blog</webMaster><item><title>自部署dsv4f</title><link>https://FairyOwO.github.io/post/zi-bu-shu-dsv4f.html</link><description>&gt; 请注意 以下为ai生成 我仅提供了过程命令
+
+用两台 NVIDIA DGX Spark 本地部署 DeepSeek V4 Flash 0731：从开机、RoCE 到 vLLM TP=2 的完整踩坑记录
+
+本文记录我使用 2 台 NVIDIA DGX Spark，通过 ConnectX-7 / RoCE 组成双机集群，并最终在本地跑起 DeepSeek-V4-Flash-0731 + DSpark + vLLM TP=2 的完整过程。</description><guid isPermaLink="true">https://FairyOwO.github.io/post/zi-bu-shu-dsv4f.html</guid><pubDate>Fri, 07 Aug 2026 08:44:56 +0000</pubDate></item><item><title>点亮LED灯 一</title><link>https://FairyOwO.github.io/post/dian-liang-LED-deng-%20-yi.html</link><description>## 点亮第一个LED灯
 
 &gt; 基于 vscode + EDEI 故与其他教程不同
 &gt; 同上一篇 新建项目 配置好 cmake 配置 头文件目录等

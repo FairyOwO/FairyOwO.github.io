@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html data-color-mode="light" data-dark-theme="dark_colorblind" data-light-theme="light" lang="zh-CN">
+<head>
+    <meta content="text/html; charset=utf-8" http-equiv="content-type" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <link href='https://mirrors.sustech.edu.cn/cdnjs/ajax/libs/Primer/21.0.7/primer.css' rel='stylesheet' />
+    
+    <link rel="icon" href="https://github.githubassets.com/favicons/favicon.svg"><script>
+        let theme = localStorage.getItem("meek_theme") || "light";
+        document.documentElement.setAttribute("data-color-mode", theme);
+    </script>
+<meta name="description" content="> 请注意 以下为ai生成 我仅提供了过程命令
+
+用两台 NVIDIA DGX Spark 本地部署 DeepSeek V4 Flash 0731：从开机、RoCE 到 vLLM TP=2 的完整踩坑记录
+
+本文记录我使用 2 台 NVIDIA DGX Spark，通过 ConnectX-7 / RoCE 组成双机集群，并最终在本地跑起 DeepSeek-V4-Flash-0731 + DSpark + vLLM TP=2 的完整过程。">
+<meta property="og:title" content="自部署dsv4f">
+<meta property="og:description" content="> 请注意 以下为ai生成 我仅提供了过程命令
+
+用两台 NVIDIA DGX Spark 本地部署 DeepSeek V4 Flash 0731：从开机、RoCE 到 vLLM TP=2 的完整踩坑记录
+
+本文记录我使用 2 台 NVIDIA DGX Spark，通过 ConnectX-7 / RoCE 组成双机集群，并最终在本地跑起 DeepSeek-V4-Flash-0731 + DSpark + vLLM TP=2 的完整过程。">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://FairyOwO.github.io/post/zi-bu-shu-dsv4f.html">
+<meta property="og:image" content="https://github.githubassets.com/favicons/favicon.svg">
+<title>自部署dsv4f</title>
+
+
+
+</head>
+<style>
+body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;padding: 45px;font-size: 16px;font-family: sans-serif;line-height: 1.25;}
+#header{display:flex;padding-bottom:8px;border-bottom: 1px solid var(--borderColor-muted, var(--color-border-muted));margin-bottom: 16px;}
+#footer {margin-top:64px; text-align: center;font-size: small;}
+
+</style>
+
+<style>
+.postTitle{margin: auto 0;font-size:40px;font-weight:bold;}
+.title-right{display:flex;margin:auto 0 0 auto;}
+.title-right .circle{padding: 14px 16px;margin-right:8px;}
+#postBody{border-bottom: 1px solid var(--color-border-default);padding-bottom:36px;}
+#postBody hr{height:2px;}
+#cmButton{height:48px;margin-top:48px;}
+#comments{margin-top:64px;}
+.g-emoji{font-size:24px;}
+@media (max-width: 600px) {
+    body {padding: 8px;}
+    .postTitle{font-size:24px;}
+}
+.copy-feedback {
+    display: none;
+    position: absolute;
+    top: 10px;
+    right: 50px;
+    color: var(--color-fg-on-emphasis);
+    background-color: var(--color-fg-muted);
+    border-radius: 3px;
+    padding: 5px 8px;
+    font-size: 12px;
+}
+</style>
+
+
+
+
+<body>
+    <div id="header">
+<h1 class="postTitle">自部署dsv4f</h1>
+<div class="title-right">
+    <a href="https://FairyOwO.github.io" id="buttonHome" class="btn btn-invisible circle" title="首页">
+        <svg class="octicon" width="16" height="16">
+            <path id="pathHome" fill-rule="evenodd"></path>
+        </svg>
+    </a>
+    
+    <a href="https://github.com/FairyOwO/FairyOwO.github.io/issues/23" target="_blank" class="btn btn-invisible circle" title="Issue">
+        <svg class="octicon" width="16" height="16">
+            <path id="pathIssue" fill-rule="evenodd"></path>
+        </svg>
+    </a>
+    
+
+    <a class="btn btn-invisible circle" onclick="modeSwitch();" title="切换主题">
+        <svg class="octicon" width="16" height="16" >
+            <path id="themeSwitch" fill-rule="evenodd"></path>
+        </svg>
+    </a>
+
+</div>
+</div>
+    <div id="content">
+<div class="markdown-body" id="postBody"><blockquote>
+<p>请注意 以下为ai生成 我仅提供了过程命令</p>
+</blockquote>
+<p>用两台 NVIDIA DGX Spark 本地部署 DeepSeek V4 Flash 0731：从开机、RoCE 到 vLLM TP=2 的完整踩坑记录</p>
+<p>本文记录我使用 2 台 NVIDIA DGX Spark，通过 ConnectX-7 / RoCE 组成双机集群，并最终在本地跑起 DeepSeek-V4-Flash-0731 + DSpark + vLLM TP=2 的完整过程。</p>
+<p>这不是一篇“理论上应该能跑”的安装教程，而是我实际部署时留下来的操作记录整理版。过程中我碰到了 DGX Spark 更新后 NVIDIA 驱动异常、Docker 状态损坏、Netplan 配置文件损坏、代理、模型同步等问题，所以也把这些修复过程保留下来。</p>
+<p>本文整理于 2026 年 8 月 7 日。DGX Spark 的系统、驱动以及相关 vLLM 镜像更新都比较快，尤其是内核版本、驱动版本和仓库默认参数，后面很可能继续变化，因此不要机械照抄所有版本号。</p>
+<p>为什么要用两台 DGX Spark？</p>
+<p>DGX Spark 使用 NVIDIA GB10 Grace Blackwell Superchip，每台机器拥有 128 GB LPDDR5x 统一内存，并带有 ConnectX-7 高速网络接口。NVIDIA 官方规格给出的定位是：单机可以处理最高约 200B 参数级模型，双 Spark 配置则可以覆盖到约 405B 参数级模型。</p>
+<p>DeepSeek-V4-Flash 本身是一个 MoE 模型。官方模型信息中给出的规模是 284B 总参数、13B 激活参数，并原生支持 1M token 上下文。</p>
+<p>所以 V4 Flash 恰好是一个很适合双 DGX Spark 折腾的模型。</p>
+<p>这里并不是把两台机器的内存变成一个真正意义上的“256 GB 单机统一内存池”，而是通过 Tensor Parallel，TP=2 将模型计算拆到两个节点。NVIDIA 自己的双 Spark 示例也是类似思路：两台机器通过高速链路交换中间结果，让一个超过单 Spark 容量的模型作为一个逻辑实例运行。</p>
+<p>我最后使用的是 MiaAI-Lab 的：</p>
+<p>DeepSeek-v4-Flash-DSpark-2x-DGX-Spark</p>
+<p>目前仓库已经更新为针对 DeepSeek-V4-Flash-0731 的双 DGX Spark recipe，使用 vLLM TP=2、DSpark speculative decoding，以及实验性的 "nvfp4_ds_mla" KV Cache 路径；默认运行镜像是：</p>
+<p>ghcr.io/anemll/dspark-vllm-gx10:0.1.1</p>
+<p>我的最终拓扑大致如下：</p>
+<pre class="notranslate"><code class="notranslate">                     普通局域网 / Wi-Fi
+                            │
+                     SSH / 下载 / API
+                            │
+                ┌───────────┴───────────┐
+                │                                                            │
+          DGX Spark #1                                      DGX Spark #2
+             Head                                                     Worker
+                │                                                            │
+        192.168.100.10                                  192.168.100.11
+                │                                                            │
+                └──── ConnectX-7 ───────────┘
+                     RoCE / NCCL
+                     vLLM TP=2
+
+          第二组接口也配置为：
+        192.168.101.10 ↔ 192.168.101.11
+
+          OpenAI-compatible API
+             Head :8888/v1
+</code></pre>
+<p>实际的 vLLM/NCCL 数据面我使用 "192.168.100.0/24" 这一组网络。</p>
+<hr>
+<ol>
+<li>DGX Spark 第一次开机</li>
+</ol>
+<p>DGX Spark 第一次开机其实很简单。</p>
+<p>我直接接了 Type-C 键盘鼠标、HDMI 显示器，再接电源完成初始化。配置好无线网络之后让系统执行自己的更新流程。更新完成后机器会重启；如果没有自动重启，我建议自己重启一次。我的两台机器完成初始化以后 SSH 已经可以直接使用，所以之后显示器、鼠标和键盘就全部拔掉了，后面的工作都通过 SSH 完成。</p>
+<p>NVIDIA 当前官方文档同样支持这种模式：第一次可以接显示器、键鼠完成初始化，之后直接把 DGX Spark 当网络设备，通过 SSH 使用即可。官方还特别提到，部分显示器在 USB-C/DisplayPort 下可能存在兼容问题，此时 HDMI 是更稳妥的方案。</p>
+<p>先找到机器 IP：</p>
+<p>ip a</p>
+<p>然后从自己的电脑连接：</p>
+<p>ssh dgx@&lt;DGX_SPARK_IP&gt;</p>
+<p>之后整套部署基本都不再需要本地显示器。</p>
+<hr>
+<ol start="2">
+<li>第一波坑：一台驱动异常，两台 Docker 都出了问题</li>
+</ol>
+<p>我这批机器初始化之后并不是完全健康。</p>
+<p>其中一台在系统更新过程中出现了 NVIDIA 驱动/内核包状态异常；两台机器的 Docker 也都出现了启动问题。</p>
+<p>这里建议不要急着开始配双机。先保证两台机器分别满足：</p>
+<p>nvidia-smi<br>
+docker info</p>
+<p>都能正常执行，再往下做。</p>
+<p>2.1 修 Docker</p>
+<p>我的机器是新机器，没有需要保留的容器和镜像，因此处理方式比较直接：</p>
+<p>sudo systemctl stop docker.service docker.socket</p>
+<p>sudo rm -rf /var/lib/docker/buildkit<br>
+sudo rm -f /run/docker.pid /var/run/docker.pid</p>
+<p>sudo systemctl reset-failed docker<br>
+sudo systemctl start docker</p>
+<p>sudo systemctl is-active docker<br>
+sudo docker info</p>
+<p>然后重启：</p>
+<p>sudo reboot</p>
+<p>回来以后重新确认：</p>
+<p>sudo systemctl is-active docker<br>
+sudo docker info</p>
+<p>这就是我当时实际使用的修复步骤。</p>
+<p>注意："rm -rf" 不应该被当成通用 Docker 修复命令。 我的场景是刚初始化的新机器，本身没有任何需要保留的镜像、容器和 BuildKit 数据。如果机器已经有生产容器或者本地镜像，先搞清楚损坏位置并做好备份，不要照抄删除命令。</p>
+<hr>
+<ol start="3">
+<li>修复更新后异常的 NVIDIA 驱动</li>
+</ol>
+<p>其中一台机器的情况更麻烦：升级过程里驱动和内核软件包没有处于完整配置状态。</p>
+<p>我先检查磁盘和 dpkg：</p>
+<p>df -h / /boot /boot/efi 2&gt;/dev/null || true</p>
+<p>sudo dpkg --audit<br>
+sudo apt-get check || true</p>
+<p>然后先把已经下载、但没有配置完成的软件包继续配置：</p>
+<p>sudo dpkg --configure -a 2&gt;&amp;1 | tee ~/dpkg-configure.log</p>
+<p>修依赖：</p>
+<p>sudo apt-get --fix-broken install 2&gt;&amp;1 | tee ~/apt-fix-broken.log</p>
+<p>再配置一次：</p>
+<p>sudo dpkg --configure -a 2&gt;&amp;1 | tee ~/dpkg-configure-2.log</p>
+<p>接着：</p>
+<p>sudo apt-get update<br>
+sudo apt-get full-upgrade 2&gt;&amp;1 | tee ~/apt-full-upgrade.log</p>
+<p>我当时出问题的版本对应：</p>
+<p>nvidia-driver-580-open<br>
+linux-modules-nvidia-580-open-6.17.0-1029-nvidia<br>
+linux-modules-nvidia-580-open-nvidia-hwe-24.04</p>
+<p>所以我检查的是：</p>
+<p>dpkg-query -W <br>
+-f='${db:Status-Abbrev} ${Package} ${Version}\n' <br>
+nvidia-driver-580-open <br>
+linux-modules-nvidia-580-open-6.17.0-1029-nvidia <br>
+linux-modules-nvidia-580-open-nvidia-hwe-24.04 <br>
+2&gt;/dev/null</p>
+<p>以及对应内核：</p>
+<p>ls -lh /boot/vmlinuz-6.17.0-1029-nvidia <br>
+/boot/initrd.img-6.17.0-1029-nvidia 2&gt;/dev/null</p>
+<p>检查 NVIDIA kernel module：</p>
+<p>find /lib/modules/6.17.0-1029-nvidia <br>
+-type f -name 'nvidia*.ko*' -print 2&gt;/dev/null</p>
+<p>我的目标是让相关 package 状态重新变成 "ii"。</p>
+<p>确认包完整以后：</p>
+<p>sudo depmod -a 6.17.0-1029-nvidia<br>
+sudo update-initramfs -u -k 6.17.0-1029-nvidia<br>
+sudo update-grub<br>
+sudo reboot</p>
+<p>这是我那台故障机器对应的真实版本。</p>
+<p>这里最重要的一句话是：</p>
+<p>不要把 "6.17.0-1029-nvidia" 当成 DGX Spark 永久固定版本。</p>
+<p>以后照这篇文章部署，先看：</p>
+<p>uname -r</p>
+<p>再根据机器当前安装的软件包和内核版本处理。</p>
+<p>DGX Spark 的 DGX OS 基于 Ubuntu 24.04 LTS，同时集成 NVIDIA 驱动、CUDA 及相关组件，所以普通 Ubuntu 的升级思路可以参考，但不要无脑替换 NVIDIA 提供的整套驱动栈。</p>
+<p>两台机器都恢复正常以后，我统一又执行：</p>
+<p>sudo apt update<br>
+sudo apt full-upgrade -y<br>
+sudo reboot</p>
+<hr>
+<ol start="4">
+<li>如果机器需要代理</li>
+</ol>
+<p>我的环境下载 GitHub、GHCR、APT 等资源时需要代理，所以这里也记录一下。</p>
+<p>临时给 APT 指代理：</p>
+<p>sudo apt <br>
+-o Acquire::http::Proxy="&lt;PROXY_URL&gt;" <br>
+-o Acquire::https::Proxy="&lt;PROXY_URL&gt;" <br>
+update</p>
+<p>Snap：</p>
+<p>sudo snap set system proxy.http="&lt;PROXY_URL&gt;"<br>
+sudo snap set system proxy.https="&lt;PROXY_URL&gt;"</p>
+<p>snap get system proxy</p>
+<p>升级：</p>
+<p>sudo apt <br>
+-o Acquire::http::Proxy="&lt;PROXY_URL&gt;" <br>
+-o Acquire::https::Proxy="&lt;PROXY_URL&gt;" <br>
+full-upgrade -y</p>
+<p>不需要以后取消 Snap 代理：</p>
+<p>sudo snap unset system proxy.http<br>
+sudo snap unset system proxy.https<br>
+sudo snap get system proxy</p>
+<p>这些是我部署时实际采用的代理处理方式。</p>
+<p>后面 Git、Docker 还要分别处理，因为 Shell 的 "HTTP_PROXY" 并不意味着 Docker daemon 一定继承代理。</p>
+<hr>
+<ol start="5">
+<li>配双机 ConnectX-7 / RoCE 网络</li>
+</ol>
+<p>这是双 DGX Spark 最关键的一步。</p>
+<p>NVIDIA 官方现在明确给出了 DGX Spark 的 ConnectX-7 拓扑：每台机器背后有两个 QSFP 端口，每个端口最高 200 Gb/s。更容易让人困惑的是，一个物理 QSFP 端口在 Linux 下会对应多个 Ethernet/RoCE 接口。</p>
+<p>这里有个非常容易误判的细节。</p>
+<p>我机器上的接口包含：</p>
+<p>enp1s0f1np1<br>
+enP2p1s0f1np1</p>
+<p>第二个里面的 大写 "P" 不是笔误。</p>
+<p>NVIDIA 当前官方文档给出的 "ibdev2netdev" 映射里就是：</p>
+<p>rocep1s0f1   -&gt; enp1s0f1np1<br>
+roceP2p1s0f1 -&gt; enP2p1s0f1np1</p>
+<p>因此第一步最好先执行：</p>
+<p>ip -br link<br>
+ibdev2netdev</p>
+<p>确认自己机器实际使用的接口名。</p>
+<p>Head 节点</p>
+<p>我的 Head 节点配置：</p>
+<p>sudo tee /etc/netplan/40-cx7.yaml &gt;/dev/null &lt;&lt;'EOF'<br>
+network:<br>
+version: 2<br>
+ethernets:<br>
+enp1s0f1np1:<br>
+addresses:<br>
+- 192.168.100.10/24<br>
+dhcp4: false<br>
+optional: true<br>
+enP2p1s0f1np1:<br>
+addresses:<br>
+- 192.168.101.10/24<br>
+dhcp4: false<br>
+optional: true<br>
+EOF</p>
+<p>sudo chmod 600 /etc/netplan/40-cx7.yaml<br>
+sudo netplan generate<br>
+sudo netplan apply</p>
+<p>Worker 节点</p>
+<p>第二台：</p>
+<p>sudo tee /etc/netplan/40-cx7.yaml &gt;/dev/null &lt;&lt;'EOF'<br>
+network:<br>
+version: 2<br>
+ethernets:<br>
+enp1s0f1np1:<br>
+addresses:<br>
+- 192.168.100.11/24<br>
+dhcp4: false<br>
+optional: true<br>
+enP2p1s0f1np1:<br>
+addresses:<br>
+- 192.168.101.11/24<br>
+dhcp4: false<br>
+optional: true<br>
+EOF</p>
+<p>sudo chmod 600 /etc/netplan/40-cx7.yaml<br>
+sudo netplan generate<br>
+sudo netplan apply</p>
+<p>这就是我的实际双节点地址规划。</p>
+<p>至少先确认：</p>
+<p>ping 192.168.100.11</p>
+<p>Head 能直接找到 Worker。</p>
+<p>Netplan 的一个坑</p>
+<p>我还碰到过一次很诡异的 Netplan 错误。</p>
+<p>最后发现 "/etc/netplan/" 里面存在一个损坏的 NetworkManager 自动生成 YAML。我当时的文件是：</p>
+<p>BAD='/etc/netplan/90-NM-2edf06d6-a4d8-4336-95d9-d76c293f806f.yaml'</p>
+<p>处理方法不是直接删，而是先挪走：</p>
+<p>sudo mkdir -p /root/netplan-bak</p>
+<p>sudo mv "$BAD" <br>
+"/root/netplan-bak/$(basename "$BAD").corrupt.$(date +%Y%m%d-%H%M%S)"</p>
+<p>sudo netplan generate<br>
+sudo netplan try --timeout 60</p>
+<p>如果 "netplan generate" 莫名其妙报 YAML 错误，非常值得把 "/etc/netplan/" 下面的所有配置文件都检查一遍，而不是只盯着自己刚写的 "40-cx7.yaml"。</p>
+<hr>
+<ol start="6">
+<li>配置 Head → Worker SSH 免密</li>
+</ol>
+<p>这个仓库需要 Head 自动操作 Worker，所以 SSH 免密是必须的。</p>
+<p>在 Head：</p>
+<p>mkdir -p ~/.ssh<br>
+chmod 700 ~/.ssh</p>
+<p>test -f ~/.ssh/id_ed25519 || <br>
+ssh-keygen -t ed25519 -N '' -f ~/.ssh/id_ed25519</p>
+<p>先测试 Worker：</p>
+<p>ssh -o StrictHostKeyChecking=accept-new <br>
+dgx@192.168.100.11 hostname</p>
+<p>第一次会要求输入 Worker 的密码。</p>
+<p>然后：</p>
+<p>ssh-copy-id dgx@192.168.100.11</p>
+<p>再做一次真正的无交互测试：</p>
+<p>ssh -o BatchMode=yes dgx@192.168.100.11 '<br>
+hostname<br>
+nvidia-smi --query-gpu=name,driver_version --format=csv,noheader<br>
+docker version --format "{{.Server.Version}}"<br>
+'</p>
+<p>如果这一步仍然需要密码，就不要继续部署。</p>
+<p>NVIDIA 官方的双 Spark playbook 同样把“高速互联 + passwordless SSH”作为组成可用双节点环境的核心步骤。</p>
+<hr>
+<ol start="7">
+<li>关闭 earlyoom</li>
+</ol>
+<p>这是一个很容易忽略，但对 DGX Spark 跑大模型非常重要的步骤。</p>
+<p>执行：</p>
+<p>sudo systemctl stop earlyoom<br>
+sudo systemctl disable earlyoom</p>
+<p>两台机器都做。</p>
+<p>MiaAI-Lab 当前仓库明确建议在 DGX Spark Host 上关闭 "earlyoom"。原因是大上下文、高内存压力场景下，它可能提前把 vLLM Head 或 Worker 杀掉，即使这种内存压力只是暂时性的。</p>
+<p>如果碰到“机器没有真的 OOM，但 vLLM 莫名其妙死了”的情况，这一点尤其值得检查。</p>
+<hr>
+<ol start="8">
+<li>克隆双 DGX Spark 部署仓库</li>
+</ol>
+<p>如果需要代理，我先设置 Shell：</p>
+<p>export HTTP_PROXY="&lt;PROXY_URL&gt;"<br>
+export HTTPS_PROXY="&lt;PROXY_URL&gt;"<br>
+export http_proxy="$HTTP_PROXY"<br>
+export https_proxy="$HTTPS_PROXY"</p>
+<p>export NO_PROXY='localhost,127.0.0.1,192.168.31.0/24,192.168.100.0/24,192.168.101.0/24'<br>
+export no_proxy="$NO_PROXY"</p>
+<p>然后：</p>
+<p>cd /home/dgx</p>
+<p>git clone --depth=1 <br>
+<a href="https://github.com/MiaAI-Lab/DeepSeek-v4-Flash-DSpark-2x-DGX-Spark.git">https://github.com/MiaAI-Lab/DeepSeek-v4-Flash-DSpark-2x-DGX-Spark.git</a></p>
+<p>cd DeepSeek-v4-Flash-DSpark-2x-DGX-Spark</p>
+<p>git rev-parse HEAD</p>
+<p>我习惯记录一下 commit hash。这样以后仓库更新，至少知道这套环境到底是基于哪个版本部署出来的。我的原始部署也是按这个流程开始。</p>
+<hr>
+<ol start="9">
+<li>配 Docker daemon 代理并准备 vLLM 镜像</li>
+</ol>
+<p>Docker pull GHCR 镜像时，单纯设置当前 Shell 的 "HTTP_PROXY" 往往不够，所以我给 Docker daemon 单独配置代理：</p>
+<p>sudo mkdir -p /etc/systemd/system/docker.service.d</p>
+<p>sudo tee /etc/systemd/system/docker.service.d/90-deploy-proxy.conf &gt;/dev/null &lt;&lt;'EOF'<br>
+[Service]<br>
+Environment="HTTP_PROXY=&lt;PROXY_URL&gt;"<br>
+Environment="HTTPS_PROXY=&lt;PROXY_URL&gt;"<br>
+Environment="NO_PROXY=localhost,127.0.0.1,::1,192.168.31.0/24,192.168.100.0/24,192.168.101.0/24"<br>
+EOF</p>
+<p>sudo systemctl daemon-reload<br>
+sudo systemctl restart docker<br>
+sudo systemctl is-active docker</p>
+<p>当前 recipe 使用：</p>
+<p>IMG='ghcr.io/anemll/dspark-vllm-gx10:0.1.1'</p>
+<p>下载：</p>
+<p>docker pull "$IMG"</p>
+<p>检查：</p>
+<p>docker image inspect "$IMG" <br>
+--format 'ID={{.Id}} ARCH={{.Architecture}} SIZE={{.Size}}'</p>
+<p>当前仓库 README 也将这个 Anemll 镜像作为默认 runtime，其中已经包含针对 GX10 / DGX Spark 的 vLLM 以及 DSpark、NVFP4 DS-MLA、b12x MoE 等支持。</p>
+<p>先在 Head 验证 GPU 是否能进入容器：</p>
+<p>docker run --rm <br>
+--gpus all <br>
+--entrypoint nvidia-smi <br>
+"$IMG"</p>
+<p>如果这个命令都失败，就先修 Docker/NVIDIA Container Runtime，不要直接跑模型。</p>
+<hr>
+<ol start="10">
+<li>不重复 pull：直接把 Docker 镜像同步到 Worker</li>
+</ol>
+<p>因为两台机器镜像必须一致，而且我的外网速度并不总是理想，所以我最后直接把 Head 上已经下载好的镜像传给 Worker：</p>
+<p>docker save "$IMG" |<br>
+ssh -o Compression=no <br>
+-c <a href="mailto:aes128-gcm@openssh.com">aes128-gcm@openssh.com</a> <br>
+dgx@192.168.100.11 <br>
+'docker load'</p>
+<p>然后比较 Image ID：</p>
+<p>echo 'Head:'<br>
+docker image inspect "$IMG" --format '{{.Id}}'</p>
+<p>echo 'Worker:'<br>
+ssh dgx@192.168.100.11 <br>
+"docker image inspect '$IMG' --format '{{.Id}}'"</p>
+<p>最后单独在 Worker 上验证 GPU：</p>
+<p>ssh dgx@192.168.100.11 <br>
+"docker run --rm --gpus all --entrypoint nvidia-smi '$IMG'"</p>
+<p>双机部署前我非常建议做这个检查。</p>
+<p>两边 Image ID 不一致，就先不要启动 TP=2。</p>
+<hr>
+<ol start="11">
+<li>下载 DeepSeek-V4-Flash-0731</li>
+</ol>
+<p>我的网络环境下 Hugging Face 下载不是最舒服，所以实际模型权重使用 ModelScope 下载。</p>
+<p>先创建一个独立环境：</p>
+<p>python3 -m venv /home/dgx/.venvs/modelscope<br>
+source /home/dgx/.venvs/modelscope/bin/activate</p>
+<p>python -m pip install -U pip modelscope</p>
+<p>本地模型目录：</p>
+<p>MODEL_DIR='/home/dgx/.cache/huggingface/local/DeepSeek-V4-Flash-0731'</p>
+<p>mkdir -p "$MODEL_DIR"</p>
+<p>下载：</p>
+<p>modelscope download <br>
+--model deepseek-ai/DeepSeek-V4-Flash-0731 <br>
+--local_dir "$MODEL_DIR" <br>
+--max-workers 1</p>
+<p>我的最终本地路径因此是：</p>
+<p>/home/dgx/.cache/huggingface/local/DeepSeek-V4-Flash-0731</p>
+<p>当前 MiaAI-Lab recipe 也已经以 "DeepSeek-V4-Flash-0731" 为默认 agent-serving checkpoint。</p>
+<hr>
+<ol start="12">
+<li>不要相信“下载完成”：检查所有 Safetensors 分片</li>
+</ol>
+<p>几百 GB 级模型最怕的事情之一就是“命令看起来完成了，但少一个 shard”。</p>
+<p>所以我额外写了一个完整性检查。</p>
+<p>MODEL_DIR='/home/dgx/.cache/huggingface/local/DeepSeek-V4-Flash-0731'</p>
+<p>python3 - "$MODEL_DIR" &lt;&lt;'PY'<br>
+import json<br>
+import sys<br>
+from pathlib import Path</p>
+<p>root = Path(sys.argv[1])<br>
+index_path = root / "model.safetensors.index.json"<br>
+encoding_path = root / "encoding" / "encoding_dsv4.py"</p>
+<p>if not index_path.exists():<br>
+raise SystemExit(f"缺少 {index_path}")</p>
+<p>index = json.loads(index_path.read_text())<br>
+shards = sorted(set(index["weight_map"].values()))<br>
+missing = [name for name in shards if not (root / name).is_file()]</p>
+<p>print("权重分片数：", len(shards))<br>
+print("缺失分片数：", len(missing))<br>
+print("encoding_dsv4.py：", encoding_path.is_file())</p>
+<p>if missing:<br>
+print("\n".join(missing[:20]))<br>
+raise SystemExit(1)<br>
+PY</p>
+<p>这里不仅检查模型 shard，还检查：</p>
+<p>encoding/encoding_dsv4.py</p>
+<p>这不是多此一举。当前 0731 recipe 的 README 也专门提醒：两台机器都必须拥有完整模型 cache，并且 snapshot 中需要包含 "encoding/encoding_dsv4.py"；不完整 cache 或启动时再次在线下载，甚至可能把 Worker 磁盘打满，最终导致 TP=2 启动失败。</p>
+<hr>
+<ol start="13">
+<li>把模型同步到 Worker</li>
+</ol>
+<p>先创建目标目录：</p>
+<p>ssh dgx@192.168.100.11 <br>
+'mkdir -p /home/dgx/.cache/huggingface/local/DeepSeek-V4-Flash-0731 &amp;&amp; <br>
+chown -R dgx:dgx /home/dgx/.cache/huggingface'</p>
+<p>然后：</p>
+<p>rsync -aH --partial --info=progress2 <br>
+/home/dgx/.cache/huggingface/local/DeepSeek-V4-Flash-0731/ <br>
+dgx@192.168.100.11:/home/dgx/.cache/huggingface/local/DeepSeek-V4-Flash-0731/</p>
+<p>同步以后，我建议把上一节的完整性检查脚本在 Worker 再跑一次。</p>
+<p>不要只比较目录大小。</p>
+<hr>
+<ol start="14">
+<li>最关键的 ".env.dspark"</li>
+</ol>
+<p>部署过程中我前面配过一次 ".env.dspark"，后来发现有些路径和参数不够干净，于是最终重新从 example 生成了一次。</p>
+<p>先备份：</p>
+<p>cd ~/DeepSeek-v4-Flash-DSpark-2x-DGX-Spark</p>
+<p>[ -f .env.dspark ] &amp;&amp; <br>
+cp .env.dspark ".env.dspark.bak.$(date +%Y%m%d-%H%M%S)"</p>
+<p>cp .env.dspark.example .env.dspark</p>
+<p>我的最终关键参数是：</p>
+<p>WORKER_HOST=dgx@192.168.100.11<br>
+WORKER_SCRIPT_DIR=/home/dgx/DeepSeek-v4-Flash-DSpark-2x-DGX-Spark</p>
+<p>MASTER_ADDR=192.168.100.10<br>
+MASTER_PORT=25000</p>
+<p>NCCL_IB_HCA=rocep1s0f1<br>
+NCCL_SOCKET_IFNAME=enp1s0f1np1<br>
+TP_SOCKET_IFNAME=enp1s0f1np1<br>
+GLOO_SOCKET_IFNAME=enp1s0f1np1</p>
+<p>WORKER_NCCL_IB_HCA=rocep1s0f1<br>
+WORKER_NCCL_SOCKET_IFNAME=enp1s0f1np1<br>
+WORKER_TP_SOCKET_IFNAME=enp1s0f1np1<br>
+WORKER_GLOO_SOCKET_IFNAME=enp1s0f1np1</p>
+<p>NCCL_IB_GID_AUTO=1</p>
+<p>VLLM_HOST_IP=192.168.100.10<br>
+WORKER_VLLM_HOST_IP=192.168.100.11</p>
+<p>HF_CACHE=/home/dgx/.cache/huggingface<br>
+WORKER_HF_CACHE=/home/dgx/.cache/huggingface</p>
+<p>HF_HUB_OFFLINE=1<br>
+TRANSFORMERS_OFFLINE=1<br>
+HF_HUB_DISABLE_XET=1</p>
+<p>DSPARK_MODEL=/cache/huggingface/local/DeepSeek-V4-Flash-0731<br>
+DSPARK_ENCODING_FILE=/cache/huggingface/local/DeepSeek-V4-Flash-0731/encoding/encoding_dsv4.py<br>
+SERVED_MODEL_NAME=deepseek-v4-flash-0731</p>
+<p>VLLM_HOST=0.0.0.0<br>
+VLLM_PORT=8888</p>
+<p>DSPARK_VLLM_IMAGE=ghcr.io/anemll/dspark-vllm-gx10:0.1.1</p>
+<p>MAX_MODEL_LEN=1048576<br>
+MAX_NUM_SEQS=6<br>
+MAX_NUM_BATCHED_TOKENS=8192<br>
+GPU_MEMORY_UTILIZATION=0.80<br>
+MTP_NUM_TOKENS=5</p>
+<p>NCCL_DEBUG=INFO</p>
+<p>这组参数就是我最终部署记录里的核心配置。</p>
+<p>而且截至本文整理时，仓库最新 README 推荐的 agent-serving profile 已经和这组设置高度一致：</p>
+<p>MAX_MODEL_LEN=1048576<br>
+MAX_NUM_SEQS=6<br>
+MAX_NUM_BATCHED_TOKENS=8192<br>
+GPU_MEMORY_UTILIZATION=0.80<br>
+MTP_NUM_TOKENS=5<br>
+DSPARK_VLLM_IMAGE=ghcr.io/anemll/dspark-vllm-gx10:0.1.1</p>
+<p>Host 路径和 Container 路径不要搞混</p>
+<p>这是我认为最容易出错的一个点。</p>
+<p>Host 上模型实际存在于：</p>
+<p>/home/dgx/.cache/huggingface/local/DeepSeek-V4-Flash-0731</p>
+<p>但是容器里挂载的是：</p>
+<p>/cache/huggingface</p>
+<p>所以：</p>
+<p>DSPARK_MODEL</p>
+<p>应该写成容器里面看到的：</p>
+<p>/cache/huggingface/local/DeepSeek-V4-Flash-0731</p>
+<p>而不是 Host 的 "/home/dgx/..."。</p>
+<p>同理：</p>
+<p>DSPARK_ENCODING_FILE=/cache/huggingface/local/DeepSeek-V4-Flash-0731/encoding/encoding_dsv4.py</p>
+<p>路径混用时，最常见的现象就是“宿主机明明有模型，但 vLLM 说找不到”。</p>
+<p>关于 "NCCL_IB_GID_AUTO"</p>
+<p>我自己的环境最终使用了：</p>
+<p>NCCL_IB_GID_AUTO=1</p>
+<p>但这里不建议把它理解为适合所有版本的永久配置。</p>
+<p>当前仓库 README 明确提醒，RoCE 的 GID 配置取决于实际环境，"NCCL_IB_GID_INDEX" 并不一定永远是 0，需要匹配实际 RoCE GID。</p>
+<p>所以如果遇到 NCCL 初始化卡死、RoCE 建链失败，接口 IP 明明互通却无法 TP=2，GID 是重点排查对象之一。</p>
+<hr>
+<ol start="15">
+<li>启动 DeepSeek V4 Flash</li>
+</ol>
+<p>所有东西准备好以后：</p>
+<p>cd ~/DeepSeek-v4-Flash-DSpark-2x-DGX-Spark</p>
+<p>./start-deepseek-v4-flash-dspark.sh</p>
+<p>当前仓库的启动逻辑是 Worker first：先准备和启动 Worker，再启动 Head，这样可以减少多节点初始化阶段的竞争问题。启动脚本还会检查双方的 Compose 配置和运行环境。</p>
+<p>启动完成后：</p>
+<p>curl -fsS <a href="http://127.0.0.1:8888/v1/models" rel="nofollow">http://127.0.0.1:8888/v1/models</a> |<br>
+python3 -m json.tool</p>
+<p>查看服务状态：</p>
+<p>./status-deepseek-v4-flash-dspark.sh</p>
+<p>看日志：</p>
+<p>./logs-deepseek-v4-flash-dspark.sh</p>
+<p>跑仓库自带 Smoke Test：</p>
+<p>./smoke-deepseek-v4-flash-dspark.sh</p>
+<p>这些也是我最后的启动和验证流程。</p>
+<hr>
+<ol start="16">
+<li>再实际调用一次 OpenAI-compatible API</li>
+</ol>
+<p>"/v1/models" 成功只能证明 API 活了，我一般还会真正生成一次。</p>
+<p>例如：</p>
+<p>curl <a href="http://127.0.0.1:8888/v1/chat/completions" rel="nofollow">http://127.0.0.1:8888/v1/chat/completions</a> <br>
+-H 'Content-Type: application/json' <br>
+-d '{<br>
+"model": "deepseek-v4-flash-0731",<br>
+"messages": [<br>
+{<br>
+"role": "user",<br>
+"content": "用一句话介绍 NVIDIA DGX Spark。"<br>
+}<br>
+],<br>
+"max_tokens": 256<br>
+}'</p>
+<p>如果要让局域网其他设备访问，因为这里配置的是：</p>
+<p>VLLM_HOST=0.0.0.0<br>
+VLLM_PORT=8888</p>
+<p>因此入口就是：</p>
+<p>http://&lt;HEAD_IP&gt;:8888/v1</p>
+<p>当前仓库同样默认使用 "8888"，并提醒如果绑定 "0.0.0.0"，应该自己通过防火墙或网络层控制 API 暴露范围；如果只在 Head 本机调用，则可以改成 "127.0.0.1"。</p>
+<p>不要直接把一个没有鉴权的 "0.0.0.0:8888" 暴露到公网。</p>
+<hr>
+<ol start="17">
+<li>我认为最值得记住的几个坑</li>
+</ol>
+<p>整套过程真正麻烦的地方，其实不是最后那一条 "start" 命令。</p>
+<p>第一是 两台机器的底层环境必须先完全一致、完全健康。驱动、Docker、镜像、模型文件，只要其中一边有细微差异，TP=2 出问题以后排查会非常痛苦。</p>
+<p>第二是 DGX Spark 的 ConnectX-7 接口命名比普通服务器更容易看错。尤其 "enP2p1s0f1np1" 里面的大写 "P" 是真的，不是 typo。最好永远先用：</p>
+<p>ibdev2netdev<br>
+ip -br link</p>
+<p>确认映射。NVIDIA 官方文档现在也专门花了很长一节解释 DGX Spark 的 QSFP → PCIe → Ethernet → RoCE 对应关系。</p>
+<p>第三是 模型下载成功不等于模型完整。检查 "model.safetensors.index.json"、逐个确认 shard、确认 "encoding_dsv4.py" 都比看目录大小可靠得多。</p>
+<p>第四是 Host path 和 Container path 一定要分清。我的模型在 Host 是：</p>
+<p>/home/dgx/.cache/huggingface/...</p>
+<p>但配置给 vLLM 的 "DSPARK_MODEL" 是：</p>
+<p>/cache/huggingface/...</p>
+<p>第五是 第一次成功启动时先别急着调参。"MAX_MODEL_LEN=1048576"、"MAX_NUM_SEQS=6"、"MAX_NUM_BATCHED_TOKENS=8192"、"GPU_MEMORY_UTILIZATION=0.80"、"MTP_NUM_TOKENS=5" 是当前仓库已经验证过的一组相对保守的 1M agent-serving 参数。先把这个 baseline 跑通，再调整 concurrency、MTP 和 memory utilization。</p>
+<hr>
+<ol start="18">
+<li>关于性能：这里我暂时不编一个数字</li>
+</ol>
+<p>原始部署记录里我留下了服务启动、模型加载和 smoke test 的步骤，但没有留下足够完整、环境固定的 benchmark 结果。</p>
+<p>所以这里我不打算拿一次随手测试的 tok/s 当“2× DGX Spark 的性能”。</p>
+<p>当前仓库已经提供：</p>
+<p>scripts/benchmark-0731.py<br>
+results/deepseek-v4-flash-0731-2x-dgx-spark.json</p>
+<p>并且 README 明确说明性能结果会随着 prompt 长度、生成长度、batch、context、KV Cache 路径以及 speculative decoding 参数发生变化。</p>
+<p>后面如果认真测试，我更倾向固定下面这些条件以后再记录：</p>
+<p>Prompt tokens<br>
+Output tokens<br>
+Concurrency<br>
+TTFT / TTFC<br>
+Decode tok/s<br>
+Aggregate tok/s<br>
+DSpark acceptance rate<br>
+MAX_MODEL_LEN<br>
+MTP_NUM_TOKENS<br>
+GPU_MEMORY_UTILIZATION</p>
+<p>这样得到的数据才比较值得横向比较。</p>
+<hr>
+<p>结语</p>
+<p>最终跑通以后，这套东西反而显得很简单：</p>
+<p>2 × DGX Spark<br>
+↓<br>
+ConnectX-7 / RoCE<br>
+↓<br>
+SSH 免密<br>
+↓<br>
+相同 Docker Runtime<br>
+↓<br>
+两边完整的 DeepSeek-V4-Flash-0731 权重<br>
+↓<br>
+vLLM TP=2<br>
+↓<br>
+DSpark speculative decoding<br>
+↓<br>
+OpenAI-compatible API :8888</p>
+<p>真正花时间的是把底层每一层都变得“无聊”——网络稳定、驱动正常、Docker 正常、两边镜像一致、两边模型一致、路径一致。</p>
+<p>这次部署给我的最大经验也是这个：</p>
+<p>多机大模型部署里，模型本身往往不是最难的；真正难的是让两台机器在网络、驱动、容器、文件和配置上都认为自己处在同一个世界里。</p>
+<p>等这些都对齐以后：</p>
+<p>./start-deepseek-v4-flash-dspark.sh</p></div>
+<div style="font-size:small;margin-top:8px;float:right;">转载无需注明出处</div>
+
+<button class="btn btn-block" type="button" onclick="openComments()" id="cmButton">评论</button>
+<div class="comments" id="comments"></div>
+
+</div>
+    <div id="footer"><div id="footer1">Copyright © <span id="copyrightYear"></span> <a href="https://FairyOwO.github.io">FairyOwO 的 Blog</a></div>
+<div id="footer2">
+    <span id="runday"></span><span>Powered by <a href="https://meekdai.com/Gmeek.html" target="_blank">Gmeek</a></span>
+</div>
+
+<script>
+var now=new Date();
+document.getElementById("copyrightYear").innerHTML=now.getFullYear();
+
+if("11/22/2024"!=""){
+    var startSite=new Date("11/22/2024");
+    var diff=now.getTime()-startSite.getTime();
+    var diffDay=Math.floor(diff/(1000*60*60*24));
+    document.getElementById("runday").innerHTML="网站运行 "+diffDay+" 天"+" • ";
+}
+</script></div>
+</body>
+<script>
+var IconList={'sun': 'M8 10.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5zM8 12a4 4 0 100-8 4 4 0 000 8zM8 0a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0V.75A.75.75 0 018 0zm0 13a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0v-1.5A.75.75 0 018 13zM2.343 2.343a.75.75 0 011.061 0l1.06 1.061a.75.75 0 01-1.06 1.06l-1.06-1.06a.75.75 0 010-1.06zm9.193 9.193a.75.75 0 011.06 0l1.061 1.06a.75.75 0 01-1.06 1.061l-1.061-1.06a.75.75 0 010-1.061zM16 8a.75.75 0 01-.75.75h-1.5a.75.75 0 010-1.5h1.5A.75.75 0 0116 8zM3 8a.75.75 0 01-.75.75H.75a.75.75 0 010-1.5h1.5A.75.75 0 013 8zm10.657-5.657a.75.75 0 010 1.061l-1.061 1.06a.75.75 0 11-1.06-1.06l1.06-1.06a.75.75 0 011.06 0zm-9.193 9.193a.75.75 0 010 1.06l-1.06 1.061a.75.75 0 11-1.061-1.06l1.06-1.061a.75.75 0 011.061 0z', 'moon': 'M9.598 1.591a.75.75 0 01.785-.175 7 7 0 11-8.967 8.967.75.75 0 01.961-.96 5.5 5.5 0 007.046-7.046.75.75 0 01.175-.786zm1.616 1.945a7 7 0 01-7.678 7.678 5.5 5.5 0 107.678-7.678z', 'sync': 'M1.705 8.005a.75.75 0 0 1 .834.656 5.5 5.5 0 0 0 9.592 2.97l-1.204-1.204a.25.25 0 0 1 .177-.427h3.646a.25.25 0 0 1 .25.25v3.646a.25.25 0 0 1-.427.177l-1.38-1.38A7.002 7.002 0 0 1 1.05 8.84a.75.75 0 0 1 .656-.834ZM8 2.5a5.487 5.487 0 0 0-4.131 1.869l1.204 1.204A.25.25 0 0 1 4.896 6H1.25A.25.25 0 0 1 1 5.75V2.104a.25.25 0 0 1 .427-.177l1.38 1.38A7.002 7.002 0 0 1 14.95 7.16a.75.75 0 0 1-1.49.178A5.5 5.5 0 0 0 8 2.5Z', 'home': 'M6.906.664a1.749 1.749 0 0 1 2.187 0l5.25 4.2c.415.332.657.835.657 1.367v7.019A1.75 1.75 0 0 1 13.25 15h-3.5a.75.75 0 0 1-.75-.75V9H7v5.25a.75.75 0 0 1-.75.75h-3.5A1.75 1.75 0 0 1 1 13.25V6.23c0-.531.242-1.034.657-1.366l5.25-4.2Zm1.25 1.171a.25.25 0 0 0-.312 0l-5.25 4.2a.25.25 0 0 0-.094.196v7.019c0 .138.112.25.25.25H5.5V8.25a.75.75 0 0 1 .75-.75h3.5a.75.75 0 0 1 .75.75v5.25h2.75a.25.25 0 0 0 .25-.25V6.23a.25.25 0 0 0-.094-.195Z', 'github': 'M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27-.68 0-1.36.09-2 .27-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.31 2.69.94 0 .67.01 1.3.01 1.49 0 .21-.15.45-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8Z', 'copy': 'M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 0 1 0 1.5h-1.5a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-1.5a.75.75 0 0 1 1.5 0v1.5A1.75 1.75 0 0 1 9.25 16h-7.5A1.75 1.75 0 0 1 0 14.25Z M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0 1 14.25 11h-7.5A1.75 1.75 0 0 1 5 9.25Zm1.75-.25a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-7.5a.25.25 0 0 0-.25-.25Z', 'check': 'M13.78 4.22a.75.75 0 0 1 0 1.06l-7.25 7.25a.75.75 0 0 1-1.06 0L2.22 9.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018L6 10.94l6.72-6.72a.75.75 0 0 1 1.06 0Z'};
+var utterancesLoad=0;
+
+let themeSettings={
+    "dark": ["dark","moon","#00f0ff","dark-blue"],
+    "light": ["light","sun","#ff5000","github-light"],
+    "auto": ["auto","sync","","preferred-color-scheme"]
+};
+function changeTheme(mode, icon, color, utheme){
+    document.documentElement.setAttribute("data-color-mode",mode);
+    document.getElementById("themeSwitch").setAttribute("d",value=IconList[icon]);
+    document.getElementById("themeSwitch").parentNode.style.color=color;
+    if(utterancesLoad==1){utterancesTheme(utheme);}
+}
+function modeSwitch(){
+    let currentMode=document.documentElement.getAttribute('data-color-mode');
+    let newMode = currentMode === "light" ? "dark" : currentMode === "dark" ? "auto" : "light";
+    localStorage.setItem("meek_theme", newMode);
+    if(themeSettings[newMode]){
+        changeTheme(...themeSettings[newMode]);
+    }
+}
+function utterancesTheme(theme){
+    const message={type:'set-theme',theme: theme};
+    const iframe=document.getElementsByClassName('utterances-frame')[0];
+    iframe.contentWindow.postMessage(message,'https://utteranc.es');
+}
+if(themeSettings[theme]){changeTheme(...themeSettings[theme]);}
+console.log("\n %c Gmeek last https://github.com/Meekdai/Gmeek \n","padding:5px 0;background:#02d81d;color:#fff");
+</script>
+
+<script>
+document.getElementById("pathHome").setAttribute("d",IconList["home"]);
+document.getElementById("pathIssue").setAttribute("d",IconList["github"]);
+
+
+
+function openComments(){
+    cm=document.getElementById("comments");
+    cmButton=document.getElementById("cmButton");
+    cmButton.disabled=true;
+    cmButton.innerHTML="loading";
+    span=document.createElement("span");
+    span.setAttribute("class","AnimatedEllipsis");
+    cmButton.appendChild(span);
+
+    script=document.createElement("script");
+    script.setAttribute("src","https://utteranc.es/client.js");
+    script.setAttribute("repo","FairyOwO/FairyOwO.github.io");
+    script.setAttribute("issue-term","title");
+    
+    if(localStorage.getItem("meek_theme")=="dark"){script.setAttribute("theme","dark-blue");}
+    else if(localStorage.getItem("meek_theme")=="light") {script.setAttribute("theme","github-light");}
+    else{script.setAttribute("theme","preferred-color-scheme");}
+    
+    script.setAttribute("crossorigin","anonymous");
+    script.setAttribute("async","");
+    cm.appendChild(script);
+
+    int=self.setInterval("iFrameLoading()",200);
+}
+
+function iFrameLoading(){
+    var utterances=document.getElementsByClassName('utterances');
+    if(utterances.length==1){
+        if(utterances[0].style.height!=""){
+            utterancesLoad=1;
+            int=window.clearInterval(int);
+            document.getElementById("cmButton").style.display="none";
+            console.log("utterances Load OK");
+        }
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const createClipboardHTML = (codeContent, additionalClasses = '') => `
+        <pre class="notranslate"><code class="notranslate">${codeContent}</code></pre>
+        <div class="clipboard-container position-absolute right-0 top-0 ${additionalClasses}">
+            <clipboard-copy class="ClipboardButton btn m-2 p-0" role="button" style="display: inherit;">
+                <svg height="16" width="16" class="octicon octicon-copy m-2"><path d="${IconList["copy"]}"></path></svg>
+                <svg height="16" width="16" class="octicon octicon-check color-fg-success m-2 d-none"><path d="${IconList["check"]}"></path></svg>
+            </clipboard-copy>
+            <div class="copy-feedback">Copied!</div>
+        </div>
+    `;
+
+    const handleCodeElements = (selector = '') => {
+        document.querySelectorAll(selector).forEach(codeElement => {
+            const codeContent = codeElement.innerHTML;
+            const newStructure = document.createElement('div');
+            newStructure.className = 'snippet-clipboard-content position-relative overflow-auto';
+            newStructure.innerHTML = createClipboardHTML(codeContent);
+
+            const parentElement = codeElement.parentElement;
+            if (selector.includes('highlight')) {
+                parentElement.insertBefore(newStructure, codeElement.nextSibling);
+                parentElement.removeChild(codeElement);
+            } else {
+                parentElement.parentElement.replaceChild(newStructure, parentElement);
+            }
+        });
+    };
+
+    handleCodeElements('pre.notranslate > code.notranslate');
+    handleCodeElements('div.highlight > pre.notranslate');
+
+    let currentFeedback = null;
+    document.querySelectorAll('clipboard-copy').forEach(copyButton => {
+        copyButton.addEventListener('click', () => {
+            const codeContent = copyButton.closest('.snippet-clipboard-content').innerText;
+            const tempTextArea = document.createElement('textarea');
+            tempTextArea.value = codeContent;
+            document.body.appendChild(tempTextArea);
+            tempTextArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempTextArea);
+
+            const copyIcon = copyButton.querySelector('.octicon-copy');
+            const checkIcon = copyButton.querySelector('.octicon-check');
+            const copyFeedback = copyButton.nextElementSibling;
+
+            if (currentFeedback && currentFeedback !== copyFeedback) {currentFeedback.style.display = 'none';}
+            currentFeedback = copyFeedback;
+
+            copyIcon.classList.add('d-none');
+            checkIcon.classList.remove('d-none');
+            copyFeedback.style.display = 'block';
+            copyButton.style.borderColor = 'var(--color-success-fg)';
+
+            setTimeout(() => {
+                copyIcon.classList.remove('d-none');
+                checkIcon.classList.add('d-none');
+                copyFeedback.style.display = 'none';
+                copyButton.style.borderColor = '';
+            }, 2000);
+        });
+    });
+});
+
+</script>
+
+
+</html>
