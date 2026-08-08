@@ -1,4 +1,4 @@
-> 请注意 以下为ai生成 我仅提供了过程命令
+> 请注意 以下为ai生成 我仅提供了过程命令 仅能保证这个过程在我这里成立
 
 用两台 NVIDIA DGX Spark 本地部署 DeepSeek V4 Flash 0731：从开机、RoCE 到 vLLM TP=2 的完整踩坑记录
 
