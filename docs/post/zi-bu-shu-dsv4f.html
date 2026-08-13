@@ -12,15 +12,11 @@
     </script>
 <meta name="description" content="> 请注意 以下为ai生成 我仅提供了过程命令 仅能保证这个过程在我这里成立
 
-> 注意 已过时 代码仓已经更新 以下部署方式有部分有更新 在此提示消失前请谨慎参考
-
 用两台 NVIDIA DGX Spark 本地部署 DeepSeek V4 Flash 0731：从开机、RoCE 到 vLLM TP=2 的完整踩坑记录
 
 本文记录我使用 2 台 NVIDIA DGX Spark，通过 ConnectX-7 / RoCE 组成双机集群，并最终在本地跑起 DeepSeek-V4-Flash-0731 + DSpark + vLLM TP=2 的完整过程。">
 <meta property="og:title" content="自部署dsv4f">
 <meta property="og:description" content="> 请注意 以下为ai生成 我仅提供了过程命令 仅能保证这个过程在我这里成立
-
-> 注意 已过时 代码仓已经更新 以下部署方式有部分有更新 在此提示消失前请谨慎参考
 
 用两台 NVIDIA DGX Spark 本地部署 DeepSeek V4 Flash 0731：从开机、RoCE 到 vLLM TP=2 的完整踩坑记录
 
@@ -97,9 +93,6 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
     <div id="content">
 <div class="markdown-body" id="postBody"><blockquote>
 <p>请注意 以下为ai生成 我仅提供了过程命令 仅能保证这个过程在我这里成立</p>
-</blockquote>
-<blockquote>
-<p>注意 已过时 代码仓已经更新 以下部署方式有部分有更新 在此提示消失前请谨慎参考</p>
 </blockquote>
 <p>用两台 NVIDIA DGX Spark 本地部署 DeepSeek V4 Flash 0731：从开机、RoCE 到 vLLM TP=2 的完整踩坑记录</p>
 <p>本文记录我使用 2 台 NVIDIA DGX Spark，通过 ConnectX-7 / RoCE 组成双机集群，并最终在本地跑起 DeepSeek-V4-Flash-0731 + DSpark + vLLM TP=2 的完整过程。</p>
@@ -495,13 +488,15 @@ dgx@192.168.100.11:/home/dgx/.cache/huggingface/local/DeepSeek-V4-Flash-0731/</p
 <ol start="14">
 <li>最关键的 ".env.dspark"</li>
 </ol>
-<p>部署过程中我前面配过一次 ".env.dspark"，后来发现有些路径和参数不够干净，于是最终重新从 example 生成了一次。</p>
-<p>先备份：</p>
-<p>cd ~/DeepSeek-v4-Flash-DSpark-2x-DGX-Spark</p>
-<p>[ -f .env.dspark ] &amp;&amp; <br>
-cp .env.dspark ".env.dspark.bak.$(date +%Y%m%d-%H%M%S)"</p>
-<p>cp .env.dspark.example .env.dspark</p>
-<p>我的最终关键参数是：</p>
+<p>我最初部署时使用的 ".env.dspark" 里有一项现在已经过时：</p>
+<p>GPU_MEMORY_UTILIZATION=0.80</p>
+<p>当前仓库已经不建议直接设置 "GPU_MEMORY_UTILIZATION"。启动脚本会根据是否启用 VL sidecar 自动选择两个 profile：</p>
+<p>ENABLE_VL_SIDECAR=0<br>
+GPU_MEMORY_UTILIZATION_TEXT=0.835<br>
+GPU_MEMORY_UTILIZATION_VISION=0.80</p>
+<p>其中默认的正式运行方式仍然是纯文本模式，也就是 "ENABLE_VL_SIDECAR=0"，实际使用 "GPU_MEMORY_UTILIZATION_TEXT=0.835"。只有实验性的 VL sidecar 开启时，才切到 "GPU_MEMORY_UTILIZATION_VISION=0.80"。</p>
+<p>另外，仓库后续又增加了 "LONG_PREFILL_TOKEN_THRESHOLD=1024"，用于限制 chunked prefill 的单次 chunk 大小；默认 "MTP_NUM_TOKENS" 仍然是 5，"DEFAULT_THINKING" 现在推荐为 "max"，并继续使用普通 CUDA Graph，即 "VLLM_USE_BREAKABLE_CUDAGRAPH=0"。</p>
+<p>所以我现在使用的核心参数更新为：</p>
 <p>WORKER_HOST=dgx@192.168.100.11<br>
 WORKER_SCRIPT_DIR=/home/dgx/DeepSeek-v4-Flash-DSpark-2x-DGX-Spark</p>
 <p>MASTER_ADDR=192.168.100.10<br>
@@ -522,46 +517,230 @@ WORKER_HF_CACHE=/home/dgx/.cache/huggingface</p>
 <p>HF_HUB_OFFLINE=1<br>
 TRANSFORMERS_OFFLINE=1<br>
 HF_HUB_DISABLE_XET=1</p>
-<p>DSPARK_MODEL=/cache/huggingface/local/DeepSeek-V4-Flash-0731<br>
-DSPARK_ENCODING_FILE=/cache/huggingface/local/DeepSeek-V4-Flash-0731/encoding/encoding_dsv4.py<br>
-SERVED_MODEL_NAME=deepseek-v4-flash-0731</p>
+<p>ABLITERATED=0</p>
+<p>DSPARK_MODEL_OFFICIAL=/cache/huggingface/local/DeepSeek-V4-Flash-0731<br>
+DSPARK_REVISION=<br>
+DSPARK_ENCODING_FILE=/cache/huggingface/local/DeepSeek-V4-Flash-0731/encoding/encoding_dsv4.py</p>
+<p>SERVED_MODEL_NAME=deepseek-v4-flash-0731</p>
 <p>VLLM_HOST=0.0.0.0<br>
 VLLM_PORT=8888</p>
 <p>DSPARK_VLLM_IMAGE=ghcr.io/anemll/dspark-vllm-gx10:0.1.1</p>
 <p>MAX_MODEL_LEN=1048576<br>
 MAX_NUM_SEQS=6<br>
 MAX_NUM_BATCHED_TOKENS=8192<br>
-GPU_MEMORY_UTILIZATION=0.80<br>
-MTP_NUM_TOKENS=5</p>
-<p>NCCL_DEBUG=INFO</p>
-<p>这组参数就是我最终部署记录里的核心配置。</p>
-<p>而且截至本文整理时，仓库最新 README 推荐的 agent-serving profile 已经和这组设置高度一致：</p>
+LONG_PREFILL_TOKEN_THRESHOLD=1024</p>
+<p>GPU_MEMORY_UTILIZATION_TEXT=0.835<br>
+GPU_MEMORY_UTILIZATION_VISION=0.80</p>
+<p>MTP_NUM_TOKENS=5<br>
+DEFAULT_THINKING=max</p>
+<p>ENABLE_VL_SIDECAR=0<br>
+PREPARE_VL_SIDECAR_MODEL=0</p>
+<p>VLLM_USE_FLASHINFER_SAMPLER=1<br>
+VLLM_USE_BREAKABLE_CUDAGRAPH=0<br>
+VLLM_USE_B12X_MOE=1</p>
+<p>这里还有一个仓库更新后很重要的变化：现在不应该再直接写 "DSPARK_MODEL="。启动脚本根据 "ABLITERATED" 自动选择 "DSPARK_MODEL_OFFICIAL" 或 "DSPARK_MODEL_ABLITERATED"。官方仓库默认使用 Hugging Face 模型 ID，并固定到测试过的 revision；如果把 "DSPARK_REVISION=" 显式留空，则表示不传 "--revision"。</p>
+<p>我的模型不是按照标准 Hugging Face Hub snapshot 结构保存，而是之前通过 ModelScope 放在：</p>
+<p>/home/dgx/.cache/huggingface/local/DeepSeek-V4-Flash-0731</p>
+<p>Compose 会把：</p>
+<p>/home/dgx/.cache/huggingface</p>
+<p>挂载成容器里的：</p>
+<p>/cache/huggingface</p>
+<p>所以我仍然需要使用容器路径：</p>
+<p>DSPARK_MODEL_OFFICIAL=/cache/huggingface/local/DeepSeek-V4-Flash-0731<br>
+DSPARK_REVISION=<br>
+DSPARK_ENCODING_FILE=/cache/huggingface/local/DeepSeek-V4-Flash-0731/encoding/encoding_dsv4.py</p>
+<p>当前 Compose 在启动时还会把这个 "encoding_dsv4.py" 安装到 vLLM，并自动应用 Issue #21 的 encoder hotfix。</p>
+<p>原文里 "GPU_MEMORY_UTILIZATION=0.80" 以及直接设置 "DSPARK_MODEL=/cache/..." 的写法，因此都应该删除。</p>
+<p>后续仓库更新：先备份，再同步 "origin/main"</p>
+<p>这套仓库后面更新得很快，所以我后来又完整走了一次更新流程。</p>
+<p>这里最重要的是：".env.dspark" 本身已经在 ".gitignore" 中，所以创建 Git 备份分支并不能备份 ".env.dspark"，必须另外复制一份。</p>
+<p>先停掉旧服务。如果服务本来没有运行，可以跳过：</p>
+<p>cd ~/DeepSeek-v4-Flash-DSpark-2x-DGX-Spark</p>
+<p>./status-deepseek-v4-flash-dspark.sh<br>
+./stop-deepseek-v4-flash-dspark.sh</p>
+<p>然后单独备份环境变量：</p>
+<p>cd ~/DeepSeek-v4-Flash-DSpark-2x-DGX-Spark</p>
+<p>STAMP="$(date +%Y%m%d-%H%M%S)"<br>
+ENV_BACKUP=".env.dspark.bak.${STAMP}"</p>
+<p>cp -a .env.dspark "$ENV_BACKUP"</p>
+<p>echo "环境变量备份：$ENV_BACKUP"<br>
+ls -lh "$ENV_BACKUP"</p>
+<p>接下来检查本地和远端到底分叉了多少：</p>
+<p>git fetch origin main</p>
+<p>echo "===== 分叉数量：左=本地独有，右=远端独有 ====="<br>
+git rev-list --left-right --count main...origin/main</p>
+<p>echo "===== 分叉提交 ====="<br>
+git log --left-right --graph --decorate --oneline <br>
+--max-count=30 main...origin/main</p>
+<p>我的本地仓库还有一些额外修改，所以在强制同步之前，我还保留一个 Git 分支：</p>
+<p>BACKUP_BRANCH="backup-before-sync-${STAMP}"</p>
+<p>git branch "$BACKUP_BRANCH" HEAD</p>
+<p>echo "备份分支：$BACKUP_BRANCH"<br>
+git rev-parse "$BACKUP_BRANCH"</p>
+<p>工作区里如果还有 tracked 或普通 untracked 文件，也先 stash。这里使用 "-u"，但它仍然不会代替前面对 ".env.dspark" 的单独备份：</p>
+<p>STASH_NAME="before-sync-${STAMP}"</p>
+<p>if [ -n "$(git status --porcelain)" ]; then<br>
+git stash push -u -m "$STASH_NAME"<br>
+fi</p>
+<p>git stash list</p>
+<p>之后切回 "main"，直接对齐远端：</p>
+<p>git switch main<br>
+git reset --hard origin/main</p>
+<p>git status<br>
+git log -1 --oneline --decorate</p>
+<p>echo "===== HEAD / origin/main ====="<br>
+git rev-parse HEAD<br>
+git rev-parse origin/main</p>
+<p>如果前面确实创建了 stash，再把本地文件恢复回来：</p>
+<p>STASH_REF="$(<br>
+git stash list --format='%gd %s' |<br>
+awk -v name="$STASH_NAME" 'index($0, name) {print $1; exit}'<br>
+)"</p>
+<p>if [ -n "$STASH_REF" ]; then<br>
+git stash apply "$STASH_REF"<br>
+fi</p>
+<p>git status --short</p>
+<p>ls -lh "$ENV_BACKUP"<br>
+ls -lh results/my-benchmark.json 2&gt;/dev/null</p>
+<p>这里我不会立刻无脑 "drop"。先确认没有冲突、本地 benchmark 等文件也都恢复正确，再执行：</p>
+<p>if [ -n "$STASH_REF" ]; then<br>
+git stash drop "$STASH_REF"<br>
+fi</p>
+<p>截至我这次重新同步时，仓库在 8 月 11～12 日连续加入了 text-only 默认 profile、VL 开关、revision pin、Issue #22 长上下文修复、vLLM 0.27 性能 hotfix backport，以及 Issue #27 的 partial-prefill 修复，所以旧 ".env.dspark" 确实不能再完全照搬。</p>
+<p>更新旧 ".env.dspark"</p>
+<p>因为我的网络、Worker 地址、本地模型路径这些配置都已经调通，所以没有直接覆盖整个 ".env.dspark"，而是在备份以后更新仓库新版本需要的参数。</p>
+<p>我现在用下面这段一次处理：</p>
+<p>cd ~/DeepSeek-v4-Flash-DSpark-2x-DGX-Spark</p>
+<p>python3 - &lt;&lt;'PY'<br>
+from pathlib import Path<br>
+import re</p>
+<p>p = Path(".env.dspark")<br>
+s = p.read_text()</p>
+<h1>新版本已经不应该由用户直接设置的旧参数。</h1>
+<p>for key in (<br>
+"GPU_MEMORY_UTILIZATION",<br>
+"DSPARK_MODEL",<br>
+):<br>
+s = re.sub(<br>
+rf"^{re.escape(key)}=.*\n?",<br>
+"",<br>
+s,<br>
+flags=re.M,<br>
+)</p>
+<p>values = {<br>
+# 当前 1M agent-serving profile<br>
+"MAX_MODEL_LEN": "1048576",<br>
+"MAX_NUM_SEQS": "6",<br>
+"MAX_NUM_BATCHED_TOKENS": "8192",<br>
+"LONG_PREFILL_TOKEN_THRESHOLD": "1024",</p>
+<pre class="notranslate"><code class="notranslate"># GPU profile
+"GPU_MEMORY_UTILIZATION_TEXT": "0.835",
+"GPU_MEMORY_UTILIZATION_VISION": "0.80",
+
+# DSpark
+"MTP_NUM_TOKENS": "5",
+"DEFAULT_THINKING": "max",
+
+# 当前正式默认仍然是 text-only
+"ENABLE_VL_SIDECAR": "0",
+"PREPARE_VL_SIDECAR_MODEL": "0",
+
+# Anemll 0.1.1 当前使用的 runtime knobs
+"VLLM_USE_FLASHINFER_SAMPLER": "1",
+"VLLM_USE_BREAKABLE_CUDAGRAPH": "0",
+"VLLM_USE_B12X_MOE": "1",
+
+# 使用官方 0731，但模型来自我自己的本地目录
+"ABLITERATED": "0",
+"DSPARK_MODEL_OFFICIAL": "/cache/huggingface/local/DeepSeek-V4-Flash-0731",
+"DSPARK_REVISION": "",
+"DSPARK_ENCODING_FILE": "/cache/huggingface/local/DeepSeek-V4-Flash-0731/encoding/encoding_dsv4.py",
+</code></pre>
+<p>}</p>
+<p>for k, v in values.items():<br>
+pat = re.compile(rf"^{re.escape(k)}=.*$", re.M)<br>
+line = f"{k}={v}"</p>
+<pre class="notranslate"><code class="notranslate">if pat.search(s):
+    s = pat.sub(line, s)
+else:
+    s = s.rstrip("\n") + "\n" + line + "\n"
+</code></pre>
+<p>p.write_text(s)<br>
+PY</p>
+<p>这也替代了我之前分别使用几次 "sed" 修改 "GPU_MEMORY_UTILIZATION_*"、"DSPARK_MODEL_OFFICIAL"、"DSPARK_REVISION" 和 "DSPARK_ENCODING_FILE" 的做法。</p>
+<p>当前仓库的 ".env.dspark.example" 还把 Anemll "0.1.1" 镜像进一步固定到了 manifest digest，目的是防止同一个 tag 将来被重新发布后内容发生变化。</p>
+<p>不过我这里前面采用的是：</p>
+<p>docker save "$IMG" | ssh ... 'docker load'</p>
+<p>把 Head 的镜像直接复制到 Worker，并通过 Image ID 保证两边完全一致。因此已经部署好的环境继续使用：</p>
+<p>DSPARK_VLLM_IMAGE=ghcr.io/anemll/dspark-vllm-gx10:0.1.1</p>
+<p>也是可以工作的。</p>
+<p>如果改成仓库 example 里的 "<a class="user-mention notranslate" data-hovercard-type="user" data-hovercard-url="/users/sha256/hovercard" data-octo-click="hovercard-link-click" data-octo-dimensions="link_type:self" href="https://github.com/sha256">@sha256</a>:..." 写法，需要先确认 Head 和 Worker 都能用这个完整 digest 引用执行 "docker image inspect"，否则新版启动脚本会在启动前直接停止。启动脚本现在会主动检查两台机器上配置的 image 是否存在。</p>
+<p>更新以后先检查，不要直接启动</p>
+<p>先确认旧变量真的已经清掉：</p>
+<p>grep -E <br>
+'^(ABLITERATED|DSPARK_MODEL_OFFICIAL|DSPARK_REVISION|DSPARK_ENCODING_FILE|MAX_MODEL_LEN|MAX_NUM_SEQS|MAX_NUM_BATCHED_TOKENS|LONG_PREFILL_TOKEN_THRESHOLD|GPU_MEMORY_UTILIZATION_TEXT|GPU_MEMORY_UTILIZATION_VISION|MTP_NUM_TOKENS|DEFAULT_THINKING|ENABLE_VL_SIDECAR|PREPARE_VL_SIDECAR_MODEL|VLLM_USE_FLASHINFER_SAMPLER|VLLM_USE_BREAKABLE_CUDAGRAPH|VLLM_USE_B12X_MOE)=' <br>
+.env.dspark</p>
+<p>echo "===== 下面两项应该没有输出 ====="<br>
+grep '^GPU_MEMORY_UTILIZATION=' .env.dspark || true<br>
+grep '^DSPARK_MODEL=' .env.dspark || true</p>
+<p>再检查 Host 上的本地模型和 encoder：</p>
+<p>test -d <br>
+/home/dgx/.cache/huggingface/local/DeepSeek-V4-Flash-0731 <br>
+&amp;&amp; echo "Head model OK"</p>
+<p>test -f <br>
+/home/dgx/.cache/huggingface/local/DeepSeek-V4-Flash-0731/encoding/encoding_dsv4.py <br>
+&amp;&amp; echo "Head encoder OK"</p>
+<p>Worker 也检查一次：</p>
+<p>ssh dgx@192.168.100.11 '<br>
+test -d /home/dgx/.cache/huggingface/local/DeepSeek-V4-Flash-0731 &amp;&amp;<br>
+echo "Worker model OK"</p>
+<p>test -f /home/dgx/.cache/huggingface/local/DeepSeek-V4-Flash-0731/encoding/encoding_dsv4.py &amp;&amp;<br>
+echo "Worker encoder OK"<br>
+'</p>
+<p>现在仓库还提供了专门的配置检查脚本：</p>
+<p>./validate-dspark-config.sh</p>
+<p>它会按照实际启动脚本的逻辑解析 "ENABLE_VL_SIDECAR"、模型选择和 GPU utilization，并把最终渲染出来的 vLLM 参数打印出来。</p>
+<p>我重点确认：</p>
+<p>serve mode: text<br>
+checkpoint: /cache/huggingface/local/DeepSeek-V4-Flash-0731<br>
+revision: (default branch tip / unpinned)</p>
+<p>max model len: 1048576<br>
+max num seqs: 6<br>
+max batched tokens: 8192<br>
+gpu memory utilization: 0.835<br>
+spec tokens: 5<br>
+breakable cudagraph: 0</p>
+<p>没有问题以后再启动。</p>
+<ol start="15">
+<li>启动 DeepSeek V4 Flash</li>
+</ol>
+<p>更新后的正常启动仍然是一条：</p>
+<p>cd ~/DeepSeek-v4-Flash-DSpark-2x-DGX-Spark</p>
+<p>./start-deepseek-v4-flash-dspark.sh</p>
+<p>但现在这条脚本背后做的事情已经比我最初部署时多了很多。</p>
+<p>它会自动根据 Head 和 Worker 的 RoCE 地址解析各自的 RoCEv2 GID index；检查两边 Docker image；把最新的 Compose、".env.dspark"、DSpark proposer 和相关 hotfix 文件同步到 Worker；分别验证 Head 和 Worker 的 Compose；然后按照 Worker first 的顺序启动双机服务。</p>
+<p>新版本还会自动处理 Issue #22 的 "nvfp4_ds_mla" 长上下文 decode 修复，以及一组从 vLLM 0.27 backport 回当前 Anemll runtime 的 DeepSeek V4 性能 hotfix。补丁应用完成后，两边容器会统一重启一次，然后脚本等待 API ready，并自动执行一个最小 OpenAI-compatible chat 请求。</p>
+<p>所以这些补丁不需要我再手工进入 Docker 修改。</p>
+<p>启动完成后先看：</p>
+<p>curl -fsS <a href="http://127.0.0.1:8888/v1/models" rel="nofollow">http://127.0.0.1:8888/v1/models</a> |<br>
+python3 -m json.tool</p>
+<p>确认服务状态：</p>
+<p>./status-deepseek-v4-flash-dspark.sh</p>
+<p>再跑一次仓库自己的完整 smoke test：</p>
+<p>./smoke-deepseek-v4-flash-dspark.sh</p>
+<p>如果有问题：</p>
+<p>./logs-deepseek-v4-flash-dspark.sh</p>
+<p>当前默认 text-only profile 下，仓库记录的配置是：</p>
 <p>MAX_MODEL_LEN=1048576<br>
 MAX_NUM_SEQS=6<br>
 MAX_NUM_BATCHED_TOKENS=8192<br>
-GPU_MEMORY_UTILIZATION=0.80<br>
+LONG_PREFILL_TOKEN_THRESHOLD=1024<br>
+GPU_MEMORY_UTILIZATION_TEXT=0.835<br>
 MTP_NUM_TOKENS=5<br>
-DSPARK_VLLM_IMAGE=ghcr.io/anemll/dspark-vllm-gx10:0.1.1</p>
-<p>Host 路径和 Container 路径不要搞混</p>
-<p>这是我认为最容易出错的一个点。</p>
-<p>Host 上模型实际存在于：</p>
-<p>/home/dgx/.cache/huggingface/local/DeepSeek-V4-Flash-0731</p>
-<p>但是容器里挂载的是：</p>
-<p>/cache/huggingface</p>
-<p>所以：</p>
-<p>DSPARK_MODEL</p>
-<p>应该写成容器里面看到的：</p>
-<p>/cache/huggingface/local/DeepSeek-V4-Flash-0731</p>
-<p>而不是 Host 的 "/home/dgx/..."。</p>
-<p>同理：</p>
-<p>DSPARK_ENCODING_FILE=/cache/huggingface/local/DeepSeek-V4-Flash-0731/encoding/encoding_dsv4.py</p>
-<p>路径混用时，最常见的现象就是“宿主机明明有模型，但 vLLM 说找不到”。</p>
-<p>关于 "NCCL_IB_GID_AUTO"</p>
-<p>我自己的环境最终使用了：</p>
-<p>NCCL_IB_GID_AUTO=1</p>
-<p>但这里不建议把它理解为适合所有版本的永久配置。</p>
-<p>当前仓库 README 明确提醒，RoCE 的 GID 配置取决于实际环境，"NCCL_IB_GID_INDEX" 并不一定永远是 0，需要匹配实际 RoCE GID。</p>
-<p>所以如果遇到 NCCL 初始化卡死、RoCE 建链失败，接口 IP 明明互通却无法 TP=2，GID 是重点排查对象之一。</p>
+DEFAULT_THINKING=max<br>
+ENABLE_VL_SIDECAR=0<br>
+VLLM_USE_BREAKABLE_CUDAGRAPH=0</p>
+<p>仓库在这套配置下记录的启动结果大约是 18 GiB 可用 KV Cache、约 2.5M token KV 容量，以及对单个 1,048,576-token request 约 2.4x 的理论最大并发；这些数字只应该作为启动 sanity check，实际值仍然以自己的 boot log 为准。</p>
 <hr>
 <ol start="15">
 <li>启动 DeepSeek V4 Flash</li>
@@ -609,18 +788,41 @@ VLLM_PORT=8888</p>
 <ol start="17">
 <li>我认为最值得记住的几个坑</li>
 </ol>
-<p>整套过程真正麻烦的地方，其实不是最后那一条 "start" 命令。</p>
-<p>第一是 两台机器的底层环境必须先完全一致、完全健康。驱动、Docker、镜像、模型文件，只要其中一边有细微差异，TP=2 出问题以后排查会非常痛苦。</p>
-<p>第二是 DGX Spark 的 ConnectX-7 接口命名比普通服务器更容易看错。尤其 "enP2p1s0f1np1" 里面的大写 "P" 是真的，不是 typo。最好永远先用：</p>
-<p>ibdev2netdev<br>
-ip -br link</p>
-<p>确认映射。NVIDIA 官方文档现在也专门花了很长一节解释 DGX Spark 的 QSFP → PCIe → Ethernet → RoCE 对应关系。</p>
-<p>第三是 模型下载成功不等于模型完整。检查 "model.safetensors.index.json"、逐个确认 shard、确认 "encoding_dsv4.py" 都比看目录大小可靠得多。</p>
-<p>第四是 Host path 和 Container path 一定要分清。我的模型在 Host 是：</p>
-<p>/home/dgx/.cache/huggingface/...</p>
-<p>但配置给 vLLM 的 "DSPARK_MODEL" 是：</p>
-<p>/cache/huggingface/...</p>
-<p>第五是 第一次成功启动时先别急着调参。"MAX_MODEL_LEN=1048576"、"MAX_NUM_SEQS=6"、"MAX_NUM_BATCHED_TOKENS=8192"、"GPU_MEMORY_UTILIZATION=0.80"、"MTP_NUM_TOKENS=5" 是当前仓库已经验证过的一组相对保守的 1M agent-serving 参数。先把这个 baseline 跑通，再调整 concurrency、MTP 和 memory utilization。</p>
+<p>第五点现在需要改成：</p>
+<p>第五是第一次成功启动时先别急着调参，而且不要再照旧教程手工设置 "GPU_MEMORY_UTILIZATION=0.80"。我最初记录的这组 baseline 已经随着仓库更新发生变化。</p>
+<p>当前默认的 1M text-only agent-serving profile 是：</p>
+<p>MAX_MODEL_LEN=1048576<br>
+MAX_NUM_SEQS=6<br>
+MAX_NUM_BATCHED_TOKENS=8192<br>
+LONG_PREFILL_TOKEN_THRESHOLD=1024<br>
+GPU_MEMORY_UTILIZATION_TEXT=0.835<br>
+MTP_NUM_TOKENS=5<br>
+DEFAULT_THINKING=max<br>
+ENABLE_VL_SIDECAR=0<br>
+VLLM_USE_BREAKABLE_CUDAGRAPH=0</p>
+<p>"GPU_MEMORY_UTILIZATION" 现在由启动脚本根据 profile 自动生成。纯文本模式使用 "0.835"；实验性的 vision coexist 才使用 "0.80"。先把当前仓库这一组 baseline 跑通，再去调整 concurrency、MTP、context 和 memory utilization。</p>
+<ol start="18">
+<li>关于性能：这里我暂时不编一个数字</li>
+</ol>
+<p>原来 benchmark 条件里最后一项：</p>
+<p>GPU_MEMORY_UTILIZATION</p>
+<p>现在更准确地应该记录成：</p>
+<p>Prompt tokens<br>
+Output tokens<br>
+Concurrency<br>
+TTFT / TTFC<br>
+Decode tok/s<br>
+Aggregate tok/s<br>
+DSpark acceptance rate<br>
+MAX_MODEL_LEN<br>
+MAX_NUM_SEQS<br>
+MAX_NUM_BATCHED_TOKENS<br>
+LONG_PREFILL_TOKEN_THRESHOLD<br>
+MTP_NUM_TOKENS<br>
+GPU_MEMORY_UTILIZATION_TEXT<br>
+实际生效的 GPU_MEMORY_UTILIZATION<br>
+VLLM_USE_BREAKABLE_CUDAGRAPH</p>
+<p>因为现在 ".env.dspark" 里的 text / vision utilization 和启动时真正传给 vLLM 的 "GPU_MEMORY_UTILIZATION" 已经是两层配置。只记录一个 "GPU_MEMORY_UTILIZATION"，以后回头看 benchmark 很容易不知道当时到底运行的是哪个 profile。</p>
 <hr>
 <ol start="18">
 <li>关于性能：这里我暂时不编一个数字</li>
