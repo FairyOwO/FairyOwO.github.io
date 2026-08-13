@@ -1,5 +1,7 @@
 > 请注意 以下为ai生成 我仅提供了过程命令 仅能保证这个过程在我这里成立
 
+> 注意 已过时 代码仓已经更新 以下部署方式有部分有更新 在此提示消失前请谨慎参考
+
 用两台 NVIDIA DGX Spark 本地部署 DeepSeek V4 Flash 0731：从开机、RoCE 到 vLLM TP=2 的完整踩坑记录
 
 本文记录我使用 2 台 NVIDIA DGX Spark，通过 ConnectX-7 / RoCE 组成双机集群，并最终在本地跑起 DeepSeek-V4-Flash-0731 + DSpark + vLLM TP=2 的完整过程。
